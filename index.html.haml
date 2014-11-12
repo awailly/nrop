@@ -2,33 +2,33 @@
 layout: base
 ---
 .row
-  .large-12.columns
-    %h1 Be ready for nROP
-    %hr
+  .span12
+    .page-header
+      %h1 Be ready for nROP
 
 .row
-  .large-12.columns
+  .span12
     .panel
       %h3 Get started
       %p Discover how to use nROP and discover tricky gadgets
-      %a.button{:href=>"#{site.base_url}/getstarted"} Get started
-      %a.button.secondary{:href=>"#{site.base_url}/download"} Download
+      %a.btn.btn-primary.btn-large{:href=>"#{site.base_url}/getstarted"} Get started
+      %a.btn.btn-primary.btn-large{:href=>"#{site.base_url}/download"} Download
 
 .row
-  .large-4.columns
+  .span4
     %h3 About
     %p Current ROP tools suffer from static gadget search and does not extract the underlying semantic. Combining the intermediate language of Qemu with the LLVM optimization, nROP is able to seek exotic combination to achieve your exploit.
     %p
-      %a.button{:href=>"#{site.base_url}/doc"} View details &raquo; 
+      %a.btn{:href=>"#{site.base_url}/doc"} View details &raquo; 
 
-  .large-4.columns
+  .span4
     %h3 Goal
     %p Exploiting softwares require subtle gadget chaining to bypass state-of-the-art memory protection. nROP helps exploit writers to achieve non-trivial gadget chaining on various architecture.
     %p
-      %a.button{:href=>"#{site.base_url}/demo"} View details &raquo; 
+      %a.btn{:href=>"#{site.base_url}/demo"} View details &raquo; 
 
-  .large-4.columns
+  .span4
     %h3 Concept
     %p Mix Qemu, LLVM and z3 (tobedone) for ultimate instruction semantic.
     %p
-      %a.button{:href=>"#{site.base_url}/doc"} View details &raquo; 
+      %a.btn{:href=>"#{site.base_url}/doc"} View details &raquo; 

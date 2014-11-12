@@ -14,10 +14,11 @@
   %body
     .navbar.navbar-fixed-top
       .container
-        %a.navbar-header{ :href=>"#{site.base_url}" } #{site.name}
-        %ul.nav.navbar-nav
-          %li
-            %a{ :href=>"#{site.base_url}" } Home
+        .navbar-header
+          %a.navbar-brand{ :href=>"#{site.base_url}" } #{site.name}
+          %ul.nav.navbar-nav
+            %li
+              %a{ :href=>"#{site.base_url}" } Home
     .container
       ~ content
       %hr

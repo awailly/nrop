@@ -3,7 +3,7 @@ title: Download && Build nROP
 layout: base
 ---
 
-[1]: http://aurelien.wail.ly/nrop/getstarted
+[1]: #{site.base_url}/getstarted
 
 # Getting the sources
 

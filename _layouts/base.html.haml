@@ -2,23 +2,33 @@
 %html
   %head
     %meta{ :charset=>'utf-8' }
-    %title An awesome site 
+    %title nROP Homepage
     %meta{ :name=>'viewport', :content=>'width=device-width, initial-scale=1.0' }
     :css
       body {
         padding-top: 60px;
       }
     %link{ :rel=>'stylesheet', :type=>'text/css', :href=>"#{site.base_url}/stylesheets/styles.css" }
+    %link{ :rel=>'stylesheet', :type=>'text/css', :href=>"https://fonts.googleapis.com/css?family=Open+Sans" }
     /[if lt IE 9]
       %script{ :type=>'text/javascript', :src=>'//html5shim.googlecode.com/svn/trunk/html5.js' }
   %body
-    .navbar.navbar-default.navbar-fixed-top
+    .navbar.navbar-inverse.navbar-fixed-top
       .container
         .navbar-header
           %a.navbar-brand{ :href=>"#{site.base_url}" } #{site.name}
           %ul.nav.navbar-nav
             %li
               %a{ :href=>"#{site.base_url}" } Home
+            %li
+              %li
+                %a{:href=>"#{site.base_url}/getstarted"} Get Started
+            %li
+              %li
+                %a{:href=>"#{site.base_url}/download"} Download
+            %li
+              %li
+                %a{:href=>"#{site.base_url}/doc"} Documentation
     .container
       ~ content
       %hr

@@ -3,3 +3,5 @@
 /_site/
 /_tmp/
 Gemfile.lock
+*~
+*.swp

@@ -7,3 +7,4 @@ profiles:
     base_url: http://aurelien.wail.ly/nrop
     deploy: 
       host: github_pages 
+      branch: gh-pages

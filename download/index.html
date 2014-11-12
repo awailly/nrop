@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>An awesome site</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <style>
+      body {
+        padding-top: 60px;
+      }
+    </style>
+    <link href="http://aurelien.wail.ly/nrop/stylesheets/styles.css" rel="stylesheet" type="text/css">
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js" type="text/javascript"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="http://aurelien.wail.ly/nrop">nROP</a>
+          <ul class="nav">
+            <li>
+              <a href="http://aurelien.wail.ly/nrop">Home</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      
+      <h1 id="dependencies">Dependencies</h1>
+      
+      <h2 id="debian">Debian</h2>
+      
+      <p>The installation was tested on <code>Linux debian 3.2.0-4-amd64 #1 SMP Debian 3.2.60-1+deb7u3 x86_64 GNU/Linux</code>.</p>
+      
+      <pre><code>sudo aptitude install build-essential git pkg-config zlib1g-dev libglib2.0-dev libpixman-1-dev libfdt-dev &#x000A;</code></pre>
+      
+      <h1 id="getting-the-sources">Getting the sources</h1>
+      
+      <p>Clone the github repository</p>
+      
+      <pre><code>git clone http://github.com/awailly/nrop&#x000A;cd nrop&#x000A;</code></pre>
+      
+      <p>You can grab the pre-compiled binary here.</p>
+      
+      <h1 id="build-the-project">Build the project</h1>
+      
+      <h2 id="get-latest-qemu">Get latest qemu</h2>
+      
+      <pre><code>git clone git://git.qemu-project.org/qemu.git # kikoo 200kB/s&#x000A;cd qemu&#x000A;PYTHON=$(which python2) ./configure --target-list=x86_64-linux-user --disable-sparse --disable-strip --disable-werror --disable-sdl --disable-gtk --disable-virtfs --disable-vnc --disable-cocoa --disable-xen --disable-xen-pci-passthrough --disable-brlapi --disable-vnc-tls --disable-vnc-sasl --disable-vnc-jpeg --disable-vnc-png --disable-vnc-ws --disable-curses --disable-curl --disable-fdt --disable-bluez --disable-slirp --disable-kvm --disable-rdma --disable-system --disable-guest-base --disable-pie --disable-uuid --disable-vde --disable-netmap --disable-linux-aio --disable-cap-ng --disable-attr --disable-blobs --disable-docs --disable-vhost-net --disable-spice --disable-libiscsi --disable-libnfs --disable-smartcard-nss --disable-libusb --disable-usb-redir --disable-guest-agent --disable-seccomp --disable-coroutine-pool --disable-glusterfs --disable-libssh2 --disable-vhdx --disable-quorum --disable-bsd-user&#x000A;make&#x000A;</code></pre>
+      
+      <h2 id="with-qemu-already-pulled">With qemu already pulled</h2>
+      
+      <pre><code>cd qemu&#x000A;git stash&#x000A;patch -p1 &lt; ../qemu.noprologet.patch&#x000A;# git apply ../qemu.noprologet.patch&#x000A;make -j32&#x000A;cd ..&#x000A;make -j32 # error wanted regarding "abi_ulong"&#x000A;cd qemu&#x000A;patch -p1 &lt; ../qemu.patch&#x000A;# git apply ../qemu.patch&#x000A;cd ..&#x000A;make -j32 # error wanted regarding multiple main and icount&#x000A;#vim qemu/x86_64-linux-user/linux-user/main.o # :%s/main/ma1n/g&#x000A;sed -i 's/main/ma1n/g' qemu/x86_64-linux-user/linux-user/main.o&#x000A;#vim qemu/stubs/cpu-get-icount.o # :%s/use_icount/use_1count/g&#x000A;sed -i 's/use_icount/use_1count/g' qemu/stubs/cpu-get-icount.o&#x000A;make -j32&#x000A;</code></pre>
+      
+      <h1 id="use-it">Use it</h1>
+      
+      <p>You can now follow the <a href="#{site.base_url}/getstarted">Get Started guide</a></p>
+      <hr>
+      <footer>
+        <p>&copy; NoName 2014</p>
+      </footer>
+    </div>
+  </body>
+</html>

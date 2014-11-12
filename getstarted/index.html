@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>An awesome site</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <style>
+      body {
+        padding-top: 60px;
+      }
+    </style>
+    <link href="http://aurelien.wail.ly/nrop/stylesheets/styles.css" rel="stylesheet" type="text/css">
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js" type="text/javascript"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="http://aurelien.wail.ly/nrop">nROP</a>
+          <ul class="nav">
+            <li>
+              <a href="http://aurelien.wail.ly/nrop">Home</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      
+      <h1 id="usage">Usage</h1>
+      
+      <p>The program expect a target (<code>-t</code>) shellcode, say x86 here, and the binary to analyze in the last position (<code>argv[argc - 1]</code>).</p>
+      
+      <p>The <code>-o</code> option output a new binary file if you modified the binary to analyze with a plugin (look into the <code>plugins/</code> directory for examples). It is not needed to use the nROP program.</p>
+      
+      <p>The <code>-c</code> option specify constraints to respect when building the ROP payload. It is not needed to use the nROP program.</p>
+      
+      <h1 id="creating-a-target">Creating a target</h1>
+      
+      <p>We start with a <code>push 0x1234</code> shellcode, assembling to <code>6834120000</code>, and insert a ret, <code>c3</code>.</p>
+      
+      <pre><code>% ./packer -t 6834120000c3 /usr/lib/libc.so.6&#x000A;</code></pre>
+      
+      <p>You can see the entrypoint of the file at first. nROP look for gadgets in all PHT with the +x flag, you can change this behavior in the plugin. If you want to scan everywhere you have to consider the input file as pure binary.</p>
+      
+      <p>Then you have the shellcode dumped by XED (or capstone), analyzed by the Qemu TCG and dumped again, finally translated into LLVM and optimized.</p>
+      
+      <pre><code>% ./packer -t 68ccedffff5a4883ec085b4831c04829d0c3 /usr/lib/libc.so.6&#x000A;</code></pre>
+      
+      <h1 id="build-the-project">Build the project</h1>
+      
+      <h2 id="reset-the-qemu-changes">Reset the qemu changes</h2>
+      
+      <pre><code>cd qemu&#x000A;git stash&#x000A;</code></pre>
+      
+      <h2 id="apply-patches-to-qemu--build">Apply patches to qemu &amp;&amp; build</h2>
+      
+      <pre><code>git apply ../qemu.noprologet.patch&#x000A;make -j32&#x000A;cd ..&#x000A;make -j32 # error wanted regarding "abi_ulong"&#x000A;</code></pre>
+      
+      <h2 id="fix-abiulong-error">Fix abi_ulong error</h2>
+      
+      <pre><code>cd qemu&#x000A;git apply ../qemu.patch&#x000A;cd ..&#x000A;make -j32 # error wanted regarding multiple main and icount&#x000A;</code></pre>
+      
+      <h2 id="fix-main-and-useicount-errors">Fix main and use_icount errors</h2>
+      
+      <pre><code>vim qemu/x86_64-linux-user/linux-user/main.o # :%s/main/ma1n/g&#x000A;vim qemu/stubs/cpu-get-icount.o # :%s/use_icount/use_1count/g&#x000A;make -j32&#x000A;</code></pre>
+      
+      <p>I know :)</p>
+      
+      <h1 id="use-it">Use it</h1>
+      
+      <p>You can now follow the <a href="http://aurelien.wail.ly/nrop/getstarted">Get Started guide</a></p>
+      <hr>
+      <footer>
+        <p>&copy; NoName 2014</p>
+      </footer>
+    </div>
+  </body>
+</html>

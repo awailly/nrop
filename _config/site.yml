@@ -1,0 +1,9 @@
+name: nROP
+title: Automated nROP
+org: NoName
+
+profiles: 
+  production: 
+    base_url: http://aurelien.wail.ly/nrop
+    deploy: 
+      host: github_pages 

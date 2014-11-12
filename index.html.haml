@@ -8,18 +8,18 @@ layout: base
 
 .row
   .col-md-12
-    .panel
+    .panel-heading
       %h3 Get started
       %p Discover how to use nROP and discover tricky gadgets
-      %a.btn.btn-primary.btn-large{:href=>"#{site.base_url}/getstarted"} Get started
-      %a.btn.btn-primary.btn-large{:href=>"#{site.base_url}/download"} Download
+      %a.btn.btn-primary.btn-lg{:href=>"#{site.base_url}/getstarted"} Get started
+      %a.btn.btn-primary.btn-lg{:href=>"#{site.base_url}/download"} Download
 
 .row
   .col-md-4
     %h3 About
     %p Current ROP tools suffer from static gadget search and does not extract the underlying semantic. Combining the intermediate language of Qemu with the LLVM optimization, nROP is able to seek exotic combination to achieve your exploit.
     %p
-      %a.btn{:href=>"#{site.base_url}/doc"} View details &raquo; 
+      %a.btn.btn-default{:href=>"#{site.base_url}/doc"} View details &raquo; 
 
   .col-md-4
     %h3 Goal

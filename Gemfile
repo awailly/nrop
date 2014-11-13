@@ -24,7 +24,7 @@
 
 source 'https://rubygems.org'                             # This tells Bundler where to look for gems
 
-gem 'awestruct', '~> 0.5.3'                               # Goes without saying
+gem 'awestruct', '~> 0.5.6.beta'                               # Goes without saying
 gem 'webrick', '~> 1.3.1'                                 # The rack webserver to use in dev mode
 
 # FIXME

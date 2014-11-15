@@ -26,3 +26,5 @@
 *.swp
 
 capstone/*
+qemu/*
+z3/*

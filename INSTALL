@@ -1,0 +1,31 @@
+Build Qemu exporting TCG
+========================
+
+cd qemu
+git stash
+git apply ../qemu.noprologet.patch
+make -j32
+cd ..
+make -j32 # error wanted regarding "abi_ulong"
+cd qemu
+git apply ../qemu.patch
+cd ..
+make -j32 # error wanted regarding multiple main and icount
+vim qemu/x86_64-linux-user/linux-user/main.o # :%s/main/ma1n/g
+vim qemu/stubs/cpu-get-icount.o # :%s/use_icount/use_1count/g
+make -j32
+
+Testing
+=======
+
+./packer -t 68ccedffff5a4883ec085b4831c04829d0c3 /usr/lib/libc.so.6
+
+FAQ
+===
+
+/bin/sh: llvm-config : commande introuvable
+-------------------------------------------
+
+pacaur -S llvm
+
+

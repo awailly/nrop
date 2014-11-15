@@ -1,0 +1,55 @@
+diff --git a/qemu-log.c b/qemu-log.c
+index 797f2af..ce59e4a 100644
+--- a/qemu-log.c
++++ b/qemu-log.c
+@@ -30,9 +30,12 @@ void qemu_log(const char *fmt, ...)
+     va_list ap;
+ 
+     va_start(ap, fmt);
++    vprintf(fmt, ap);
++    /*
+     if (qemu_logfile) {
+         vfprintf(qemu_logfile, fmt, ap);
+     }
++    */
+     va_end(ap);
+ }
+ 
+diff --git a/target-i386/translate.c b/target-i386/translate.c
+index 782f7d2..31384d1 100644
+--- a/target-i386/translate.c
++++ b/target-i386/translate.c
+@@ -7980,7 +7980,7 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
+     if (max_insns == 0)
+         max_insns = CF_COUNT_MASK;
+ 
+-    gen_tb_start();
++    /*gen_tb_start();*/
+     for(;;) {
+         if (unlikely(!QTAILQ_EMPTY(&cs->breakpoints))) {
+             QTAILQ_FOREACH(bp, &cs->breakpoints, entry) {
+@@ -8039,7 +8039,7 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
+     if (tb->cflags & CF_LAST_IO)
+         gen_io_end();
+ done_generating:
+-    gen_tb_end(tb, num_insns);
++    /*gen_tb_end(tb, num_insns);*/
+     *tcg_ctx.gen_opc_ptr = INDEX_op_end;
+     /* we don't forget to fill the last values */
+     if (search_pc) {
+diff --git a/translate-all.c b/translate-all.c
+index ba5c840..af0c9d8 100644
+--- a/translate-all.c
++++ b/translate-all.c
+@@ -135,6 +135,11 @@ void cpu_gen_init(void)
+     tcg_context_init(&tcg_ctx); 
+ }
+ 
++TCGContext *get_tcg_ctx(void)
++{
++    return &tcg_ctx;
++}
++
+ /* return non zero if the very first instruction is invalid so that
+    the virtual CPU can trigger an exception.
+ 

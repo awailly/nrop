@@ -1,0 +1,30 @@
+diff --git a/qemu-log.c b/qemu-log.c
+index 797f2af..ce59e4a 100644
+--- a/qemu-log.c
++++ b/qemu-log.c
+@@ -30,9 +30,12 @@ void qemu_log(const char *fmt, ...)
+     va_list ap;
+ 
+     va_start(ap, fmt);
++    vprintf(fmt, ap);
++    /*
+     if (qemu_logfile) {
+         vfprintf(qemu_logfile, fmt, ap);
+     }
++    */
+     va_end(ap);
+ }
+ 
+diff --git a/tcg/tcg.c b/tcg/tcg.c
+index f1e0763..360e487 100644
+--- a/tcg/tcg.c
++++ b/tcg/tcg.c
+@@ -2496,6 +2496,8 @@ static inline int tcg_gen_code_common(TCGContext *s, uint8_t *gen_code_buf,
+     }
+ #endif
+ 
++    tcg_dump_ops(s);
++
+     tcg_reg_alloc_start(s);
+ 
+     s->code_buf = gen_code_buf;

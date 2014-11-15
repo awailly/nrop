@@ -1,0 +1,90 @@
+diff --git a/include/exec/user/abitypes.h b/include/exec/user/abitypes.h
+index 80eedac..079bef0 100644
+--- a/include/exec/user/abitypes.h
++++ b/include/exec/user/abitypes.h
+@@ -1,5 +1,37 @@
+ #ifndef QEMU_TYPES_H
+ #define QEMU_TYPES_H
++
++#ifdef TARGET_ABI32
++typedef uint32_t abi_ulong __attribute__((aligned(ABI_LONG_ALIGNMENT)));
++typedef int32_t abi_long __attribute__((aligned(ABI_LONG_ALIGNMENT)));
++#define TARGET_ABI_FMT_lx "%08x"
++#define TARGET_ABI_FMT_ld "%d"
++#define TARGET_ABI_FMT_lu "%u"
++
++static inline abi_ulong tswapal(abi_ulong v)
++{
++    return tswap32(v);
++}
++
++#else
++typedef unsigned long target_ulong;
++typedef signed long target_long;
++typedef target_ulong abi_ulong; 
++typedef target_long abi_long;
++#define TARGET_ABI_FMT_lx TARGET_FMT_lx
++#define TARGET_ABI_FMT_ld TARGET_FMT_ld
++#define TARGET_ABI_FMT_lu TARGET_FMT_lu
++/* for consistency, define ABI32 too */
++#if TARGET_ABI_BITS == 32
++#define TARGET_ABI32 1
++#endif
++
++static inline abi_ulong tswapal(abi_ulong v)
++{
++    return tswapl(v);
++}
++
++#endif
+ #include "cpu.h"
+ 
+ #ifdef TARGET_ABI32
+@@ -33,34 +65,4 @@ typedef int32_t abi_int __attribute__((aligned(ABI_INT_ALIGNMENT)));
+ typedef uint32_t abi_uint __attribute__((aligned(ABI_INT_ALIGNMENT)));
+ typedef int64_t abi_llong __attribute__((aligned(ABI_LLONG_ALIGNMENT)));
+ typedef uint64_t abi_ullong __attribute__((aligned(ABI_LLONG_ALIGNMENT)));
+-
+-#ifdef TARGET_ABI32
+-typedef uint32_t abi_ulong __attribute__((aligned(ABI_LONG_ALIGNMENT)));
+-typedef int32_t abi_long __attribute__((aligned(ABI_LONG_ALIGNMENT)));
+-#define TARGET_ABI_FMT_lx "%08x"
+-#define TARGET_ABI_FMT_ld "%d"
+-#define TARGET_ABI_FMT_lu "%u"
+-
+-static inline abi_ulong tswapal(abi_ulong v)
+-{
+-    return tswap32(v);
+-}
+-
+-#else
+-typedef target_ulong abi_ulong __attribute__((aligned(ABI_LONG_ALIGNMENT)));
+-typedef target_long abi_long __attribute__((aligned(ABI_LONG_ALIGNMENT)));
+-#define TARGET_ABI_FMT_lx TARGET_FMT_lx
+-#define TARGET_ABI_FMT_ld TARGET_FMT_ld
+-#define TARGET_ABI_FMT_lu TARGET_FMT_lu
+-/* for consistency, define ABI32 too */
+-#if TARGET_ABI_BITS == 32
+-#define TARGET_ABI32 1
+-#endif
+-
+-static inline abi_ulong tswapal(abi_ulong v)
+-{
+-    return tswapl(v);
+-}
+-
+-#endif
+ #endif
+diff --git a/stubs/cpu-get-icount.c b/stubs/cpu-get-icount.c
+index d685859..12fd74c 100644
+--- a/stubs/cpu-get-icount.c
++++ b/stubs/cpu-get-icount.c
+@@ -1,7 +1,7 @@
+ #include "qemu-common.h"
+ #include "qemu/timer.h"
+ 
+-int use_icount;
++//int use_icount;
+ 
+ int64_t cpu_get_icount(void)
+ {

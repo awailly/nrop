@@ -1,0 +1,52 @@
+diff --git a/qemu-log.c b/qemu-log.c
+index 797f2af..ce59e4a 100644
+--- a/qemu-log.c
++++ b/qemu-log.c
+@@ -30,9 +30,12 @@ void qemu_log(const char *fmt, ...)
+     va_list ap;
+ 
+     va_start(ap, fmt);
++    vprintf(fmt, ap);
++    /*
+     if (qemu_logfile) {
+         vfprintf(qemu_logfile, fmt, ap);
+     }
++    */
+     va_end(ap);
+ }
+ 
+diff --git a/target-i386/translate.c b/target-i386/translate.c
+index 707ebd5..d0dae94 100644
+--- a/target-i386/translate.c
++++ b/target-i386/translate.c
+@@ -7963,7 +7963,7 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
+     if (max_insns == 0)
+         max_insns = CF_COUNT_MASK;
+ 
+-    gen_tb_start();
++    /*gen_tb_start();*/
+     for(;;) {
+         if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
+             QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
+@@ -8021,7 +8021,7 @@ static inline void gen_intermediate_code_internal(X86CPU *cpu,
+     }
+     if (tb->cflags & CF_LAST_IO)
+         gen_io_end();
+-    gen_tb_end(tb, num_insns);
++    /*gen_tb_end(tb, num_insns);*/
+     *tcg_ctx.gen_opc_ptr = INDEX_op_end;
+     /* we don't forget to fill the last values */
+     if (search_pc) {
+diff --git a/tcg/tcg.c b/tcg/tcg.c
+index f1e0763..360e487 100644
+--- a/tcg/tcg.c
++++ b/tcg/tcg.c
+@@ -2496,6 +2496,8 @@ static inline int tcg_gen_code_common(TCGContext *s, uint8_t *gen_code_buf,
+     }
+ #endif
+ 
++    tcg_dump_ops(s);
++
+     tcg_reg_alloc_start(s);
+ 
+     s->code_buf = gen_code_buf;

@@ -51,4 +51,4 @@ You can grab the pre-compiled binary here.
 
 # Use it
 
-You can now follow the [Get Started guide](#{site.base_url}/getstarted)
+You can now follow the [Get Started guide](http://aurelien.wail.ly/nrop/getstarted)

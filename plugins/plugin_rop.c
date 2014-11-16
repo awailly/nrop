@@ -467,6 +467,7 @@ status_t pack(private_plugin_rop_t *this, Elf64_Addr addr, chunk_t chunk)
     th_arg *ta;
     int jc;
 
+
     if ((!this) || (!this->code))
         return FAILED;
 

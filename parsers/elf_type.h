@@ -193,6 +193,6 @@ struct elf_t
  *
  * @return          elf_t object
  */
-elf_t *create_elf(chunk_t type, region_t *region);
+elf_t *create_elf(chunk_t type, region_t *region, size_t arch);
 
 #endif

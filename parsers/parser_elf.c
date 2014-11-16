@@ -62,19 +62,19 @@ static status_t check_region(region_t *region)
 
 static code_t *parse(private_parser_elf_t *this, region_t *region)
 {
-    elf_t *code = create_elf(chunk_create((unsigned char *)"ELF", 3), region);
-
     if (this->check_region_32b(region))
     {
+        elf_t *code = create_elf(chunk_create((unsigned char *)"ELF", 3), region, 32);
         return (code_t*) code;
+
     }
     else if (this->check_region_64b(region))
     {
+        elf_t *code = create_elf(chunk_create((unsigned char *)"ELF", 3), region, 64);
         return (code_t*) code;
     }
     else
     {
-        code->destroy(code);
         return NULL;
     }
 }

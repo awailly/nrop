@@ -46,6 +46,6 @@ struct program_header_t
     void (*destroy)(program_header_t* this);
 };
 
-program_header_t *create_program_header(chunk_t program_header, chunk_t data);
+program_header_t *create_program_header(chunk_t program_header, chunk_t data, size_t arch);
 
 #endif

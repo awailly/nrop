@@ -11,22 +11,37 @@ struct private_program_header_t
 
     chunk_t bytes_chunk;
     chunk_t data_chunk;
+    size_t arch;
 
-    Elf64_Phdr (*get_formatted_header)(private_program_header_t *);
+    void *(*get_formatted_header)(private_program_header_t *);
 };
 
-static Elf64_Phdr get_formatted_header(private_program_header_t *this)
+static void *get_formatted_header(private_program_header_t *this)
 {
-    Elf64_Phdr phdr;
+    void *phdr;
 
-    memcpy(&phdr, this->bytes_chunk.ptr, sizeof(phdr));
+    if ((phdr = calloc(1, sizeof(Elf64_Phdr))) == NULL)
+    {
+        logging("Error while allocating phdr in get_formatted_header\n");
+        return NULL;
+    }
+
+    if (this->arch == 32)
+        memcpy(phdr, this->bytes_chunk.ptr, sizeof(Elf32_Phdr));
+    else if (this->arch == 64)
+        memcpy(phdr, this->bytes_chunk.ptr, sizeof(Elf64_Phdr));
 
     return phdr;
 }
 
 static uint64_t get_p_filesz(private_program_header_t *this)
 {
-    return this->get_formatted_header(this).p_filesz;
+    if (this->arch == 32)
+        return ((Elf32_Phdr*) this->get_formatted_header(this))->p_filesz;
+    else if (this->arch == 64)
+        return ((Elf64_Phdr*) this->get_formatted_header(this))->p_filesz;
+    
+    return 0;
 }
 
 static void set_p_filesz(private_program_header_t *this, uint64_t filesz)
@@ -57,12 +72,22 @@ static void set_p_memsz(private_program_header_t *this, uint64_t memsz)
 
 static uint64_t get_p_align(private_program_header_t *this)
 {
-    return this->get_formatted_header(this).p_align;
+    if (this->arch == 32)
+        return ((Elf32_Phdr*) this->get_formatted_header(this))->p_align;
+    else if (this->arch == 64)
+        return ((Elf64_Phdr*) this->get_formatted_header(this))->p_align;
+    
+    return 0;
 }
 
 static Elf64_Off get_p_offset(private_program_header_t *this)
 {
-    return this->get_formatted_header(this).p_offset;
+    if (this->arch == 32)
+        return ((Elf32_Phdr*) this->get_formatted_header(this))->p_offset;
+    else if (this->arch == 64)
+        return ((Elf64_Phdr*) this->get_formatted_header(this))->p_offset;
+
+    return 0;
 }
 
 static void set_p_offset(private_program_header_t *this, Elf64_Off offset)
@@ -80,12 +105,22 @@ static void set_p_offset(private_program_header_t *this, Elf64_Off offset)
 
 static uint32_t get_p_type(private_program_header_t *this)
 {
-    return this->get_formatted_header(this).p_type;
+    if (this->arch == 32)
+        return ((Elf32_Phdr*) this->get_formatted_header(this))->p_type;
+    else if (this->arch == 64)
+        return ((Elf64_Phdr*) this->get_formatted_header(this))->p_type;
+
+    return 0;
 }
 
 static uint64_t get_p_vaddr(private_program_header_t *this)
 {
-    return this->get_formatted_header(this).p_vaddr;
+    if (this->arch == 32)
+        return ((Elf32_Phdr*)this->get_formatted_header(this))->p_vaddr;
+    else if (this->arch == 64)
+        return ((Elf64_Phdr*)this->get_formatted_header(this))->p_vaddr;
+
+    return 0;
 }
 
 static void set_p_vaddr(private_program_header_t *this, Elf64_Addr address)
@@ -126,7 +161,12 @@ static chunk_t get_chunk(private_program_header_t *this)
 
 static uint32_t get_p_flags(private_program_header_t *this)
 {
-    return this->get_formatted_header(this).p_flags;
+    if (this->arch == 32)
+        return ((Elf32_Phdr*) this->get_formatted_header(this))->p_flags;
+    else if (this->arch == 64)
+        return ((Elf64_Phdr*) this->get_formatted_header(this))->p_flags;
+
+    return 0;
 }
 
 static void destroy(private_program_header_t *this)
@@ -135,12 +175,13 @@ static void destroy(private_program_header_t *this)
     this = NULL;
 }
 
-program_header_t *create_program_header(chunk_t program_header, chunk_t data)
+program_header_t *create_program_header(chunk_t program_header, chunk_t data, size_t arch)
 {
     private_program_header_t *this = malloc_thing(private_program_header_t);
 
     this->bytes_chunk = program_header;
     this->data_chunk = data;
+    this->arch = arch;
 
     this->public.get_p_type = (uint32_t (*)(program_header_t*)) get_p_type;
     this->public.get_p_flags= (uint32_t (*)(program_header_t*)) get_p_flags;
@@ -157,7 +198,7 @@ program_header_t *create_program_header(chunk_t program_header, chunk_t data)
 
     this->public.get_header = (chunk_t (*)(program_header_t*)) get_header;
     this->public.get_chunk = (chunk_t (*)(program_header_t*)) get_chunk;
-    this->get_formatted_header = (Elf64_Phdr (*)(private_program_header_t *)) get_formatted_header;
+    this->get_formatted_header = (void *(*)(private_program_header_t *)) get_formatted_header;
 
     return &this->public;
 }

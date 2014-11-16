@@ -12,6 +12,7 @@ struct private_elf_t
 
     chunk_t type;
     region_t *region;
+    size_t arch;
     linked_list_t *section_list;
     linked_list_t *program_header_list;
 
@@ -34,9 +35,15 @@ struct private_elf_t
     status_t (*check_region_32b)(region_t *);
     status_t (*check_region_64b)(region_t *);
     status_t (*check_region)(region_t *);
+    status_t (*symbols_elf)(private_elf_t *);
+    status_t (*symbols_elf32)(private_elf_t *);
     status_t (*symbols_elf64)(private_elf_t *);
     status_t (*map_sections)(private_elf_t *);
+    status_t (*map_sections32)(private_elf_t *);
+    status_t (*map_sections64)(private_elf_t *);
     status_t (*map_program_headers)(private_elf_t *);
+    status_t (*map_program_headers32)(private_elf_t *);
+    status_t (*map_program_headers64)(private_elf_t *);
     void (*update_symbols_generic)(private_elf_t *, section_t *, Elf64_Off, char *, size_t);
 
     /**
@@ -129,6 +136,110 @@ void read_symbols64(void* start,
     }
 }
 
+static status_t symbols_elf(private_elf_t *this)
+{
+    if (this->arch == 32)
+    {
+        return this->symbols_elf32(this);
+    }
+    else if (this->arch == 64)
+    {
+        return this->symbols_elf64(this);
+    }
+    else
+    {
+        printf("Unexpected architecture %u in symbols_elf (elf_type.c)\n", this->arch);
+        return FAILED;
+    }
+}
+
+static status_t symbols_elf32(private_elf_t *this)
+{
+    region_t *region = ((code_t*) this)->get_region((code_t*) this);
+    chunk_t chunk = region->get_chunk(region);
+    void *start = chunk.ptr;
+
+    Elf32_Ehdr* elf_hdr = (Elf32_Ehdr*) start;
+    if (this->check_region_32b(region)==0) {
+        printf("Not an x86-32  binary. Consider not using the -32 switch.\n");
+        return FAILED;
+    }
+
+    Elf32_Off shoff = elf_hdr->e_shoff;  // section hdr table offset
+    Elf32_Shdr* shp = (Elf32_Shdr*) ((char*)start + shoff);
+    Elf32_Half nsect = elf_hdr->e_shnum;
+    unsigned int i;
+    Elf32_Half sect_strings  = elf_hdr->e_shstrndx;
+    Elf32_Half sect_strtab= 0;
+    Elf32_Off string_table_offset=0;
+    Elf32_Off dynamic_string_table_offset=0;
+
+    /* find the string_table_offset and the dynamic_string_table_offset */
+    for( i=0;i<nsect;i++)  {
+        if (shp[i].sh_type == SHT_STRTAB) {
+            char* name = lookup32(shp[i].sh_name, start, 
+                                  shp[sect_strings].sh_offset);
+            if (strcmp(name,".strtab")==0) {
+                sect_strtab = i;
+                string_table_offset = shp[i].sh_offset;
+            }
+            if (strcmp(name,".dynstr")==0) {
+                dynamic_string_table_offset = shp[i].sh_offset;
+            }
+        }
+    }
+
+    /* now read the symbols */
+    /*
+    for( i=0;i<nsect;i++)  {
+        if (shp[i].sh_type == SHT_SYMTAB) {
+            read_symbols32(start,shp[i].sh_offset, shp[i].sh_size, 
+                           string_table_offset,symtab);
+        }
+        else if (shp[i].sh_type == SHT_DYNSYM) {
+            read_symbols32(start,shp[i].sh_offset, shp[i].sh_size,
+                           dynamic_string_table_offset, symtab);
+        }
+    }
+    */
+
+    this->elf32_ehdr = elf_hdr;
+    this->elf32_phdr = (Elf32_Phdr*) ((char*) start + elf_hdr->e_phoff);
+    this->elf32_shdr = shp;
+    this->strtab32_off = string_table_offset;
+    this->dynstr32_off = dynamic_string_table_offset;
+
+    if (sect_strings == 0)
+    {
+        logging("Beware, shstr index is 0\n");
+        this->shstr_section = NULL;
+    }
+    else
+        this->shstr_section = create_section(
+                                chunk_create(
+                                    (u_char*) &shp[sect_strings],
+                                    sizeof(Elf32_Shdr)),
+                                chunk_create(
+                                    ((Elf32_Shdr*) &shp[sect_strings])->sh_offset + (u_char*) start,
+                                    ((Elf32_Shdr*) &shp[sect_strings])->sh_size));
+
+    if (sect_strtab == 0)
+    {
+        logging("Beware, strtab index is 0\n");
+        this->strtab_section = NULL;
+    }
+    else
+        this->strtab_section = create_section(
+                                chunk_create(
+                                    (u_char*) &shp[sect_strtab],
+                                    sizeof(Elf32_Shdr)),
+                                chunk_create(
+                                    ((Elf32_Shdr*) &shp[sect_strtab])->sh_offset + (u_char*) start,
+                                    ((Elf32_Shdr*) &shp[sect_strtab])->sh_size));
+
+    return SUCCESS;
+}
+
 static status_t symbols_elf64(private_elf_t *this)
 {
     region_t *region = ((code_t*) this)->get_region((code_t*) this);
@@ -137,7 +248,7 @@ static status_t symbols_elf64(private_elf_t *this)
 
     Elf64_Ehdr* elf_hdr = (Elf64_Ehdr*) start;
     if (this->check_region_64b(region)==0) {
-        printf("Not an x86-64  binary. Consider not using the -64 switch.");
+        printf("Not an x86-64  binary. Consider not using the -64 switch.\n");
         return FAILED;
     }
 
@@ -231,6 +342,77 @@ static status_t check_region(region_t *region)
 
 static status_t map_sections(private_elf_t *this)
 {
+    if (this->arch == 32)
+    {
+        return this->map_sections32(this);
+    }
+    else if (this->arch == 64)
+    {
+        return this->map_sections64(this);
+    }
+    else
+    {
+        printf("Unexpected architecture %u in symbols_elf (elf_type.c)\n", this->arch);
+        return FAILED;
+    }
+}
+
+static status_t map_sections32(private_elf_t *this)
+{
+    region_t *region;
+    chunk_t chunk;
+    void *start;
+    unsigned int i;
+
+    region = ((code_t*) this)->get_region((code_t*) this);
+    chunk = region->get_chunk(region);
+    start = chunk.ptr;
+
+    Elf32_Ehdr* elf_hdr = (Elf32_Ehdr*) start;
+    if (this->check_region_32b(region)==0)
+    {
+        printf("Not an x86-32  binary. Consider not using the -32 switch.");
+        return FAILED;
+    }
+
+    Elf32_Off shoff = elf_hdr->e_shoff;  // section hdr table offset
+    Elf32_Shdr* shp = (Elf32_Shdr*) ((char*)start + shoff);
+    Elf32_Half nsect = elf_hdr->e_shnum;
+
+    for( i=0;i<nsect;i++)
+    {
+        chunk_t header;
+        chunk_t data;
+        section_t *current_section;
+        uint32_t data_size;
+
+        header = chunk_create((u_char*) &shp[i], sizeof(shp[i]));
+
+        /*
+         * Handling .bss NOBITS, with sh_size defined but not really
+         * occupied into the program file.
+         */
+        if (((Elf32_Shdr*) &shp[i])->sh_type == SHT_NOBITS)
+        {
+            data_size = 0;
+        }
+        else
+        {
+            data_size = ((Elf32_Shdr*) &shp[i])->sh_size;
+        }
+
+        data = chunk_create(
+                    ((Elf32_Shdr*) &shp[i])->sh_offset + (u_char*) start,
+                    data_size);
+        current_section = create_section(header, data);
+        this->public.add_section(&this->public, current_section);
+    }
+
+    return SUCCESS;
+}
+
+static status_t map_sections64(private_elf_t *this)
+{
     region_t *region;
     chunk_t chunk;
     void *start;
@@ -285,6 +467,71 @@ static status_t map_sections(private_elf_t *this)
 
 static status_t map_program_headers(private_elf_t *this)
 {
+    if (this->arch == 32)
+    {
+        return this->map_program_headers32(this);
+    }
+    else if (this->arch == 64)
+    {
+        return this->map_program_headers64(this);
+    }
+    else
+    {
+        printf("Unexpected architecture %u in symbols_elf (elf_type.c)\n", this->arch);
+        return FAILED;
+    }
+}
+
+static status_t map_program_headers32(private_elf_t *this)
+{
+    region_t *region;
+    chunk_t chunk;
+    void *start;
+    unsigned int i;
+
+    region = ((code_t*) this)->get_region((code_t*) this);
+    chunk = region->get_chunk(region);
+    start = chunk.ptr;
+
+    Elf32_Ehdr* elf_hdr = (Elf32_Ehdr*) start;
+    if (this->check_region_32b(region)==0)
+    {
+        printf("Not an x86-32  binary. Consider not using the -32 switch.");
+        return FAILED;
+    }
+
+    Elf32_Off phoff = elf_hdr->e_phoff;  // section hdr table offset
+    Elf32_Phdr* php = (Elf32_Phdr*) ((char*)start + phoff);
+    Elf32_Half nsect = elf_hdr->e_phnum;
+
+    for( i=0;i<nsect;i++)
+    {
+        chunk_t header;
+        chunk_t data;
+        uint32_t data_size;
+
+        header = chunk_create((u_char*) &php[i], sizeof(php[i]));
+        data_size = ((Elf32_Phdr*) &php[i])->p_memsz;
+        data = chunk_create(
+                ((Elf32_Phdr*) &php[i])->p_offset + (u_char*) start,
+                data_size);
+        program_header_t *current_program_header = create_program_header(header, data, this->arch);
+        /**
+         * Debug alignment, not taken in account yet
+         *
+        printf("pvaddr == poffset %% palign | %"PRIx32" == %"PRIx32" %% %"PRIx32"\n",
+                current_program_header->get_p_vaddr(current_program_header),
+                current_program_header->get_p_offset(current_program_header),
+                current_program_header->get_p_align(current_program_header));
+        */
+        this->public.add_program_header(&this->public, current_program_header);
+    }
+
+    return SUCCESS;
+}
+
+static status_t map_program_headers64(private_elf_t *this)
+{
     region_t *region;
     chunk_t chunk;
     void *start;
@@ -316,7 +563,7 @@ static status_t map_program_headers(private_elf_t *this)
         data = chunk_create(
                 ((Elf64_Phdr*) &php[i])->p_offset + (u_char*) start,
                 data_size);
-        program_header_t *current_program_header = create_program_header(header, data);
+        program_header_t *current_program_header = create_program_header(header, data, this->arch);
         /**
          * Debug alignment, not taken in account yet
          *
@@ -1311,7 +1558,7 @@ static void destroy(private_elf_t *this)
     this = NULL;
 }
 
-elf_t *create_elf(chunk_t type, region_t *region)
+elf_t *create_elf(chunk_t type, region_t *region, size_t arch)
 {
     private_elf_t *this = malloc_thing(private_elf_t);
 
@@ -1319,14 +1566,21 @@ elf_t *create_elf(chunk_t type, region_t *region)
     this->program_header_list = linked_list_create();
     this->type = chunk_clone(type);
     this->region = region;
+    this->arch = arch;
 
     /* Private functions */
     this->check_region_32b = (status_t (*)(region_t *)) check_region_32b;
     this->check_region_64b = (status_t (*)(region_t *)) check_region_64b;
     this->check_region = (status_t (*)(region_t *)) check_region;
+    this->symbols_elf = (status_t (*)(private_elf_t*)) symbols_elf;
+    this->symbols_elf32 = (status_t (*)(private_elf_t*)) symbols_elf32;
     this->symbols_elf64 = (status_t (*)(private_elf_t*)) symbols_elf64;
     this->map_sections = (status_t (*)(private_elf_t*)) map_sections;
+    this->map_sections32 = (status_t (*)(private_elf_t*)) map_sections32;
+    this->map_sections64 = (status_t (*)(private_elf_t*)) map_sections64;
     this->map_program_headers = (status_t (*)(private_elf_t*)) map_program_headers;
+    this->map_program_headers32 = (status_t (*)(private_elf_t*)) map_program_headers32;
+    this->map_program_headers64 = (status_t (*)(private_elf_t*)) map_program_headers64;
     this->update_symbols_generic = (void (*)(private_elf_t*,section_t*,Elf64_Off,char*,size_t)) update_symbols_generic;
     this->update_start_offsets = (status_t (*)(private_elf_t*, chunk_t)) update_start_offsets;
     this->create_alignment_chunk = (chunk_t (*)(section_t*,uint64_t)) create_alignment_chunk;
@@ -1360,10 +1614,16 @@ elf_t *create_elf(chunk_t type, region_t *region)
     this->public.interface.destroy = (void (*)(code_t*)) destroy;
 
     /* Feeding local object */
-    this->symbols_elf64(this);
+    this->symbols_elf(this);
     this->map_sections(this);
     this->map_program_headers(this);
-    this->public.interface.entry = this->elf64_ehdr->e_entry;
+
+    if (this->arch == 32)
+        this->public.interface.entry = this->elf32_ehdr->e_entry;
+    else if (this->arch == 64)
+        this->public.interface.entry = this->elf64_ehdr->e_entry;
+    else
+        printf("Unknown architecture for entry point definition in create_elf (elf_type.c)\n");
 
     return &this->public;
 }

@@ -1035,9 +1035,17 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
         valueref_size = 64;
     else if (LLVMTypeOf(valueref) == intType(32) || (LLVMTypeOf(valueref) == intPtrType(32)))
         valueref_size = 32;
+    else if (LLVMTypeOf(valueref) == intType(16) || (LLVMTypeOf(valueref) == intPtrType(16)))
+        valueref_size = 16;
+    else if (LLVMTypeOf(valueref) == intType(8) || (LLVMTypeOf(valueref) == intPtrType(8)))
+        valueref_size = 8;
+    else if (LLVMTypeOf(valueref) == intType(1) || (LLVMTypeOf(valueref) == intPtrType(1)))
+        valueref_size = 1;
     else
     {
         logging("Size not supported (%x) in create_Z3_var_internal\n", LLVMTypeOf(valueref));
+        logging("int64:%08x pint64:%08x int32:%08x pint32:%08x\n", intType(64), intPtrType(64), intType(32), intPtrType(32));
+        logging("int16:%08x pint16:%08x int8:%08x pint8:%08x\n", intType(16), intPtrType(16), intType(8), intPtrType(8));
         valueref_size = 0;
     }
 

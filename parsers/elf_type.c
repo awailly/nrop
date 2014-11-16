@@ -148,7 +148,7 @@ static status_t symbols_elf(private_elf_t *this)
     }
     else
     {
-        printf("Unexpected architecture %u in symbols_elf (elf_type.c)\n", this->arch);
+        printf("Unexpected architecture %zu in symbols_elf (elf_type.c)\n", this->arch);
         return FAILED;
     }
 }
@@ -352,7 +352,7 @@ static status_t map_sections(private_elf_t *this)
     }
     else
     {
-        printf("Unexpected architecture %u in symbols_elf (elf_type.c)\n", this->arch);
+        printf("Unexpected architecture %zu in symbols_elf (elf_type.c)\n", this->arch);
         return FAILED;
     }
 }
@@ -477,7 +477,7 @@ static status_t map_program_headers(private_elf_t *this)
     }
     else
     {
-        printf("Unexpected architecture %u in symbols_elf (elf_type.c)\n", this->arch);
+        printf("Unexpected architecture %zu in symbols_elf (elf_type.c)\n", this->arch);
         return FAILED;
     }
 }

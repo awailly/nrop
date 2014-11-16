@@ -64,13 +64,13 @@ static code_t *parse(private_parser_elf_t *this, region_t *region)
 {
     if (this->check_region_32b(region))
     {
-        elf_t *code = create_elf(chunk_create((unsigned char *)"ELF", 3), region, 32);
+        elf_t *code = create_elf(chunk_create((unsigned char *)"ELF32", 5), region);
         return (code_t*) code;
 
     }
     else if (this->check_region_64b(region))
     {
-        elf_t *code = create_elf(chunk_create((unsigned char *)"ELF", 3), region, 64);
+        elf_t *code = create_elf(chunk_create((unsigned char *)"ELF64", 5), region);
         return (code_t*) code;
     }
     else

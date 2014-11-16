@@ -27,11 +27,12 @@ struct private_plugin_rop_t
 static status_t disassemble(private_plugin_rop_t *this, chunk_t function_chunk)
 {
     xed_error_enum_t xed_error;
-    xed_bool_t long_mode = 1;
+    xed_bool_t long_mode;
     xed_decoded_inst_t xedd;
     xed_format_options_t format_options;
     xed_machine_mode_enum_t mmode;
     xed_address_width_enum_t stack_addr_width;
+    chunk_t code_type;
 
 #define BUFLEN  1000
     char buffer[BUFLEN];
@@ -49,6 +50,9 @@ static status_t disassemble(private_plugin_rop_t *this, chunk_t function_chunk)
     format_options.no_sign_extend_signed_immediates=0;
 
     xed_format_set_options( format_options );
+
+    code_type = ((code_t*) this->code)->get_type((code_t*) this->code);
+    long_mode = (strncmp((char*) code_type.ptr, "ELF64", 5) == 0);
 
     if (long_mode) {
         mmode=XED_MACHINE_MODE_LONG_64;
@@ -325,11 +329,12 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
 static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t function_chunk, Elf64_Addr addr)
 {
     xed_error_enum_t xed_error;
-    xed_bool_t long_mode = 1;
+    xed_bool_t long_mode;
     xed_decoded_inst_t xedd;
     xed_format_options_t format_options;
     xed_machine_mode_enum_t mmode;
     xed_address_width_enum_t stack_addr_width;
+    chunk_t code_type;
 
     /*char buffer[BUFLEN];*/
     unsigned int bytes = 0;
@@ -349,6 +354,9 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
     xed_format_set_options( format_options );
 
     inst_list = linked_list_create();
+
+    code_type = ((code_t*) this->code)->get_type((code_t*) this->code);
+    long_mode = (strncmp((char*) code_type.ptr, "ELF64", 5) == 0);
 
     if (long_mode) {
         mmode=XED_MACHINE_MODE_LONG_64;

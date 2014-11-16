@@ -1558,7 +1558,7 @@ static void destroy(private_elf_t *this)
     this = NULL;
 }
 
-elf_t *create_elf(chunk_t type, region_t *region, size_t arch)
+elf_t *create_elf(chunk_t type, region_t *region)
 {
     private_elf_t *this = malloc_thing(private_elf_t);
 
@@ -1566,7 +1566,14 @@ elf_t *create_elf(chunk_t type, region_t *region, size_t arch)
     this->program_header_list = linked_list_create();
     this->type = chunk_clone(type);
     this->region = region;
-    this->arch = arch;
+
+    if (strncmp("ELF32", (char*) type.ptr, 5) == 0)
+        this->arch = 32;
+    else if (strncmp("ELF64", (char*) type.ptr, 5) == 0)
+        this->arch = 64;
+    else
+        this->arch = 0;
+
 
     /* Private functions */
     this->check_region_32b = (status_t (*)(region_t *)) check_region_32b;

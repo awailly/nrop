@@ -417,6 +417,9 @@ static void job_chain(th_arg *t)
     chunk_t prefix;
     gadget_type g;
 
+    logging("***************************************************************************************************\n");
+    logging("***************************************************************************************************\n");
+
     pthread_mutex_lock(&job_mutex);
     job_count++;
     pthread_mutex_unlock(&job_mutex);
@@ -449,6 +452,8 @@ static void job_chain(th_arg *t)
     if (g != BAD)
     {
         logging("Found equivalent! %u\n", g);
+        logging("   [X] %s\n", c->get_str(c));
+        logging("   [X] %s\n", t->target->get_str(t->target));
         map->dump(map);
     }
 

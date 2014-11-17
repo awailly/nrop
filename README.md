@@ -21,8 +21,8 @@ To work with submodules (init && update):
 Contributors
 ------------
 
-Aurélien Wailly @awailly
-Axel Souchet @0vercl0k
-Jonathan Salwan @JonathanSalwan
-Anthony Verez @netantho
-Tiphaine Romand @tromand
+* Aurélien Wailly @awailly
+* Axel Souchet @0vercl0k
+* Jonathan Salwan @JonathanSalwan
+* Anthony Verez @netantho
+* Tiphaine Romand @tromand

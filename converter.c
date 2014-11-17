@@ -966,9 +966,13 @@ static void optimize_llvm(private_converter_t *this)
 static void dump(private_converter_t *this)
 {
     /*this->optimize_llvm(this);*/
+    char *msg;
+    
+    msg = LLVMPrintModuleToString(this->module);
 
     LOG_LLVM("Dumping\n");
-    LLVMDumpModule(this->module);
+    /*LLVMDumpModule(this->module);*/
+    LOG_LLVM("%s\n", msg);
 }
 
 /**

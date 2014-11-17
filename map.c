@@ -259,7 +259,11 @@ static gadget_type compare(private_map_t *this, map_t *other)
                     Z3_solver_assert(this->ctx, solver, eq);
                     LOG_Z3_SOLVE("Dumping TTO:%s\n", Z3_ast_to_string(this->ctx, eq));
 
-                    Z3_solver_assert(this->ctx, solvernot, Z3_mk_not(this->ctx, eq));
+                    if ((strcmp((char*)c->name.ptr, "rsp") == 0) || 
+                        (strcmp((char*)c->name.ptr, "esp") == 0))
+                        Z3_solver_assert(this->ctx, solvernot, eq);
+                    else
+                        Z3_solver_assert(this->ctx, solvernot, Z3_mk_not(this->ctx, eq));
                     Z3_solver_assert(this->ctx, solvernot_other, eq);
 
                     if (need_free_name_a)
@@ -301,6 +305,7 @@ static gadget_type compare(private_map_t *this, map_t *other)
         if (solver_resnot == Z3_L_FALSE)
         {
             printf("Found PN2\n");
+            LOG_Z3_SOLVE("Solver: %s\n", Z3_solver_to_string(this->ctx, solvernot));
             result = PN2;
         }
         else

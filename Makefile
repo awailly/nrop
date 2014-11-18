@@ -9,7 +9,7 @@ LIBS=xed2-intel64/lib/libxed.a -Lz3/build -L/usr/lib -lz -lm -lrt -lglib-2.0 $(Q
 #`llvm-config --libs --cflags --ldflags core analysis executionengine jit interpreter native`
 # pkg-config --cflags --libs glib-2.0
 #INCLUDES=-Ixed2-intel64/include -I. -Iplugins -Iparsers -Iqemu/tcg/i386 -Iqemu/x86_64-linux-user -Iqemu/target-i386 -Iqemu -Iqemu/include -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include 
-INCLUDES=-Ixed2-intel64/include -I. -Iplugins -Iparsers -isystem qemu/tcg/i386 -isystem qemu/x86_64-linux-user -isystem qemu/target-i386 -isystem qemu -isystem qemu/include -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -Iz3/build -Iz3/src/api
+INCLUDES=-Ixed2-intel64/include -I. -Idisassemblers -Iplugins -Iparsers -isystem qemu/tcg/i386 -isystem qemu/x86_64-linux-user -isystem qemu/target-i386 -isystem qemu -isystem qemu/include -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -Iz3/build -Iz3/src/api
 
 .SUFFIXES:
 .SUFFIXES: .c .o
@@ -26,6 +26,7 @@ SRCS=packer.c\
 	 map.c\
 	 constraints.c\
 	 converter.c\
+	 disassemblers/disassembler_xed.c\
      parsers/section.c\
      parsers/program_header.c\
      parsers/parser_builder.c\

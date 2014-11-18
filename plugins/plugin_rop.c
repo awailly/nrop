@@ -26,91 +26,44 @@ struct private_plugin_rop_t
 
 static status_t disassemble(private_plugin_rop_t *this, chunk_t function_chunk)
 {
-    xed_error_enum_t xed_error;
-    xed_bool_t long_mode;
-    xed_decoded_inst_t xedd;
-    xed_format_options_t format_options;
-    xed_machine_mode_enum_t mmode;
-    xed_address_width_enum_t stack_addr_width;
     chunk_t code_type;
+    chunk_t code_chunk;
+    instruction_t *instruction;
 
-#define BUFLEN  1000
-    char buffer[BUFLEN];
     unsigned int bytes = 0;
     unsigned char itext[XED_MAX_INSTRUCTION_BYTES];
     unsigned int i;
 
-    // one time initialization 
-    xed_tables_init();
-    xed_set_verbosity( 99 );
-    memset(&format_options,0, sizeof(format_options));
-    format_options.hex_address_before_symbolic_name=0;
-    format_options.xml_a=0;
-    format_options.omit_unit_scale=0;
-    format_options.no_sign_extend_signed_immediates=0;
+    disassembler_t *d;
 
-    xed_format_set_options( format_options );
+    d = (disassembler_t*) create_xed();
 
     code_type = ((code_t*) this->code)->get_type((code_t*) this->code);
-    long_mode = (strncmp((char*) code_type.ptr, "ELF64", 5) == 0);
-
-    if (long_mode) {
-        mmode=XED_MACHINE_MODE_LONG_64;
-        stack_addr_width =XED_ADDRESS_WIDTH_64b;
-    }
-    else {
-        mmode=XED_MACHINE_MODE_LEGACY_32;
-        stack_addr_width =XED_ADDRESS_WIDTH_32b;
-    }
+    d->initialize(d, code_type);
 
     if (!this)
-    {
         return FAILED;
-    }
 
     hexdump(function_chunk.ptr, function_chunk.len);
 
     for (i=0; i<function_chunk.len; )
     {
-        xed_decoded_inst_zero(&xedd);
-        xed_decoded_inst_set_mode(&xedd, mmode, stack_addr_width);
-        xed_bool_t ok;
-        unsigned int len;
-
-        memcpy(itext, function_chunk.ptr + i, 15);
         bytes = 15;
+        memcpy(itext, function_chunk.ptr + i, bytes);
+
+        code_chunk = chunk_create(itext, 15);
 
         /*hexdump(&itext, 15);*/
-        xed_error = xed_decode(&xedd, itext, bytes);
 
-        switch(xed_error)
-        {
-          case XED_ERROR_NONE:
-            xed_decoded_inst_dump(&xedd,buffer, BUFLEN);
-            printf("%s\n",buffer);
-            break;
-          case XED_ERROR_BUFFER_TOO_SHORT:
-            fprintf(stderr,"Not enough bytes provided\n");
-            break;
-          case XED_ERROR_GENERAL_ERROR:
-            fprintf(stderr,"Could not decode given input.\n");
-            break;
-          default:
-            fprintf(stderr,"Unhandled error code %s\n",
-                    xed_error_enum_t2str(xed_error));
-            break;
-        }
+        d->decode(d, instruction, code_chunk);
 
-        ok = xed_format(XED_SYNTAX_INTEL, &xedd, buffer, BUFLEN, 0);
+        i+= d->get_length(d, instruction);
 
-        if (ok)
-            printf("\t%s\n", buffer);
-        else
-            fprintf(stderr,"DISASSEMBLY ERROR\n");
-
-        len = xed_decoded_inst_get_length(&xedd);
-        i+= len;
+        free(instruction);
+        instruction = NULL;
     }
+
+    d->destroy(d);
 
     return SUCCESS;
 }
@@ -232,6 +185,8 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
                 item = NULL;
             }
         }
+
+        xed_error = XED_ERROR_GENERAL_ERROR;
 
         /* Quick fix TODO
          * The memcpy while current_byte<0

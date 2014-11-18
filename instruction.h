@@ -23,6 +23,16 @@ struct instruction_t
     void (*destroy)(instruction_t *);
 };
 
+typedef enum
+{
+    NO_CAT,
+    COND_BR,
+    UNCOND_BR,
+    SYSCALL,
+    CALL,
+    RET
+} category_t;
+
 instruction_t *create_instruction(chunk_t bytes);
 
 #endif

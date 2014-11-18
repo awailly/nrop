@@ -16,7 +16,20 @@ You will need
 To work with submodules (init && update):
 
     git clone http://github.com/awailly/nrop
-    git submodules update --init --recursive
+    git submodule update --init --recursive
+
+Dockerfile
+----------
+
+Using:
+
+    $ sudo docker pull awailly/nrop
+    $ sudo docker run -h nrop -t -i awailly/nrop:latest /bin/bash
+
+
+Building:
+
+    $ sudo docker build -t awailly/nrop:latest .
 
 Contributors
 ------------

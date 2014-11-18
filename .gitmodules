@@ -3,4 +3,4 @@
 	url = git://git.qemu-project.org/qemu.git
 [submodule "z3"]
 	path = z3
-	url = https://git01.codeplex.com/z3
+	url = https://git.codeplex.com/z3

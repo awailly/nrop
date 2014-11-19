@@ -52,7 +52,7 @@ struct disassembler_t
      * @param chunk         corresponding string
      * @return              STATUS of the decoding
      */
-    status_t (*decode)(disassembler_t *, instruction_t *, chunk_t);
+    status_t (*decode)(disassembler_t *, instruction_t **, chunk_t);
 
     /**
      * Encode a sequence of bytes to a string. The format can be modified

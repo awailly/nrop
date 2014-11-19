@@ -92,22 +92,24 @@ static status_t format(private_disass_xed_t *this, instruction_t *i, chunk_t for
     if (ok)
         printf("\t%s\n", format.ptr);
     else
-        fprintf(stderr,"DISASSEMBLY ERROR\n");
+        fprintf(stderr,"DISASSEMBLY ERROR: %x\n", xedd);
 
     return SUCCESS;
 }
 
-static status_t decode(private_disass_xed_t *this, instruction_t *i, chunk_t c)
+static status_t decode(private_disass_xed_t *this, instruction_t **i, chunk_t c)
 {
     xed_bool_t ok;
     char buffer[BUFLEN];
     xed_decoded_inst_t *xedd;
     xed_error_enum_t xed_error;
+    status_t status;
 
-    if ((i = (instruction_t*) malloc_thing(xed_instruction_t)) == NULL)
+    if ((*i = (instruction_t*) malloc_thing(xed_instruction_t)) == NULL)
         logging("[x] Error while allocating xed_instruction_t in disassembler_xed.c\n");
 
-    xedd = &((xed_instruction_t*) i)->xedd;
+    xedd = &((xed_instruction_t*) *i)->xedd;
+    printf("instruction @%x xedd @%x\n", *i, xedd);
 
     xed_decoded_inst_zero(xedd);
     xed_decoded_inst_set_mode(xedd, this->mmode, this->stack_addr_width);
@@ -122,22 +124,29 @@ static status_t decode(private_disass_xed_t *this, instruction_t *i, chunk_t c)
         break;
       case XED_ERROR_BUFFER_TOO_SHORT:
         fprintf(stderr,"Not enough bytes provided\n");
+        status = FAILED;
         break;
       case XED_ERROR_GENERAL_ERROR:
         fprintf(stderr,"Could not decode given input.\n");
+        status = FAILED;
         break;
       default:
         fprintf(stderr,"Unhandled error code %s\n",
                 xed_error_enum_t2str(xed_error));
+        status = FAILED;
         break;
     }
 
+    if (status == FAILED)
+        return status;
+
     ok = xed_format(XED_SYNTAX_INTEL, xedd, buffer, BUFLEN, 0);
+    printf("formattiung\n");
 
     if (ok)
         printf("\t%s\n", buffer);
     else
-        fprintf(stderr,"DISASSEMBLY ERROR\n");
+        fprintf(stderr,"DISASSEMBLY ERROR: %x\n", xedd);
 
     return SUCCESS;
 }
@@ -183,7 +192,7 @@ disass_xed_t *create_xed()
     this->public.interface.get_category = (category_t (*)(disassembler_t*, instruction_t*)) get_category;
     this->public.interface.get_length = (uint64_t (*)(disassembler_t*, instruction_t*)) get_length;
     this->public.interface.format = (status_t (*)(disassembler_t*, instruction_t *, chunk_t)) format;
-    this->public.interface.decode = (status_t (*)(disassembler_t*, instruction_t *, chunk_t)) decode;
+    this->public.interface.decode = (status_t (*)(disassembler_t*, instruction_t **, chunk_t)) decode;
     this->public.interface.encode = (status_t (*)(disassembler_t*, chunk_t, instruction_t *)) encode;
     this->public.interface.destroy = (void (*)(disassembler_t*)) destroy;
 

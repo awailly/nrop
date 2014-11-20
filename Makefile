@@ -59,7 +59,7 @@ $(MAIN): $(OBJS)
 	g++ $^ $(INCLUDES) -o $@ $(LIBS) $(CFLAGS) 
 
 clean:
-	$(RM) *.o *.bak *~ $(EXEC) plugins/*.o plugins/*~ parsers/*.o parsers/*~
+	$(RM) *.o *.bak *~ $(EXEC) plugins/*.o plugins/*~ parsers/*.o parsers/*~ disassemblers/*.o disassemblers/*~
 
 realclean:
 	$(clean)

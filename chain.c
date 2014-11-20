@@ -8,6 +8,13 @@
 #include "qemu/tcg/tcg.h"
 #include "converter.h"
 
+//#define DEBUG_CHAIN
+#ifdef DEBUG_CHAIN
+#  define LOG_CHAIN(...) logging(__VA_ARGS__)
+#else
+#  define LOG_CHAIN(...) do { } while (0)
+#endif
+
 typedef struct private_chain_t private_chain_t;
 
 struct private_chain_t
@@ -51,7 +58,7 @@ void *clone_instruction(void *instruction)
 
     if ((new_instruction = malloc(sizeof(xed_decoded_inst_t))) == NULL)
     {
-        logging("Error while allocating instruction in clone_instruction from chain.c\n");
+        LOG_CHAIN("Error while allocating instruction in clone_instruction from chain.c\n");
         return NULL;
     }
 
@@ -78,6 +85,9 @@ static linked_list_t *get_instructions(private_chain_t *this)
 
 static void set_chunk(private_chain_t *this, chunk_t chunk)
 {
+    if ((chunk.ptr == NULL) || (chunk.len == 0))
+        logging("Setting NULL chunk\n");
+
     this->chunk = chunk_clone(chunk);
 }
 
@@ -144,7 +154,7 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
     tcg_dump_ops(s);
 
     if (this->ctx == NULL)
-        logging("The Z3 context is NULL, will segfault\n");
+        LOG_CHAIN("The Z3 context is NULL, will segfault\n");
 
     converter = converter_create(s, this->ctx);
     converter->set_prefix(converter, prefix);
@@ -161,7 +171,7 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
     chain_list = this->public.get_instructions(&this->public);
     chain_i = chain_list->create_enumerator(chain_list);
 
-     * logging("Dumping insns:\n");
+     * LOG_CHAIN("Dumping insns:\n");
 
     while(chain_i->enumerate(chain_i, &xedd))
     {
@@ -188,35 +198,34 @@ static void destroy(private_chain_t *this)
     this = NULL;
 }
 
-chain_t *chain_create_from_string(uint64_t addr, chunk_t chunk_str)
+chain_t *chain_create_from_string(chunk_t type, uint64_t addr, chunk_t chunk_str)
 {
     linked_list_t *instructions;
     chain_t *res;
     chunk_t chunk_hex;
 
-    xed_decoded_inst_t *xedd;
-    xed_error_enum_t xed_error;
+    instruction_t *instruction;
+
     unsigned char itext[XED_MAX_INSTRUCTION_BYTES];
 
     size_t count;
     size_t bytes;
 
+    disassembler_t *d;
+
     instructions = linked_list_create();
     chunk_hex = chunk_from_hex(chunk_str, NULL);
     count = 0;
 
-    xed_tables_init();
+    LOG_CHAIN("Creating chain of type %s[%u] @%x : %s\n", type.ptr, type.len, addr, chunk_str.ptr);
+
+    d = (disassembler_t*) create_xed();
+    d->initialize(d, type);
 
     while (count < chunk_hex.len)
     {
-        if ((xedd = malloc(sizeof(*xedd))) == NULL)
-        {
-            logging("Error while allocating xedd value in chain_create_from_string from chain.c\n");
-            return NULL;
-        }
-
-        xed_decoded_inst_zero(xedd);
-        xed_decoded_inst_set_mode(xedd, XED_MACHINE_MODE_LONG_64, XED_ADDRESS_WIDTH_64b);
+        chunk_t code_chunk;
+        chunk_t format_chunk;
 
         if ((chunk_hex.len - count) >= XED_MAX_INSTRUCTION_BYTES)
             bytes = XED_MAX_INSTRUCTION_BYTES;
@@ -225,109 +234,97 @@ chain_t *chain_create_from_string(uint64_t addr, chunk_t chunk_str)
 
         memset(itext, 0, sizeof(itext));
         memcpy(itext, chunk_hex.ptr + count, bytes);
+        code_chunk = chunk_create(itext, bytes);
 
         hexdump(chunk_hex.ptr + count, bytes);
 
-        xed_error = xed_decode(xedd, itext, bytes);
+        d->decode(d, &instruction, code_chunk);
 
-        switch(xed_error)
-        {
-          case XED_ERROR_NONE:
-            break;
-          case XED_ERROR_BUFFER_TOO_SHORT:
-            logging("Not enough bytes provided\n");
-            break;
-          case XED_ERROR_GENERAL_ERROR:
-            logging("Could not decode given input.\n");
-            break;
-          default:
-            logging("Unhandled error code %s\n",
-                    xed_error_enum_t2str(xed_error));
-            break;
-        }
+        count+= d->get_length(d, instruction);
 
-        count+= xed_decoded_inst_get_length(xedd);
-
+        /*
         char buf[4096];
         unsigned int buflen = 4096;
 
         xed_decoded_inst_dump_intel_format(xedd, buf, buflen, 0);
-        logging("%s\n", buf);
+        LOG_CHAIN("%s\n", buf);
+        */
+        format_chunk = chunk_calloc(4096);
+        d->dump_intel(d, instruction, format_chunk, addr);
+        LOG_CHAIN("%s\n", format_chunk.ptr);
 
-        instructions->insert_last(instructions, xedd);
+        chunk_free(&format_chunk);
+
+        instructions->insert_last(instructions, instruction);
     }
 
     chunk_clear(&chunk_hex);
 
-    res = chain_create_from_insn(addr, instructions);
+    res = chain_create_from_insn(type, addr, instructions);
 
     instructions->destroy_function(instructions, free);
 
     return res;
 }
 
-chain_t *chain_create_from_insn(uint64_t addr, linked_list_t *instructions)
+chain_t *chain_create_from_insn(chunk_t type, uint64_t addr, linked_list_t *instructions)
 {
     char *insns_str;
     chunk_t insns_chunk;
     enumerator_t *e;
-    xed_decoded_inst_t *x;
     uint64_t offset_addr;
     chain_t *ret_chain;
-    unsigned int ilen, olen;
-    unsigned char *itext;
-    xed_error_enum_t xed_error;
+
+    disassembler_t *d;
+    instruction_t *instruction;
 
     if ((insns_str = calloc(4096, 1)) == NULL)
     {
-        logging("Error while allocating insns_chunk in chain_create_from_insn\n");
+        LOG_CHAIN("Error while allocating insns_chunk in chain_create_from_insn\n");
         return NULL;
     }
 
+    d = (disassembler_t*) create_xed();
+    d->initialize(d, type);
+
     insns_chunk = chunk_empty;
     offset_addr = addr;
-    ilen = XED_MAX_INSTRUCTION_BYTES;
-    olen = 0;
 
     e = instructions->create_enumerator(instructions);
 
-    while (e->enumerate(e, &x))
+    while (e->enumerate(e, &instruction))
     {
-        char new_str[4096];
+        chunk_t new_str;
         chunk_t new_chunk;
 
-        xed_decoded_inst_dump_intel_format(x, new_str, sizeof(new_str), offset_addr);
+        new_str = chunk_calloc(4096);
 
-        if ((itext = calloc(sizeof(itext), 1)) == NULL)
+        LOG_CHAIN("dumping instruction %x %x\n", instruction);
+        d->dump_intel(d, instruction, new_str, offset_addr);
+
+        if (d->encode(d, &new_chunk, instruction) == FAILED)
         {
-            logging("Error while allocating itext in chain_create_from_insn\n");
+            LOG_CHAIN("Error while encoding chunk in chain_create_from_insn\n");
             return NULL;
         }
-
-        xed_encoder_request_init_from_decode(x);
-        xed_error = xed_encode(x, itext, ilen, &olen);
-
-        if (xed_error != XED_ERROR_NONE) {
-            fprintf(stderr,"ENCODE ERROR: %s\n",
-                xed_error_enum_t2str(xed_error));
-        }
-
-        new_chunk = chunk_create(itext, olen);
 
         if (strlen(insns_str) > 0)
         {
             strcat(insns_str, " ");
-            strcat(insns_str, new_str);
+            strcat(insns_str, (char*) new_str.ptr);
             strcat(insns_str, " ;");
         }
         else
-            sprintf(insns_str, "%s ;", new_str);
+            sprintf(insns_str, "%s ;", (char*) new_str.ptr);
         insns_chunk = chunk_cat("mm", insns_chunk, new_chunk);
 
-        offset_addr+= xed_decoded_inst_get_length(x);
+        offset_addr+= d->get_length(d, instruction);
     }
 
     e->destroy(e);
+
+    if ((insns_chunk.ptr == NULL) || (insns_chunk.len == 0))
+        LOG_CHAIN("Creating chain with NULL insns_chunk\n");
 
     ret_chain = chain_create(addr, insns_str, insns_chunk, instructions);
 

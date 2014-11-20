@@ -10,6 +10,7 @@
 #include "map.h"
 #include "linked_list.h"
 #include "xed-interface.h"
+#include "disassembler_xed.h"
 
 /*
  * Using -isystem qemu te handle warnings
@@ -38,8 +39,8 @@ struct chain_t
     void (*destroy)(chain_t *);
 };
 
-chain_t *chain_create_from_string(uint64_t addr, chunk_t chain_str);
-chain_t *chain_create_from_insn(uint64_t addr, linked_list_t *instructions);
+chain_t *chain_create_from_string(chunk_t type, uint64_t addr, chunk_t chain_str);
+chain_t *chain_create_from_insn(chunk_t type, uint64_t addr, linked_list_t *instructions);
 chain_t *chain_create(uint64_t addr, char *str, chunk_t chunk, linked_list_t *instructions);
 
 #endif

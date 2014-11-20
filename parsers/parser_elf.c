@@ -66,7 +66,6 @@ static code_t *parse(private_parser_elf_t *this, region_t *region)
     {
         elf_t *code = create_elf(chunk_create((unsigned char *)"ELF32", 5), region);
         return (code_t*) code;
-
     }
     else if (this->check_region_64b(region))
     {

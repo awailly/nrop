@@ -6,6 +6,13 @@
 
 #define BUFLEN  1000
 
+//#define DEBUG_XED
+#ifdef DEBUG_XED
+#  define LOG_XED(...) logging(__VA_ARGS__)
+#else
+#  define LOG_XED(...) do { } while (0)
+#endif
+
 typedef struct private_disass_xed_t private_disass_xed_t;
 
 struct private_disass_xed_t
@@ -90,9 +97,31 @@ static status_t format(private_disass_xed_t *this, instruction_t *i, chunk_t for
     ok = xed_format(XED_SYNTAX_INTEL, xedd, (char*)format.ptr, format.len, 0);
 
     if (ok)
-        printf("\t%s\n", format.ptr);
+        return SUCCESS;
     else
-        fprintf(stderr,"DISASSEMBLY ERROR: %x\n", xedd);
+    {
+        logging("[x] Error while format in disassembler_xed.c : DISASSEMBLY ERROR: %p\n", xedd);
+        return FAILED;
+    }
+
+    return SUCCESS;
+}
+
+static status_t dump_intel(private_disass_xed_t *this, instruction_t *i, chunk_t buffer, uint64_t offset_addr)
+{
+    xed_decoded_inst_t *x;
+    xed_bool_t xed_error;
+
+    if (!this)
+        return FAILED;
+
+    x = &((xed_instruction_t*) i)->xedd;
+
+    LOG_XED("[XED] dump_intel(%x, %x, %x, %x): %x\n", x, buffer.ptr, buffer.len, offset_addr, *x);
+
+    xed_error = xed_decoded_inst_dump_intel_format(x, (char*)buffer.ptr, buffer.len, offset_addr);
+
+    LOG_XED("   = %x\n", xed_error);
 
     return SUCCESS;
 }
@@ -109,7 +138,7 @@ static status_t decode(private_disass_xed_t *this, instruction_t **i, chunk_t c)
         logging("[x] Error while allocating xed_instruction_t in disassembler_xed.c\n");
 
     xedd = &((xed_instruction_t*) *i)->xedd;
-    printf("instruction @%x xedd @%x\n", *i, xedd);
+    LOG_XED("instruction @%x xedd @%x\n", *i, xedd);
 
     xed_decoded_inst_zero(xedd);
     xed_decoded_inst_set_mode(xedd, this->mmode, this->stack_addr_width);
@@ -119,19 +148,18 @@ static status_t decode(private_disass_xed_t *this, instruction_t **i, chunk_t c)
     switch(xed_error)
     {
       case XED_ERROR_NONE:
-        xed_decoded_inst_dump(xedd, buffer, BUFLEN);
-        printf("%s\n",buffer);
+        status = SUCCESS;
         break;
       case XED_ERROR_BUFFER_TOO_SHORT:
-        fprintf(stderr,"Not enough bytes provided\n");
+        LOG_XED("Error in decode : Not enough bytes provided\n");
         status = FAILED;
         break;
       case XED_ERROR_GENERAL_ERROR:
-        fprintf(stderr,"Could not decode given input.\n");
+        LOG_XED("Error in decode : Could not decode given input.\n");
         status = FAILED;
         break;
       default:
-        fprintf(stderr,"Unhandled error code %s\n",
+        LOG_XED("Error in decode : Unhandled error code %s\n",
                 xed_error_enum_t2str(xed_error));
         status = FAILED;
         break;
@@ -140,29 +168,78 @@ static status_t decode(private_disass_xed_t *this, instruction_t **i, chunk_t c)
     if (status == FAILED)
         return status;
 
+    /* FIXME
+     * Why is this code here??
+     */
     ok = xed_format(XED_SYNTAX_INTEL, xedd, buffer, BUFLEN, 0);
-    printf("formattiung\n");
+    LOG_XED("formatting\n");
 
     if (ok)
-        printf("\t%s\n", buffer);
+        LOG_XED("\t%s\n", buffer);
     else
-        fprintf(stderr,"DISASSEMBLY ERROR: %x\n", xedd);
+        logging("DISASSEMBLY ERROR: %x\n", xedd);
 
     return SUCCESS;
 }
 
-static status_t encode(private_disass_xed_t *this, chunk_t c, instruction_t *i)
+static status_t encode(private_disass_xed_t *this, chunk_t *c, instruction_t *i)
+{
+    unsigned int ilen, olen;
+    xed_error_enum_t xed_error;
+    unsigned char *itext;
+    xed_decoded_inst_t *x;
+
+    if (!this)
+        return FAILED;
+
+    x = &((xed_instruction_t*) i)->xedd;
+
+    ilen = XED_MAX_INSTRUCTION_BYTES;
+    olen = 0;
+    
+    if ((itext = calloc(XED_MAX_INSTRUCTION_BYTES + 1, 1)) == NULL)
+    {
+        logging("Error while allocating itext in chain_create_from_insn\n");
+        return FAILED;
+    }
+
+    xed_encoder_request_init_from_decode(x);
+    xed_error = xed_encode(x, itext, ilen, &olen);
+
+    if (xed_error != XED_ERROR_NONE) {
+        logging("Error in encode : ENCODE ERROR: %s\n",
+            xed_error_enum_t2str(xed_error));
+        return FAILED;
+    }
+
+    c->ptr = itext;
+    c->len = olen;
+
+    return SUCCESS;
+}
+
+static instruction_t *alloc_instruction(private_disass_xed_t *this)
+{
+    xed_instruction_t *new_insn;
+
+    if (!this)
+        return NULL;
+
+    if ((new_insn = malloc(sizeof(*new_insn))) == NULL)
+    {
+        logging("Error while allocating instruction in disassembler_xed\n");
+        return NULL;
+    }
+
+    return (instruction_t*) new_insn;
+}
+
+static uint64_t get_instruction_size(private_disass_xed_t *this)
 {
     if (!this)
         return FAILED;
 
-    if (!i)
-        return FAILED;
-
-    if (!c.ptr)
-        return FAILED;
-
-    return SUCCESS;
+    return sizeof(xed_instruction_t);
 }
 
 static void destroy(private_disass_xed_t *this)
@@ -192,8 +269,11 @@ disass_xed_t *create_xed()
     this->public.interface.get_category = (category_t (*)(disassembler_t*, instruction_t*)) get_category;
     this->public.interface.get_length = (uint64_t (*)(disassembler_t*, instruction_t*)) get_length;
     this->public.interface.format = (status_t (*)(disassembler_t*, instruction_t *, chunk_t)) format;
+    this->public.interface.dump_intel = (status_t (*)(disassembler_t*, instruction_t *, chunk_t, uint64_t)) dump_intel;
     this->public.interface.decode = (status_t (*)(disassembler_t*, instruction_t **, chunk_t)) decode;
-    this->public.interface.encode = (status_t (*)(disassembler_t*, chunk_t, instruction_t *)) encode;
+    this->public.interface.encode = (status_t (*)(disassembler_t*, chunk_t *, instruction_t *)) encode;
+    this->public.interface.alloc_instruction = (instruction_t *(*)(disassembler_t*)) alloc_instruction;
+    this->public.interface.get_instruction_size = (uint64_t (*)(disassembler_t*)) get_instruction_size;
     this->public.interface.destroy = (void (*)(disassembler_t*)) destroy;
 
     return &this->public;

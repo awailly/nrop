@@ -16,6 +16,7 @@ struct private_plugin_rop_t
     chain_t *target;
     thpool_t* threadpool;
     disassembler_t *d;
+    chunk_t code_type;
 
     status_t (*disassemble)(private_plugin_rop_t *, chunk_t);
     bool (*is_last_inst)(private_plugin_rop_t *, instruction_t*);
@@ -27,7 +28,6 @@ struct private_plugin_rop_t
 
 static status_t disassemble(private_plugin_rop_t *this, chunk_t function_chunk)
 {
-    chunk_t code_type;
     chunk_t code_chunk;
     instruction_t *instruction;
 
@@ -37,13 +37,11 @@ static status_t disassemble(private_plugin_rop_t *this, chunk_t function_chunk)
 
     disassembler_t *d;
 
-    d = (disassembler_t*) create_xed();
-
     if (!this)
         return FAILED;
 
-    code_type = ((code_t*) this->code)->get_type((code_t*) this->code);
-    d->initialize(d, code_type);
+    d = (disassembler_t*) create_xed();
+    d->initialize(d, this->code_type);
     instruction = NULL;
 
     hexdump(function_chunk.ptr, function_chunk.len);
@@ -72,14 +70,17 @@ static status_t disassemble(private_plugin_rop_t *this, chunk_t function_chunk)
 
 static bool is_last_inst(private_plugin_rop_t *this, instruction_t *instruction)
 {
+    category_t cat;
+
+    cat = this->d->get_category(this->d, instruction);
+
     return (
-            (this->d->get_category(this->d, instruction) == COND_BR) ||
-            (this->d->get_category(this->d, instruction) == UNCOND_BR) ||
-            (this->d->get_category(this->d, instruction) == SYSCALL) ||
-            (this->d->get_category(this->d, instruction) == CALL) ||
-            (this->d->get_category(this->d, instruction) == RET)
+            (cat == COND_BR) ||
+            (cat == UNCOND_BR) ||
+            (cat == SYSCALL) ||
+            (cat == CALL) ||
+            (cat == RET)
            );
-    (void)this;
 }
 
 static bool bad_insn(private_plugin_rop_t *this, unsigned char *itext)
@@ -120,7 +121,6 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
     char *item;
 
     disassembler_t *d;
-    chunk_t code_type;
 
     chain_insns = linked_list_create();
     /*
@@ -138,8 +138,7 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
     }
 
     d = (disassembler_t*) create_xed();
-    code_type = ((code_t*) this->code)->get_type((code_t*) this->code);
-    d->initialize(d, code_type);
+    d->initialize(d, this->code_type);
 
     /*hexdump(chunk.ptr + ret_byte - 19, 20);*/
 
@@ -261,17 +260,13 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
                 last_decoded_byte = current_byte;
                 /*current_byte-= xed_decoded_inst_get_length(&xedd);*/
 
-                if ((new_insn = malloc(sizeof(*new_insn))) == NULL)
-                {
-                    logging("Error while allocating new_insn in reverse_disass_ret\n");
-                    return FAILED;
-                }
+                new_insn = d->alloc_instruction(d);
 
-                memcpy(new_insn, *inst, sizeof(*new_insn));
+                memcpy(new_insn, *inst, d->get_instruction_size(d));
 
                 chain_insns->insert_first(chain_insns, new_insn);
 
-                chain = chain_create_from_insn(addr + last_decoded_byte, chain_insns);
+                chain = chain_create_from_insn(this->code_type, addr + last_decoded_byte, chain_insns);
 
                 inst_list->insert_last(inst_list, chain);
             }
@@ -303,9 +298,6 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
     disassembler_t *d;
     instruction_t *instruction;
     status_t status;
-    chunk_t code_type;
-
-    d = (disassembler_t*) create_xed();
 
     inst_list = linked_list_create();
 
@@ -314,8 +306,8 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
         return inst_list;
     }
 
-    code_type = ((code_t*) this->code)->get_type((code_t*) this->code);
-    d->initialize(d, code_type);
+    d = (disassembler_t*) create_xed();
+    d->initialize(d, this->code_type);
     instruction = NULL;
 
 
@@ -332,14 +324,13 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
         code_chunk = chunk_create(itext, bytes);
 
         status = d->decode(d, &instruction, code_chunk);
-        printf("gotta %08x\n", instruction);
 
         if (status == SUCCESS)
         {
             if (this->is_last_inst(this, instruction))
             {
-                logging("Found a RET ins @%x\n", *instruction);
                 /*
+                logging("Found a RET ins @%x\n", instruction);
                 char buffer[4096];
                 xed_decoded_inst_dump(&xedd,buffer, sizeof(buffer));
                 printf("%s\n",buffer);
@@ -379,13 +370,14 @@ static void job_chain(th_arg *t)
 
     Z3_del_config(cfg);
 
-    //target_map = t->target_map;
-    t->target->set_Z3_context(t->target, ctx);
-    target_map = t->target->get_map(t->target);
     c = t->c;
 
     logging("%08x: %s\n", c->get_addr(c), c->get_str(c));
     /*hexdump(c->get_chunk(c).ptr, c->get_chunk(c).len);*/
+
+    //target_map = t->target_map;
+    t->target->set_Z3_context(t->target, ctx);
+    target_map = t->target->get_map(t->target);
 
     /*
      * Maybe something better to do with Z3_translate().
@@ -477,7 +469,7 @@ status_t pack(private_plugin_rop_t *this, Elf64_Addr addr, chunk_t chunk)
         jc = job_count;
         pthread_mutex_unlock(&job_mutex);
 
-        printf("j:%i i:%i\n", jc, inst_list->get_count(inst_list));
+        logging("j:%i i:%i\n", jc, inst_list->get_count(inst_list));
         usleep(10000);
     }
 
@@ -561,7 +553,8 @@ plugin_rop_t *plugin_rop_create(code_t *code, char *constraints, chunk_t target)
 
     this->code = (elf_t *) code;
     this->constraints = constraints;
-    this->target = chain_create_from_string(0x400000, target);
+    this->code_type = ((code_t*) this->code)->get_type((code_t*) this->code);
+    this->target = chain_create_from_string(this->code_type, 0x400000, target);
 
     this->public.interface.apply = (status_t (*)(plugin_t *)) apply;
     this->public.interface.destroy = (void (*)(plugin_t *)) destroy;

@@ -40,7 +40,11 @@ struct chain_t
 };
 
 chain_t *chain_create_from_string(chunk_t type, uint64_t addr, chunk_t chain_str);
+chain_t *chain_create_from_string_disass(disassembler_t *d, uint64_t addr, chunk_t chain_str);
+
 chain_t *chain_create_from_insn(chunk_t type, uint64_t addr, linked_list_t *instructions);
+chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_list_t *instructions);
+
 chain_t *chain_create(uint64_t addr, char *str, chunk_t chunk, linked_list_t *instructions);
 
 #endif

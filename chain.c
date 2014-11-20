@@ -200,6 +200,18 @@ static void destroy(private_chain_t *this)
 
 chain_t *chain_create_from_string(chunk_t type, uint64_t addr, chunk_t chunk_str)
 {
+    disassembler_t *d;
+
+    d = (disassembler_t*) create_xed();
+    d->initialize(d, type);
+
+    LOG_CHAIN("Creating chain of type %s[%u] @%x : %s\n", type.ptr, type.len, addr, chunk_str.ptr);
+
+    return chain_create_from_string_disass(d, addr, chunk_str);
+}
+
+chain_t *chain_create_from_string_disass(disassembler_t *d, uint64_t addr, chunk_t chunk_str)
+{
     linked_list_t *instructions;
     chain_t *res;
     chunk_t chunk_hex;
@@ -211,16 +223,9 @@ chain_t *chain_create_from_string(chunk_t type, uint64_t addr, chunk_t chunk_str
     size_t count;
     size_t bytes;
 
-    disassembler_t *d;
-
     instructions = linked_list_create();
     chunk_hex = chunk_from_hex(chunk_str, NULL);
     count = 0;
-
-    LOG_CHAIN("Creating chain of type %s[%u] @%x : %s\n", type.ptr, type.len, addr, chunk_str.ptr);
-
-    d = (disassembler_t*) create_xed();
-    d->initialize(d, type);
 
     while (count < chunk_hex.len)
     {
@@ -260,7 +265,7 @@ chain_t *chain_create_from_string(chunk_t type, uint64_t addr, chunk_t chunk_str
 
     chunk_clear(&chunk_hex);
 
-    res = chain_create_from_insn(type, addr, instructions);
+    res = chain_create_from_insn_disass(d, addr, instructions);
 
     instructions->destroy_function(instructions, free);
 
@@ -269,13 +274,22 @@ chain_t *chain_create_from_string(chunk_t type, uint64_t addr, chunk_t chunk_str
 
 chain_t *chain_create_from_insn(chunk_t type, uint64_t addr, linked_list_t *instructions)
 {
+    disassembler_t *d;
+
+    d = (disassembler_t*) create_xed();
+    d->initialize(d, type);
+
+    return chain_create_from_insn_disass(d, addr, instructions);
+}
+
+chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_list_t *instructions)
+{
     char *insns_str;
     chunk_t insns_chunk;
     enumerator_t *e;
     uint64_t offset_addr;
     chain_t *ret_chain;
 
-    disassembler_t *d;
     instruction_t *instruction;
 
     if ((insns_str = calloc(4096, 1)) == NULL)
@@ -283,9 +297,6 @@ chain_t *chain_create_from_insn(chunk_t type, uint64_t addr, linked_list_t *inst
         LOG_CHAIN("Error while allocating insns_chunk in chain_create_from_insn\n");
         return NULL;
     }
-
-    d = (disassembler_t*) create_xed();
-    d->initialize(d, type);
 
     insns_chunk = chunk_empty;
     offset_addr = addr;

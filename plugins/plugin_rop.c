@@ -40,8 +40,7 @@ static status_t disassemble(private_plugin_rop_t *this, chunk_t function_chunk)
     if (!this)
         return FAILED;
 
-    d = (disassembler_t*) create_xed();
-    d->initialize(d, this->code_type);
+    d = this->d;
     instruction = NULL;
 
     hexdump(function_chunk.ptr, function_chunk.len);
@@ -62,8 +61,6 @@ static status_t disassemble(private_plugin_rop_t *this, chunk_t function_chunk)
         free(instruction);
         instruction = NULL;
     }
-
-    d->destroy(d);
 
     return SUCCESS;
 }
@@ -137,8 +134,7 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
         return FAILED;
     }
 
-    d = (disassembler_t*) create_xed();
-    d->initialize(d, this->code_type);
+    d = this->d;
 
     /*hexdump(chunk.ptr + ret_byte - 19, 20);*/
 
@@ -282,7 +278,7 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
 
     chain_insns->destroy_function(chain_insns, free);
 
-    d->destroy(d);
+    //d->destroy(d);
 
     return SUCCESS;
 }
@@ -306,10 +302,8 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
         return inst_list;
     }
 
-    d = (disassembler_t*) create_xed();
-    d->initialize(d, this->code_type);
+    d = this->d;
     instruction = NULL;
-
 
     for (byte = 0; byte < function_chunk.len; byte++)
     {
@@ -340,7 +334,7 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
         }
     }
 
-    d->destroy(d);
+    //d->destroy(d);
 
     return inst_list;
 }
@@ -555,6 +549,8 @@ plugin_rop_t *plugin_rop_create(code_t *code, char *constraints, chunk_t target)
     this->constraints = constraints;
     this->code_type = ((code_t*) this->code)->get_type((code_t*) this->code);
     this->target = chain_create_from_string(this->code_type, 0x400000, target);
+
+    this->d->initialize(this->d, this->code_type);
 
     this->public.interface.apply = (status_t (*)(plugin_t *)) apply;
     this->public.interface.destroy = (void (*)(plugin_t *)) destroy;

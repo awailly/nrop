@@ -128,8 +128,6 @@ static status_t dump_intel(private_disass_xed_t *this, instruction_t *i, chunk_t
 
 static status_t decode(private_disass_xed_t *this, instruction_t **i, chunk_t c)
 {
-    xed_bool_t ok;
-    char buffer[BUFLEN];
     xed_decoded_inst_t *xedd;
     xed_error_enum_t xed_error;
     status_t status;
@@ -170,7 +168,10 @@ static status_t decode(private_disass_xed_t *this, instruction_t **i, chunk_t c)
 
     /* FIXME
      * Why is this code here??
-     */
+     *
+    char buffer[BUFLEN];
+    xed_bool_t ok;
+
     ok = xed_format(XED_SYNTAX_INTEL, xedd, buffer, BUFLEN, 0);
     LOG_XED("formatting\n");
 
@@ -178,6 +179,7 @@ static status_t decode(private_disass_xed_t *this, instruction_t **i, chunk_t c)
         LOG_XED("\t%s\n", buffer);
     else
         logging("DISASSEMBLY ERROR: %x\n", xedd);
+     */
 
     return SUCCESS;
 }
@@ -255,6 +257,7 @@ disass_xed_t *create_xed()
     xed_format_options_t format_options;
 
     xed_tables_init();
+
     xed_set_verbosity( 99 );
     memset(&format_options,0, sizeof(format_options));
     format_options.hex_address_before_symbolic_name=0;

@@ -262,7 +262,7 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
 
                 chain_insns->insert_first(chain_insns, new_insn);
 
-                chain = chain_create_from_insn(this->code_type, addr + last_decoded_byte, chain_insns);
+                chain = chain_create_from_insn_disass(this->d, addr + last_decoded_byte, chain_insns);
 
                 inst_list->insert_last(inst_list, chain);
             }
@@ -441,6 +441,8 @@ status_t pack(private_plugin_rop_t *this, Elf64_Addr addr, chunk_t chunk)
 
     logging("Unique %i elements\n", inst_list->get_count(inst_list));
 
+    return SUCCESS;
+
     e = inst_list->create_enumerator(inst_list);
     pthread_mutex_lock(&job_mutex);
     jc = job_count;
@@ -547,10 +549,11 @@ plugin_rop_t *plugin_rop_create(code_t *code, char *constraints, chunk_t target)
 
     this->code = (elf_t *) code;
     this->constraints = constraints;
-    this->code_type = ((code_t*) this->code)->get_type((code_t*) this->code);
-    this->target = chain_create_from_string(this->code_type, 0x400000, target);
 
+    this->code_type = ((code_t*) this->code)->get_type((code_t*) this->code);
     this->d->initialize(this->d, this->code_type);
+
+    this->target = chain_create_from_string_disass(this->d, 0x400000, target);
 
     this->public.interface.apply = (status_t (*)(plugin_t *)) apply;
     this->public.interface.destroy = (void (*)(plugin_t *)) destroy;

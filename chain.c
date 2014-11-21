@@ -26,6 +26,7 @@ struct private_chain_t
     chunk_t chunk;
     linked_list_t *instructions;
     Z3_context ctx;
+    disassembler_t *d;
 };
 
 TCGContext *get_tcg_ctx(void);
@@ -52,30 +53,9 @@ static char *get_str(private_chain_t *this)
     return this->str;
 }
 
-void *clone_instruction(void *instruction)
-{
-    xed_decoded_inst_t *new_instruction;
-
-    if ((new_instruction = malloc(sizeof(xed_decoded_inst_t))) == NULL)
-    {
-        LOG_CHAIN("Error while allocating instruction in clone_instruction from chain.c\n");
-        return NULL;
-    }
-
-    memcpy(new_instruction, instruction, sizeof(xed_decoded_inst_t));
-
-    return new_instruction;
-}
-
-void destroy_instruction(void *instruction)
-{
-    free(instruction);
-    instruction = NULL;
-}
-
 static void set_instructions(private_chain_t *this, linked_list_t *instructions)
 {
-    this->instructions = instructions->clone_function(instructions, clone_instruction);
+    this->instructions = instructions->clone_function(instructions, this->d->clone_instruction);
 }
 
 static linked_list_t *get_instructions(private_chain_t *this)
@@ -192,7 +172,7 @@ static void destroy(private_chain_t *this)
     chunk_clear(&this->chunk);
     this->chunk = chunk_empty;
 
-    this->instructions->destroy_function(this->instructions, destroy_instruction);
+    this->instructions->destroy_function(this->instructions, this->d->destroy_instruction);
 
     free(this);
     this = NULL;
@@ -340,7 +320,7 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
     if ((insns_chunk.ptr == NULL) || (insns_chunk.len == 0))
         LOG_CHAIN("Creating chain with NULL insns_chunk\n");
 
-    ret_chain = chain_create(addr, insns_str, insns_chunk, instructions);
+    ret_chain = chain_create(d, addr, insns_str, insns_chunk, instructions);
 
     free(insns_str);
     chunk_clear(&insns_chunk);
@@ -348,7 +328,7 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
     return ret_chain;
 }
 
-chain_t *chain_create(uint64_t addr, char *str, chunk_t chunk, linked_list_t *instructions)
+chain_t *chain_create(disassembler_t *d, uint64_t addr, char *str, chunk_t chunk, linked_list_t *instructions)
 {
     private_chain_t *this = malloc_thing(private_chain_t);
 
@@ -366,6 +346,7 @@ chain_t *chain_create(uint64_t addr, char *str, chunk_t chunk, linked_list_t *in
     this->public.destroy = (void (*)(chain_t *)) destroy;
 
     this->addr = addr;
+    this->d = d;
     this->public.set_str(&this->public, str);
     this->public.set_chunk(&this->public, chunk);
     this->public.set_instructions(&this->public, instructions);

@@ -327,9 +327,12 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
         }
         else
             sprintf(insns_str, "%s ;", (char*) new_str.ptr);
+
         insns_chunk = chunk_cat("mm", insns_chunk, new_chunk);
 
         offset_addr+= d->get_length(d, instruction);
+
+        chunk_clear(&new_str);
     }
 
     e->destroy(e);

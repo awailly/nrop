@@ -83,6 +83,22 @@ struct disassembler_t
     instruction_t *(*alloc_instruction)(disassembler_t *);
 
     /**
+     * Clone an instruction with disassembler specific size. Meant to be
+     * used with linked_list_t
+     *
+     * @param               a pointer to the instruction to clone
+     * @return              the pointer toward the new instruction
+     */
+    void *(*clone_instruction)(void *instruction);
+
+    /**
+     * Destroy the instruction prevously allocated
+     *
+     * @param               a pointer to the instruction to destroy
+     */
+    void (*destroy_instruction)(void *instruction);
+
+    /**
      * Return the size of disassembler instance of instruction.
      *
      * @return              the size of the expected instructions

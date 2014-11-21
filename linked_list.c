@@ -605,7 +605,10 @@ static void unique(private_linked_list_t *this)
         if (prev_name == NULL)
             prev_name = c->get_str(c);
         else if (!strcmp(prev_name, c->get_str(c)))
+        {
+            c->destroy(c);
             remove_element(this, current);
+        }
         else
             prev_name = c->get_str(c);
 

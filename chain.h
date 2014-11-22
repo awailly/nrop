@@ -13,7 +13,7 @@
 #include "disassembler_xed.h"
 
 /*
- * Using -isystem qemu te handle warnings
+ * Using -isystem qemu to handle warnings
  */
 #include <include/exec/user/abitypes.h>
 

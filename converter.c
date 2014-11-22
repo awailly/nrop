@@ -489,7 +489,7 @@ static void tcg_to_llvm(private_converter_t *this)
             else*/\
             {\
             v = LLVMBuildAdd(this->builder, getValue(this, args[1]),                  \
-                        LLVMConstInt(wordType(), args[2], 0), "A");         \
+                        LLVMConstInt(wordType(), args[2], 0), "AddLd");         \
             v = LLVMBuildIntToPtr(this->builder, v, intPtrType(memBits), "Ild");       \
             v = LLVMBuildLoad(this->builder, v, "Lld");                                \
             }\
@@ -503,21 +503,24 @@ static void tcg_to_llvm(private_converter_t *this)
             assert(getValue(this, args[1])->getType() == wordType());         \
             LLVMValueRef  valueToStore = getValue(this, args[0]);                    \
                                                                             \
-            if ((this->s->temps[args[1]].fixed_reg) &&\
+            if (this->s->temps[args[1]].fixed_reg)\
+            { \
+                if ( \
                 (args[2] == 0x80))\
-            {\
-                if (this->rip == NULL)\
                 {\
-                    this->rip = LLVMAddGlobal(this->module, intType(64), "rip");\
-                    LLVMSetThreadLocal(this->rip, 1);\
+                    if (this->rip == NULL)\
+                    {\
+                        this->rip = LLVMAddGlobal(this->module, intType(64), "rip");\
+                        LLVMSetThreadLocal(this->rip, 1);\
+                    }\
+                    v = this->rip;\
                 }\
-                v = this->rip;\
             }\
             else\
             {\
                                                                             \
                 v = LLVMBuildAdd(this->builder, getValue(this, args[1]),                  \
-                            LLVMConstInt(wordType(), args[2], 0), "A");         \
+                            LLVMConstInt(wordType(), args[2], 0), "AddSt");         \
                 v = LLVMBuildIntToPtr(this->builder, v, intPtrType(memBits), "Ist");       \
             }\
             LLVMBuildStore(this->builder, LLVMBuildTrunc(this->builder,                 \
@@ -821,7 +824,7 @@ static void tcg_to_llvm(private_converter_t *this)
             uint32_t mask = (1u << len) - 1;
             LLVMValueRef t1, ret;
             if (ofs + len < 32) {
-                t1 = LLVMBuildAnd(this->builder, arg2, LLVMConstInt(intType(32), mask, 0), "A");
+                t1 = LLVMBuildAnd(this->builder, arg2, LLVMConstInt(intType(32), mask, 0), "AddDepositC");
                 t1 = LLVMBuildShl(this->builder, t1, LLVMConstInt(intType(32), ofs, 0), "S");
                 /*
                 temp_val = ((args[2] & mask) << ofs);
@@ -833,7 +836,7 @@ static void tcg_to_llvm(private_converter_t *this)
                 */
             }
 
-            ret = LLVMBuildAnd(this->builder, arg1, LLVMConstInt(intType(32), ~(mask << ofs), 0), "A");
+            ret = LLVMBuildAnd(this->builder, arg1, LLVMConstInt(intType(32), ~(mask << ofs), 0), "AddDeposit");
             ret = LLVMBuildOr(this->builder, ret, t1, "Odep");
             /*
             ret = LLVMConstInt(intType(32), ((args[1] & ~(mask << ofs)) | temp_val), 0);
@@ -868,7 +871,7 @@ static void tcg_to_llvm(private_converter_t *this)
             uint64_t mask = (1u << len) - 1;
             LLVMValueRef t1, ret;
             if (ofs + len < 64) {
-                t1 = LLVMBuildAnd(this->builder, arg2, LLVMConstInt(intType(64), mask, 0), "A");
+                t1 = LLVMBuildAnd(this->builder, arg2, LLVMConstInt(intType(64), mask, 0), "AddDepositCx");
                 t1 = LLVMBuildShl(this->builder, t1, LLVMConstInt(intType(64), ofs, 0), "S");
                 /*
                 temp_val = ((args[2] & mask) << ofs);
@@ -880,7 +883,7 @@ static void tcg_to_llvm(private_converter_t *this)
                 */
             }
 
-            ret = LLVMBuildAnd(this->builder, arg1, LLVMConstInt(intType(64), ~(mask << ofs), 0), "A");
+            ret = LLVMBuildAnd(this->builder, arg1, LLVMConstInt(intType(64), ~(mask << ofs), 0), "AddDepositx");
             ret = LLVMBuildOr(this->builder, ret, t1, "O");
             /*
             ret = LLVMConstInt(intType(64), ((args[1] & ~(mask << ofs)) | temp_val), 0);
@@ -959,7 +962,7 @@ static void optimize_llvm(private_converter_t *this)
     /*LLVMInitializeFunctionPassManager (this->pass_mgr);*/
 
     /*LOG_LLVM("Running pass manager\n");*/
-    if (1)
+    if (0)
         LLVMRunPassManager(this->pass_mgr, this->module);
 }
 
@@ -1020,20 +1023,9 @@ Z3_ast mk_real_var(Z3_context ctx, const char * name)
     return mk_var(ctx, name, ty);
 }
 
-Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, int need_inc, int read_access)
+uint64_t get_llvm_type_size(LLVMValueRef valueref)
 {
-    Z3_ast res;
-    Z3_sort bv_sort;
-    Z3_context ctx;
-
-    LLVMTypeKind type;
     uint64_t valueref_size;
-
-    enumerator_t *e;
-    Z3_symbol_cell *c, *target_cell;
-
-    target_cell = NULL;
-    ctx = this->ctx;
 
     if (LLVMTypeOf(valueref) == intType(64) || (LLVMTypeOf(valueref) == intPtrType(64)))
         valueref_size = 64;
@@ -1052,6 +1044,38 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
         logging("int16:%08x pint16:%08x int8:%08x pint8:%08x\n", intType(16), intPtrType(16), intType(8), intPtrType(8));
         valueref_size = 0;
     }
+
+    return valueref_size;
+}
+
+uint64_t get_z3_size(private_converter_t *this, Z3_ast z3value)
+{
+    Z3_sort sort;
+
+    sort = Z3_get_sort(this->ctx, z3value);
+
+    if (Z3_get_sort_kind(this->ctx, sort) != Z3_BV_SORT)
+        return 1;
+
+    return Z3_get_bv_sort_size(this->ctx, sort);
+}
+
+Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, int need_inc, int read_access)
+{
+    Z3_ast res;
+    Z3_sort bv_sort;
+    Z3_context ctx;
+
+    LLVMTypeKind type;
+    uint64_t valueref_size;
+
+    enumerator_t *e;
+    Z3_symbol_cell *c, *target_cell;
+
+    target_cell = NULL;
+    ctx = this->ctx;
+
+    valueref_size = get_llvm_type_size(valueref);
 
     bv_sort = Z3_mk_bv_sort(ctx, valueref_size);
 
@@ -1227,6 +1251,17 @@ Z3_ast create_Z3_var_read(private_converter_t *this, LLVMValueRef valueref)
 Z3_ast create_Z3_var_inc(private_converter_t *this, LLVMValueRef valueref)
 {
     return create_Z3_var_internal(this, valueref, 1, 0);
+}
+
+void error_handler(Z3_context c, Z3_error_code e)
+{
+    if (!c)
+        printf("No context in error_handler\n");
+
+    printf("[Z3 error handler]\n");
+    printf("Error code: %d\n", e);
+    printf("Error msg : %s\n", Z3_get_error_msg_ex(c, e));
+    exit(0);
 }
 
 static map_t *llvm_to_z3(private_converter_t *this)
@@ -1558,7 +1593,11 @@ static map_t *llvm_to_z3(private_converter_t *this)
                         if (LLVMIsAGlobalValue(src))
                             Z3_res = Z3_src;
                         else
+                        {
+                            printf("before select %x %x\n");
                             Z3_res = Z3_mk_select(this->ctx, ram->symbol, Z3_src);
+                            printf("after select\n");
+                        }
                         break;
                     }
                     default:
@@ -1850,6 +1889,30 @@ static map_t *llvm_to_z3(private_converter_t *this)
         if (Z3_res)
         {
             Z3_ast tmp;
+            uint64_t store_name_size, Z3_res_size;
+
+            store_name_size = get_z3_size(this, store_name);
+            Z3_res_size = get_z3_size(this, Z3_res);
+
+            if (store_name_size > Z3_res_size)
+            {
+                logging("store name is greater\n");
+                Z3_ast Z3_res_ext;
+
+                Z3_res_ext = Z3_mk_zero_ext(this->ctx, store_name_size - Z3_res_size, Z3_res);
+
+                Z3_res = Z3_res_ext;
+            }
+            else if (store_name_size < Z3_res_size)
+            {
+                logging("store name is smaller\n");
+                Z3_ast Z3_res_trunc;
+
+                Z3_res_trunc = Z3_mk_extract(this->ctx, store_name_size - 1, 0, Z3_res);
+
+                Z3_res = Z3_res_trunc;
+            }
+
             tmp = Z3_mk_eq(this->ctx, store_name, Z3_res);
             Z3_res = tmp;
 
@@ -1998,6 +2061,8 @@ converter_t *converter_create(TCGContext *s, Z3_context ctx)
     this->ctx = ctx;
     this->formula = Z3_mk_true(this->ctx);
     this->prefix = chunk_empty;
+
+    Z3_set_error_handler(this->ctx, error_handler);
 
     this->Z3_symbol_list = linked_list_create();
 

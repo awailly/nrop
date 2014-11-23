@@ -28,6 +28,7 @@ struct private_converter_t
     LLVMValueRef m_memValuesPtr[TCG_MAX_TEMPS];
     LLVMBasicBlockRef m_labels[TCG_MAX_TEMPS];
     LLVMValueRef rip;
+    LLVMValueRef df;
 
     TCGContext *s;
 
@@ -81,14 +82,17 @@ static LLVMValueRef getPtrForValue(private_converter_t *this, int idx)
 
     if (this->m_memValuesPtr[idx] == NULL)
     {
-        if ((!temp.temp_allocated) && (!temp.temp_local))/*((temp.mem_allocated) || (temp.fixed_reg))*/
+        if ((!temp.temp_allocated) && (!temp.temp_local)) /*((temp.mem_allocated) || (temp.fixed_reg))*/
         {
             /*
             LLVMValueRef indices[] = { LLVMConstInt(LLVMInt64Type(), this->m_globalsIdx[idx], 0) };
             LLVMValueRef v = LLVMConstGEP(LLVMGetFirstParam(this->Fn), indices, 1);
             this->m_memValuesPtr[idx] = LLVMBuildIntToPtr(this->builder, v, tcgPtrType(temp.type), temp.name);
             */
-            LLVMValueRef v = LLVMAddGlobal(this->module, tcgType(temp.type), temp.name);
+            LLVMValueRef v;
+
+            v = LLVMAddGlobal(this->module, tcgType(temp.type), temp.name);
+
             //LLVMSetThreadLocal(v, 1);
             /* Filtering qemu cc_* */
             if ((temp.name[0] == 'c') && (temp.name[1] == 'c'))
@@ -1276,14 +1280,19 @@ static map_t *llvm_to_z3(private_converter_t *this)
 
     Z3_ast store_name, Z3_res, args[2];
     Z3_sort bv_sort, array_sort;
+    Z3_sort bv_sort_32, array_sort_32;
     /* Z3_ast ram; */
     Z3_symbol_cell *ram;
+    Z3_symbol_cell *env;
 
     int number_of_operands;
     int operand_num;
 
     bv_sort = Z3_mk_bv_sort(this->ctx, 64);
     array_sort = Z3_mk_array_sort(this->ctx, bv_sort, bv_sort);
+
+    bv_sort_32 = Z3_mk_bv_sort(this->ctx, 32);
+    array_sort_32 = Z3_mk_array_sort(this->ctx, bv_sort_32, bv_sort_32);
 
     bb = LLVMGetFirstBasicBlock(this->Fn);
     insn = LLVMGetFirstInstruction(bb);
@@ -1311,6 +1320,27 @@ static map_t *llvm_to_z3(private_converter_t *this)
         ram->symbol = mk_var(this->ctx, (char*)ram->name.ptr, array_sort);
 
     ram->is_global = 1;
+
+    if ((env = malloc(sizeof(*env))) == NULL)
+        LOG_LLVM("Error while allocating env in llvm_to_z3\n");
+
+    env->valueref = NULL;
+    env->index = 0;
+    env->name = chunk_calloc(255);
+    strncpy((char*)env->name.ptr, "env", env->name.len);
+    env->prefix = chunk_clone(this->prefix);
+
+    if (env->prefix.ptr)
+    {
+        chunk_t env_name;
+        env_name = chunk_cat("cc", env->prefix, env->name);
+        env->symbol = mk_var(this->ctx, (char*)env_name.ptr, array_sort_32);
+        chunk_free(&env_name);
+    }
+    else
+        env->symbol = mk_var(this->ctx, (char*)env->name.ptr, array_sort_32);
+
+    env->is_global = 1;
 
     do
     {
@@ -1596,9 +1626,18 @@ static map_t *llvm_to_z3(private_converter_t *this)
                             Z3_res = Z3_src;
                         else
                         {
-                            printf("before select %x %x\n");
-                            Z3_res = Z3_mk_select(this->ctx, ram->symbol, Z3_src);
-                            printf("after select\n");
+                            printf("found ptr\n");
+                            if (get_z3_size(this, Z3_src) == 32)
+                            {
+                                printf("before sel32\n");
+                                Z3_res = Z3_mk_select(this->ctx, env->symbol, Z3_src);
+                            }
+                            else
+                            {
+                                printf("before select %x %x\n");
+                                Z3_res = Z3_mk_select(this->ctx, ram->symbol, Z3_src);
+                                printf("after select\n");
+                            }
                         }
                         break;
                     }
@@ -2005,6 +2044,7 @@ converter_t *converter_create(TCGContext *s, Z3_context ctx)
     this->builder = LLVMCreateBuilder ();
     this->s = s;
     this->rip = NULL;
+    this->df = NULL;
 
     memset(this->m_globalsIdx, 0, sizeof(this->m_globalsIdx));
     memset(this->m_values, 0, sizeof(this->m_values));

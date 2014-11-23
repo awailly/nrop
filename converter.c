@@ -1027,7 +1027,9 @@ uint64_t get_llvm_type_size(LLVMValueRef valueref)
 {
     uint64_t valueref_size;
 
-    if (LLVMTypeOf(valueref) == intType(64) || (LLVMTypeOf(valueref) == intPtrType(64)))
+    if (LLVMTypeOf(valueref) == intType(128) || (LLVMTypeOf(valueref) == intPtrType(128)))
+        valueref_size = 128;
+    else if (LLVMTypeOf(valueref) == intType(64) || (LLVMTypeOf(valueref) == intPtrType(64)))
         valueref_size = 64;
     else if (LLVMTypeOf(valueref) == intType(32) || (LLVMTypeOf(valueref) == intPtrType(32)))
         valueref_size = 32;

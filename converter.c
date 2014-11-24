@@ -4,7 +4,7 @@
 
 #include "converter.h"
 
-#define DEBUG_LLVM
+//#define DEBUG_LLVM
 #ifdef DEBUG_LLVM
 #  define LOG_LLVM(...) logging(__VA_ARGS__)
 #else
@@ -914,8 +914,8 @@ static void optimize_llvm(private_converter_t *this)
     error = NULL;
 
     LOG_LLVM("Verification of the module\n");
-    LLVMVerifyModule(this->module, LLVMPrintMessageAction, &error);
-    /*LLVMVerifyModule(this->module, LLVMAbortProcessAction, &error);*/
+    /*LLVMVerifyModule(this->module, LLVMPrintMessageAction, &error);*/
+    LLVMVerifyModule(this->module, LLVMAbortProcessAction, &error);
     LLVMDisposeMessage(error);
 
     /*
@@ -963,7 +963,7 @@ static void optimize_llvm(private_converter_t *this)
     /*LLVMInitializeFunctionPassManager (this->pass_mgr);*/
 
     /*LOG_LLVM("Running pass manager\n");*/
-    if (0)
+    if (1)
         LLVMRunPassManager(this->pass_mgr, this->module);
 }
 
@@ -1431,7 +1431,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
                 Z3_src = create_Z3_var(this, src);
                 Z3_dst = create_Z3_var(this, dst);
 
-                Z3_res = Z3_mk_bvsub(this->ctx, Z3_dst, Z3_src);
+                Z3_res = Z3_mk_bvsub(this->ctx, Z3_src, Z3_dst);
                 break;
             }
             case LLVMFSub:

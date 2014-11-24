@@ -131,7 +131,7 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
     tb_gen_code(cpu, (uint64_t) this->chunk.ptr, 0, 0x40c0b3, 0);
 
     s = get_tcg_ctx();
-    tcg_dump_ops(s);
+    //tcg_dump_ops(s);
 
     if (this->ctx == NULL)
         LOG_CHAIN("The Z3 context is NULL, will segfault\n");
@@ -139,7 +139,7 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
     converter = converter_create(s, this->ctx);
     converter->set_prefix(converter, prefix);
     converter->tcg_to_llvm(converter);
-    converter->dump(converter);
+    //converter->dump(converter);
 
     map = converter->llvm_to_z3(converter);
 

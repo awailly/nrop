@@ -4,7 +4,7 @@
 
 #include "map.h"
 
-#define DEBUG_Z3_SOLVE
+//#define DEBUG_Z3_SOLVE
 #ifdef DEBUG_Z3_SOLVE
 #  define LOG_Z3_SOLVE(...) logging(__VA_ARGS__)
 #else
@@ -136,6 +136,10 @@ static gadget_type compare(private_map_t *this, map_t *other)
          * XXX */
         if ((c->name.ptr) && ((strcmp((char*)c->name.ptr, "rip") == 0) ||
             (strcmp((char*)c->name.ptr, "eip") == 0)))
+            continue;
+
+        if ((c->name.ptr) && ((strcmp((char*)c->name.ptr, "rsp") == 0) ||
+            (strcmp((char*)c->name.ptr, "esp") == 0)))
             continue;
 
         if (!c->is_global)

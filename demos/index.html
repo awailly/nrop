@@ -49,25 +49,49 @@
       
       <p>The simplest form of ga is two chains, as ROP chains, do the same thing.</p>
       
-      <p>A sample binary containing <a href="https://media.blackhat.com/us-13/US-13-Quynh-OptiROP-Hunting-for-ROP-Gadgets-in-Style-Slides.pdf">optiROP</a> tricky chains is included in the <a href="https://github.com/awailly/nrop/tree/master/examples">examples directory of the github repository</a>. We will use this binary to underline different type of gadgets handled by nROP.</p>
+      <p>A sample binary containing <a href="https://media.blackhat.com/us-13/US-13-Quynh-OptiROP-Hunting-for-ROP-Gadgets-in-Style-Slides.pdf">optiROP</a> tricky chains is included in the <a href="https://github.com/awailly/nrop/tree/master/examples">examples directory of the github repository</a>. We will use this binary to underline different type of gadgets handled by nROP, and corresponding to the categories of gadgets identified by @aquynh.</p>
       
       <h2 id="natural-gadgets">Natural gadgets</h2>
       
       <h3 id="pn1">PN1</h3>
       
-      <h3 id="pn2">PN2</h3>
+      <p>The first category of gadgets sets a register to another register.</p>
       
       <p>Command to launch:</p>
       
-      <pre><code>% ./packer -t 4889d8c3 examples/opti | grep "equivalent! 3" -A3&#x000A;</code></pre>
+      <pre><code>% ./packer -t 4889d8c3 examples/opti | grep "equivalent! 3" -A2&#x000A;</code></pre>
       
       <p>Results</p>
       
       <pre><code>Found equivalent! 3&#x000A;   [X] add byte ptr [rax], al ; add byte ptr [rdi], cl ; add eax, 0xc3d88948 ; xchg rbx, rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] add byte ptr [rdi], cl ; add eax, 0xc3d88948 ; xchg rbx, rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] add eax, 0xc3d88948 ; xchg rbx, rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] fadd st0, st3 ; xchg rbx, rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] fadd st0, st3 ; xchg rcx, rbx ; xchg rcx, rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] fadd st0, st3 ; xor rax, rax ; not rax ; and rax, rbx ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] imul rax, rbx, 0x1 ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] push rbx ; xor rax, rax ; pop rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] rcr byte ptr [rsi+0x48], 0x1 ; fadd st0, st3 ; xor rax, rax ; not rax ; and rax, rbx ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] ror byte ptr [rax+0x21], 0x1 ; fadd st0, st3 ; xchg rcx, rbx ; xchg rcx, rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] xchg rbx, rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] xchg rcx, rbx ; lea rax, ptr [rcx] ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] xchg rcx, rbx ; xchg rcx, rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] xor eax, eax ; add rax, rbx ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] xor eax, eax ; not rax ; and rax, rbx ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] xor rax, rax ; add rax, rbx ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] xor rax, rax ; not rax ; and rax, rbx ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;</code></pre>
       
+      <h3 id="pn2">PN2</h3>
+      
+      <p>The second category of gadgets sets a register to an immediate constant.</p>
+      
+      <p>Command to launch:</p>
+      
+      <pre><code>% ./packer -t 48c7c034120000c3 examples/opti | grep "equivalent! 3" -A2&#x000A;</code></pre>
+      
+      <p>Results</p>
+      
+      <pre><code>Found equivalent! 3&#x000A;   [X] push 0x1234 ; pop rax ; inc rbx ; ret  ;&#x000A;   [X] mov rax, 0x1234 ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] push 0x1234 ; pop rbp ; xchg rbp, rax ; ret  ;&#x000A;   [X] mov rax, 0x1234 ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] push 0xffffffffffffedcc ; pop rdx ; xor rax, rax ; sub rax, rdx ; ret  ;&#x000A;   [X] mov rax, 0x1234 ; ret  ;&#x000A;</code></pre>
+      
       <h2 id="chained-gadgets">Chained gadgets</h2>
       
       <p>Support coming :)</p>
+      
+      <h3 id="pc1">PC1</h3>
+      
+      <p>This category of gadgets is close to PN1, setting register to another, but with the help of gadget chaining.</p>
+      
+      <h3 id="pc2">PC2</h3>
+      
+      <p>This category of gadgets is close to PN2, setting register to another, but with the help of gadget chaining.</p>
+      
+      <h3 id="pc3">PC3</h3>
+      
+      <p>This category of gadgets is close to PN3, setting register to another, but with the help of gadget chaining.</p>
       <hr>
       <footer>
         <p>&copy; NoName 2014</p>

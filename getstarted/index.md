@@ -3,12 +3,13 @@ title: Download nROP
 layout: base
 ---
 
-[1]: http://aurelien.wail.ly/nrop/faq
-[2]: http://aurelien.wail.ly/nrop/documentation
+[1]: http://aurelien.wail.ly/nrop/doc
+[2]: http://aurelien.wail.ly/nrop/download
 
 # Build it
 
 The process to build the program is described in the [Documentation page][2]
+
 # Usage
 
 The program expect a target (`-t`) shellcode, say x86 here, and the binary to analyze in the last position (`argv[argc - 1]`).

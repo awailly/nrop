@@ -507,18 +507,15 @@ static void tcg_to_llvm(private_converter_t *this)
             assert(getValue(this, args[1])->getType() == wordType());         \
             LLVMValueRef  valueToStore = getValue(this, args[0]);                    \
                                                                             \
-            if (this->s->temps[args[1]].fixed_reg)\
-            { \
-                if ( \
+            if ((this->s->temps[args[1]].fixed_reg) &&\
                 (args[2] == 0x80))\
+            { \
+                if (this->rip == NULL)\
                 {\
-                    if (this->rip == NULL)\
-                    {\
-                        this->rip = LLVMAddGlobal(this->module, intType(64), "rip");\
-                        LLVMSetThreadLocal(this->rip, 1);\
-                    }\
-                    v = this->rip;\
+                    this->rip = LLVMAddGlobal(this->module, intType(64), "rip");\
+                    LLVMSetThreadLocal(this->rip, 1);\
                 }\
+                v = this->rip;\
             }\
             else\
             {\
@@ -917,8 +914,8 @@ static void optimize_llvm(private_converter_t *this)
     error = NULL;
 
     LOG_LLVM("Verification of the module\n");
-    /*LLVMVerifyModule(this->module, LLVMPrintMessageAction, &error);*/
-    LLVMVerifyModule(this->module, LLVMAbortProcessAction, &error);
+    LLVMVerifyModule(this->module, LLVMPrintMessageAction, &error);
+    /*LLVMVerifyModule(this->module, LLVMAbortProcessAction, &error);*/
     LLVMDisposeMessage(error);
 
     /*
@@ -1626,18 +1623,10 @@ static map_t *llvm_to_z3(private_converter_t *this)
                             Z3_res = Z3_src;
                         else
                         {
-                            printf("found ptr\n");
                             if (get_z3_size(this, Z3_src) == 32)
-                            {
-                                printf("before sel32\n");
                                 Z3_res = Z3_mk_select(this->ctx, env->symbol, Z3_src);
-                            }
                             else
-                            {
-                                printf("before select %x %x\n");
                                 Z3_res = Z3_mk_select(this->ctx, ram->symbol, Z3_src);
-                                printf("after select\n");
-                            }
                         }
                         break;
                     }
@@ -1691,25 +1680,52 @@ static map_t *llvm_to_z3(private_converter_t *this)
                              * Should be something (= (ram) (store ram val)) as
                              * pointed by the Model if SAT.
                             store_name = mk_var(this->ctx, "JUNK", array_sort);
+                             *
+                             * FIXME
+                             * Something with only get_z3_size
                              */
-                            chunk_t new_chunk;
-                            Z3_ast previous_ram;
+                            if (get_z3_size(this, Z3_src) == 32)
+                            {
+                                chunk_t new_chunk;
+                                Z3_ast previous_env;
 
-                            ram->index++;
-                            previous_ram = ram->symbol;
+                                env->index++;
+                                previous_env = env->symbol;
 
-                            new_chunk = chunk_calloc(255);
-                            snprintf((char*) new_chunk.ptr, new_chunk.len, "%s%i", ram->name.ptr, ram->index);
+                                new_chunk = chunk_calloc(255);
+                                snprintf((char*) new_chunk.ptr, new_chunk.len, "%s%i", env->name.ptr, env->index);
 
-                            if (ram->prefix.ptr)
-                                new_chunk = chunk_cat("cm", ram->prefix, new_chunk);
+                                if (env->prefix.ptr)
+                                    new_chunk = chunk_cat("cm", env->prefix, new_chunk);
 
-                            ram->symbol = mk_var(this->ctx, (char*)new_chunk.ptr, array_sort);
+                                env->symbol = mk_var(this->ctx, (char*)new_chunk.ptr, array_sort_32);
 
-                            chunk_clear(&new_chunk);
+                                chunk_clear(&new_chunk);
 
-                            store_name = ram->symbol;
-                            Z3_res = Z3_mk_store(this->ctx, previous_ram, Z3_dst, Z3_src);
+                                store_name = env->symbol;
+                                Z3_res = Z3_mk_store(this->ctx, previous_env, Z3_dst, Z3_src);
+                            }
+                            else
+                            {
+                                chunk_t new_chunk;
+                                Z3_ast previous_ram;
+
+                                ram->index++;
+                                previous_ram = ram->symbol;
+
+                                new_chunk = chunk_calloc(255);
+                                snprintf((char*) new_chunk.ptr, new_chunk.len, "%s%i", ram->name.ptr, ram->index);
+
+                                if (ram->prefix.ptr)
+                                    new_chunk = chunk_cat("cm", ram->prefix, new_chunk);
+
+                                ram->symbol = mk_var(this->ctx, (char*)new_chunk.ptr, array_sort);
+
+                                chunk_clear(&new_chunk);
+
+                                store_name = ram->symbol;
+                                Z3_res = Z3_mk_store(this->ctx, previous_ram, Z3_dst, Z3_src);
+                            }
                         }
                         break;
                     }

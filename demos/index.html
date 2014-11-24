@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>nROP Homepage</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <style>
+      body {
+        padding-top: 60px;
+      }
+    </style>
+    <link href="http://aurelien.wail.ly/nrop/stylesheets/styles.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js" type="text/javascript"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="http://aurelien.wail.ly/nrop">nROP</a>
+          <ul class="nav navbar-nav">
+            <li>
+              <a href="http://aurelien.wail.ly/nrop">Home</a>
+            </li>
+            <li>
+              <li>
+                <a href="http://aurelien.wail.ly/nrop/getstarted">Get Started</a>
+              </li>
+            </li>
+            <li>
+              <li>
+                <a href="http://aurelien.wail.ly/nrop/download">Download</a>
+              </li>
+            </li>
+            <li>
+              <li>
+                <a href="http://aurelien.wail.ly/nrop/doc">Documentation</a>
+              </li>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      
+      <h1 id="gather-gadgets">Gather gadgets</h1>
+      
+      <p>The simplest form of gadgets is two chains, as ROP chains, do the same thing. A sample binary containing <a href="https://media.blackhat.com/us-13/US-13-Quynh-OptiROP-Hunting-for-ROP-Gadgets-in-Style-Slides.pdf">optiROP</a></p>
+      
+      <h2 id="natural-gadgets">Natural gadgets</h2>
+      
+      <p>Command to launch:</p>
+      
+      <pre><code>% ./packer -t 4889d8c3 examples/opti | grep "equivalent! 3" -A3&#x000A;</code></pre>
+      
+      <p>Results</p>
+      
+      <pre><code>Found equivalent! 3&#x000A;   [X] add byte ptr [rax], al ; add byte ptr [rdi], cl ; add eax, 0xc3d88948 ; xchg rbx, rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] add byte ptr [rdi], cl ; add eax, 0xc3d88948 ; xchg rbx, rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] add eax, 0xc3d88948 ; xchg rbx, rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] fadd st0, st3 ; xchg rbx, rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] fadd st0, st3 ; xchg rcx, rbx ; xchg rcx, rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] fadd st0, st3 ; xor rax, rax ; not rax ; and rax, rbx ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] imul rax, rbx, 0x1 ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] push rbx ; xor rax, rax ; pop rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] rcr byte ptr [rsi+0x48], 0x1 ; fadd st0, st3 ; xor rax, rax ; not rax ; and rax, rbx ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] ror byte ptr [rax+0x21], 0x1 ; fadd st0, st3 ; xchg rcx, rbx ; xchg rcx, rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] xchg rbx, rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] xchg rcx, rbx ; lea rax, ptr [rcx] ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] xchg rcx, rbx ; xchg rcx, rax ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] xor eax, eax ; add rax, rbx ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] xor eax, eax ; not rax ; and rax, rbx ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] xor rax, rax ; add rax, rbx ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;--&#x000A;Found equivalent! 3&#x000A;   [X] xor rax, rax ; not rax ; and rax, rbx ; ret  ;&#x000A;   [X] mov rax, rbx ; ret  ;&#x000A;</code></pre>
+      
+      <h2 id="chained-gadgets">Chained gadgets</h2>
+      
+      <p>Support coming :)</p>
+      <hr>
+      <footer>
+        <p>&copy; NoName 2014</p>
+      </footer>
+    </div>
+  </body>
+</html>

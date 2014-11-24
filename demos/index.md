@@ -5,9 +5,15 @@ layout: base
 
 # Gather gadgets
 
-The simplest form of gadgets is two chains, as ROP chains, do the same thing. A sample binary containing [optiROP](https://media.blackhat.com/us-13/US-13-Quynh-OptiROP-Hunting-for-ROP-Gadgets-in-Style-Slides.pdf)
+The simplest form of ga is two chains, as ROP chains, do the same thing.
+
+A sample binary containing [optiROP](https://media.blackhat.com/us-13/US-13-Quynh-OptiROP-Hunting-for-ROP-Gadgets-in-Style-Slides.pdf) tricky chains is included in the [examples directory of the github repository](https://github.com/awailly/nrop/tree/master/examples). We will use this binary to underline different type of gadgets handled by nROP.
 
 ## Natural gadgets
+
+### PN1
+
+### PN2
 
 Command to launch:
 

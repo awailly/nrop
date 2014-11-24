@@ -69,26 +69,6 @@
       
       <pre><code>% ./packer -t 68ccedffff5a4883ec085b4831c04829d0c3 /usr/lib/libc.so.6&#x000A;</code></pre>
       
-      <h1 id="build-the-project">Build the project</h1>
-      
-      <h2 id="reset-the-qemu-changes">Reset the qemu changes</h2>
-      
-      <pre><code>cd qemu&#x000A;git stash&#x000A;</code></pre>
-      
-      <h2 id="apply-patches-to-qemu--build">Apply patches to qemu &amp;&amp; build</h2>
-      
-      <pre><code>git apply ../qemu.noprologet.patch&#x000A;make -j32&#x000A;cd ..&#x000A;make -j32 # error wanted regarding "abi_ulong"&#x000A;</code></pre>
-      
-      <h2 id="fix-abiulong-error">Fix abi_ulong error</h2>
-      
-      <pre><code>cd qemu&#x000A;git apply ../qemu.patch&#x000A;cd ..&#x000A;make -j32 # error wanted regarding multiple main and icount&#x000A;</code></pre>
-      
-      <h2 id="fix-main-and-useicount-errors">Fix main and use_icount errors</h2>
-      
-      <pre><code>vim qemu/x86_64-linux-user/linux-user/main.o # :%s/main/ma1n/g&#x000A;vim qemu/stubs/cpu-get-icount.o # :%s/use_icount/use_1count/g&#x000A;make -j32&#x000A;</code></pre>
-      
-      <p>I know :)</p>
-      
       <h1 id="use-it">Use it</h1>
       
       <p>You can now follow the <a href="http://aurelien.wail.ly/nrop/doc">debugging guide</a>, as you will encounter tons of bugs</p>

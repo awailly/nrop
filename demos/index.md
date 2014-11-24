@@ -7,17 +7,17 @@ layout: base
 
 The simplest form of ga is two chains, as ROP chains, do the same thing.
 
-A sample binary containing [optiROP](https://media.blackhat.com/us-13/US-13-Quynh-OptiROP-Hunting-for-ROP-Gadgets-in-Style-Slides.pdf) tricky chains is included in the [examples directory of the github repository](https://github.com/awailly/nrop/tree/master/examples). We will use this binary to underline different type of gadgets handled by nROP.
+A sample binary containing [optiROP](https://media.blackhat.com/us-13/US-13-Quynh-OptiROP-Hunting-for-ROP-Gadgets-in-Style-Slides.pdf) tricky chains is included in the [examples directory of the github repository](https://github.com/awailly/nrop/tree/master/examples). We will use this binary to underline different type of gadgets handled by nROP, and corresponding to the categories of gadgets identified by @aquynh.
 
 ## Natural gadgets
 
 ### PN1
 
-### PN2
+The first category of gadgets sets a register to another register.
 
 Command to launch:
 
-    % ./packer -t 4889d8c3 examples/opti | grep "equivalent! 3" -A3
+    % ./packer -t 4889d8c3 examples/opti | grep "equivalent! 3" -A2
 
 Results
 
@@ -93,7 +93,41 @@ Results
        [X] xor rax, rax ; not rax ; and rax, rbx ; ret  ;
        [X] mov rax, rbx ; ret  ;
 
+### PN2
+
+The second category of gadgets sets a register to an immediate constant.
+
+Command to launch:
+
+    % ./packer -t 48c7c034120000c3 examples/opti | grep "equivalent! 3" -A2
+
+Results
+
+    Found equivalent! 3
+       [X] push 0x1234 ; pop rax ; inc rbx ; ret  ;
+       [X] mov rax, 0x1234 ; ret  ;
+    --
+    Found equivalent! 3
+       [X] push 0x1234 ; pop rbp ; xchg rbp, rax ; ret  ;
+       [X] mov rax, 0x1234 ; ret  ;
+    --
+    Found equivalent! 3
+       [X] push 0xffffffffffffedcc ; pop rdx ; xor rax, rax ; sub rax, rdx ; ret  ;
+       [X] mov rax, 0x1234 ; ret  ;
 
 ## Chained gadgets
 
 Support coming :)
+
+### PC1
+
+This category of gadgets is close to PN1, setting register to another, but with the help of gadget chaining.
+
+### PC2
+
+This category of gadgets is close to PN2, setting register to another, but with the help of gadget chaining.
+
+### PC3
+
+This category of gadgets is close to PN3, setting register to another, but with the help of gadget chaining.
+

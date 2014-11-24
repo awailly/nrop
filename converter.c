@@ -4,7 +4,7 @@
 
 #include "converter.h"
 
-//#define DEBUG_LLVM
+#define DEBUG_LLVM
 #ifdef DEBUG_LLVM
 #  define LOG_LLVM(...) logging(__VA_ARGS__)
 #else
@@ -612,10 +612,10 @@ static void tcg_to_llvm(private_converter_t *this)
             v = LLVMBuildMul(this->builder, v1, v2, "Mul");\
                            \
             v1 = LLVMBuildAnd(this->builder, v, LLVMConstInt(intType(2*bits), mask, 0), "Andm");\
-            v1 = LLVMBuildTrunc(this->builder, v, intType(bits), "Tand");\
+            v1 = LLVMBuildTrunc(this->builder, v1, intType(bits), "Tand");\
             setValue(this, args[0], v1);\
             v1 = LLVMBuildLShr(this->builder, v,LLVMConstInt(intType(2*bits), bits, 0), "Shrm");\
-            v1 = LLVMBuildTrunc(this->builder, v, intType(bits), "Tshr");\
+            v1 = LLVMBuildTrunc(this->builder, v1, intType(bits), "Tshr");\
             setValue(this, args[1], v1);\
         } break;
 
@@ -1133,6 +1133,7 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
 
         type = LLVMGetTypeKind(LLVMTypeOf(valueref));
 
+        /* FIXME Refactor */
         switch (type)
         {
             /* 
@@ -1167,7 +1168,7 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
                  * ConstInt: dst = src
                  */
                 if (LLVMIsAConstantInt(valueref))
-                    res = Z3_mk_unsigned_int(ctx, LLVMConstIntGetZExtValue(valueref), bv_sort);
+                    res = Z3_mk_unsigned_int64(ctx, LLVMConstIntGetZExtValue(valueref), bv_sort);
                 /*
                  * Named integer: dst = src
                  */
@@ -1649,7 +1650,6 @@ static map_t *llvm_to_z3(private_converter_t *this)
                 dst = LLVMGetOperand(insn, 1);
 
                 Z3_src = create_Z3_var(this, src);
-                Z3_dst = create_Z3_var_inc(this, dst);
 
                 type = LLVMGetTypeKind(LLVMTypeOf(dst));
 
@@ -1660,6 +1660,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
                      */
                     case LLVMIntegerTypeKind:
                     {
+                        Z3_dst = create_Z3_var_inc(this, dst);
                         Z3_res = Z3_mk_eq(this->ctx, Z3_dst, Z3_src);
                         break;
                     }
@@ -1671,6 +1672,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
                         if (LLVMIsAGlobalValue(dst))
                         {
                             //Z3_res = Z3_mk_eq(this->ctx, Z3_dst, Z3_src);
+                            Z3_dst = create_Z3_var_inc(this, dst);
                             store_name = Z3_dst;
                             Z3_res = Z3_src;
                         }
@@ -1684,48 +1686,44 @@ static map_t *llvm_to_z3(private_converter_t *this)
                              * FIXME
                              * Something with only get_z3_size
                              */
+                            chunk_t new_chunk;
+                            Z3_ast previous;
+                            Z3_symbol_cell *new;
+
+                            Z3_dst = create_Z3_var(this, dst);
+
+                            new_chunk = chunk_calloc(255);
+
                             if (get_z3_size(this, Z3_src) == 32)
                             {
-                                chunk_t new_chunk;
-                                Z3_ast previous_env;
-
-                                env->index++;
-                                previous_env = env->symbol;
-
-                                new_chunk = chunk_calloc(255);
-                                snprintf((char*) new_chunk.ptr, new_chunk.len, "%s%i", env->name.ptr, env->index);
-
-                                if (env->prefix.ptr)
-                                    new_chunk = chunk_cat("cm", env->prefix, new_chunk);
-
-                                env->symbol = mk_var(this->ctx, (char*)new_chunk.ptr, array_sort_32);
-
-                                chunk_clear(&new_chunk);
-
-                                store_name = env->symbol;
-                                Z3_res = Z3_mk_store(this->ctx, previous_env, Z3_dst, Z3_src);
+                                new = env;
                             }
                             else
                             {
-                                chunk_t new_chunk;
-                                Z3_ast previous_ram;
-
-                                ram->index++;
-                                previous_ram = ram->symbol;
-
-                                new_chunk = chunk_calloc(255);
-                                snprintf((char*) new_chunk.ptr, new_chunk.len, "%s%i", ram->name.ptr, ram->index);
-
-                                if (ram->prefix.ptr)
-                                    new_chunk = chunk_cat("cm", ram->prefix, new_chunk);
-
-                                ram->symbol = mk_var(this->ctx, (char*)new_chunk.ptr, array_sort);
-
-                                chunk_clear(&new_chunk);
-
-                                store_name = ram->symbol;
-                                Z3_res = Z3_mk_store(this->ctx, previous_ram, Z3_dst, Z3_src);
+                                new = ram;
                             }
+
+                            new->index++;
+                            previous = new->symbol;
+
+                            snprintf((char*) new_chunk.ptr, new_chunk.len, "%s%i", new->name.ptr, new->index);
+
+                            if (new->prefix.ptr)
+                                new_chunk = chunk_cat("cm", new->prefix, new_chunk);
+
+                            if (get_z3_size(this, Z3_src) == 32)
+                            {
+                                new->symbol = mk_var(this->ctx, (char*)new_chunk.ptr, array_sort_32);
+                            }
+                            else
+                            {
+                                new->symbol = mk_var(this->ctx, (char*)new_chunk.ptr, array_sort);
+                            }
+
+                            store_name = new->symbol;
+                            Z3_res = Z3_mk_store(this->ctx, previous, Z3_dst, Z3_src);
+
+                            chunk_clear(&new_chunk);
                         }
                         break;
                     }
@@ -1743,12 +1741,30 @@ static map_t *llvm_to_z3(private_converter_t *this)
             }
             case LLVMTrunc:
             {
+                LLVMValueRef dst;
+                Z3_ast Z3_dst;
+
                 LOG_LLVM("LLVMTrunc\n");
+
+                dst = LLVMGetOperand(insn, 0);
+
+                Z3_dst = create_Z3_var(this, dst);
+
+                Z3_res = Z3_mk_extract(this->ctx, get_z3_size(this, store_name)-1, 0, Z3_dst);
                 break;
             }
             case LLVMZExt:
             {
+                LLVMValueRef dst;
+                Z3_ast Z3_dst;
+
                 LOG_LLVM("LLVMZExt\n");
+
+                dst = LLVMGetOperand(insn, 0);
+
+                Z3_dst = create_Z3_var(this, dst);
+
+                Z3_res = Z3_mk_zero_ext(this->ctx, get_z3_size(this, store_name) - get_z3_size(this, Z3_dst), Z3_dst);
                 break;
             }
             case LLVMSExt:

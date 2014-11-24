@@ -4,6 +4,20 @@
 
 #include "plugin_rop.h"
 
+#define DEBUG_ROP
+#ifdef DEBUG_ROP
+#  define LOG_ROP(...) logging(__VA_ARGS__)
+#else
+#  define LOG_ROP(...) do { } while (0)
+#endif
+
+//#define DEBUG_ROP_DEBUG
+#ifdef DEBUG_ROP_DEBUG
+#  define LOG_ROP_DEBUG(...) logging(__VA_ARGS__)
+#else
+#  define LOG_ROP_DEBUG(...) do { } while (0)
+#endif
+
 #define BUFLEN  1000
 
 typedef struct private_plugin_rop_t private_plugin_rop_t;
@@ -144,17 +158,17 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
     {
         if ((current_byte == 0) && (last_decoded_byte == last_byte))
         {
-            /*logging("start of chunk reached\n");*/
+            /*LOG_ROP_DEBUG("start of chunk reached\n");*/
             byte_to_disass = false;
         }
         else if /*((last_decoded_byte > 0) &&*/ (((ret_byte - current_byte > 50)))
         {
-            /*logging("max decoding size reached\n");*/
+            /*LOG_ROP_DEBUG("max decoding size reached\n");*/
             byte_to_disass = false;
         }
         else if ((last_decoded_byte > 0) && (((last_decoded_byte - current_byte) > 15) || (current_byte < 0)))
         {
-            /*logging("no instruction found within maximum instruction length range\n");*/
+            /*LOG_ROP_DEBUG("no instruction found within maximum instruction length range\n");*/
             current_byte = last_decoded_byte;
 
             if (last_decoded_byte == last_byte)
@@ -221,28 +235,28 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
 
             if (!ok)
             {
-                logging("Error while using xed_format in reverse_disass_ret\n");
+                LOG_ROP_DEBUG("Error while using xed_format in reverse_disass_ret\n");
             }
             else
             */
             if ((last_decoded_byte > 0) && (d->get_length(d, inst) != (last_decoded_byte - current_byte)))
             {
                 /*
-                logging("instruction length is not valid\n");
-                logging("decoded:%u vs. l-c:%u\n", xed_decoded_inst_get_length(&xedd), last_decoded_byte - current_byte);
+                LOG_ROP_DEBUG("instruction length is not valid\n");
+                LOG_ROP_DEBUG("decoded:%u vs. l-c:%u\n", xed_decoded_inst_get_length(&xedd), last_decoded_byte - current_byte);
                 xed_decoded_inst_dump(&xedd, buf, sizeof(buf));
-                logging("Invalid:\n%s\n", buf);
+                LOG_ROP_DEBUG("Invalid:\n%s\n", buf);
                 */
             }
             else if ((last_decoded_byte == 0) && (d->get_length(d, inst) != (last_byte - current_byte)))
             {}
             else if ((this->is_last_inst(this, inst)) && (chain_insns->get_last(chain_insns, (void**)&item) != NOT_FOUND))
             {
-                /*logging("found ending instruction, skipping as position != end (ret; bla; ret)\n");*/
+                /*LOG_ROP_DEBUG("found ending instruction, skipping as position != end (ret; bla; ret)\n");*/
             }
             else if ((this->is_last_inst(this, inst) == 0) && (chain_insns->get_last(chain_insns, (void**)&item) == NOT_FOUND))
             {
-                /*logging("found last instruction not being an ending instruction, skipping\n");*/
+                /*LOG_ROP_DEBUG("found last instruction not being an ending instruction, skipping\n");*/
             }
             /*
              * Filtering not wanted insns. HLT/STI
@@ -272,14 +286,14 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
         }
         else
         {
-            /*logging("wrong decoding\n");*/
+            /*LOG_ROP_DEBUG("wrong decoding\n");*/
         }
 
         //this->d->destroy_instruction(inst);
 
         current_byte--;
     }
-    /*logging("%08x: %s\n", addr + last_decoded_byte, chain_str);*/
+    /*LOG_ROP_DEBUG("%08x: %s\n", addr + last_decoded_byte, chain_str);*/
 
     chain_insns->destroy_function(chain_insns, this->d->destroy_instruction);
 
@@ -327,7 +341,7 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
             if (this->is_last_inst(this, instruction))
             {
                 /*
-                logging("Found a RET ins @%x\n", instruction);
+                LOG_ROP_DEBUG("Found a RET ins @%x\n", instruction);
                 char buffer[4096];
                 xed_decoded_inst_dump(&xedd,buffer, sizeof(buffer));
                 printf("%s\n",buffer);
@@ -356,8 +370,8 @@ static void job_chain(th_arg *t)
     chunk_t prefix;
     gadget_type g;
 
-    logging("***************************************************************************************************\n");
-    logging("***************************************************************************************************\n");
+    LOG_ROP_DEBUG("***************************************************************************************************\n");
+    LOG_ROP_DEBUG("***************************************************************************************************\n");
 
     pthread_mutex_lock(&job_mutex);
     job_count++;
@@ -370,7 +384,7 @@ static void job_chain(th_arg *t)
 
     c = t->c;
 
-    logging("%08x: %s\n", c->get_addr(c), c->get_str(c));
+    LOG_ROP_DEBUG("%08x: %s\n", c->get_addr(c), c->get_str(c));
     /*hexdump(c->get_chunk(c).ptr, c->get_chunk(c).len);*/
 
     //target_map = t->target_map;
@@ -391,10 +405,9 @@ static void job_chain(th_arg *t)
     g = target_map->compare(target_map, map);
     if (g != BAD)
     {
-        logging("Found equivalent! %u\n", g);
-        logging("   [X] %s\n", c->get_str(c));
-        logging("   [X] %s\n", t->target->get_str(t->target));
-        map->dump(map);
+        LOG_ROP("Found equivalent! %u\n", g);
+        LOG_ROP("   [X] %s\n", c->get_str(c));
+        LOG_ROP("   [X] %s\n", t->target->get_str(t->target));
     }
 
     target_map->destroy(target_map);
@@ -433,7 +446,7 @@ status_t pack(private_plugin_rop_t *this, Elf64_Addr addr, chunk_t chunk)
     if ((!this) || (!this->code))
         return FAILED;
 
-    logging("Getting target map\n");
+    LOG_ROP("Getting target map\n");
 
     /*
      * It is more efficient to get the target map here and share.
@@ -443,16 +456,16 @@ status_t pack(private_plugin_rop_t *this, Elf64_Addr addr, chunk_t chunk)
     target_map->dump(target_map);
      */
 
-    logging("Finding rop chains\n");
+    LOG_ROP("Finding rop chains\n");
 
     inst_list = this->find_rop_chains(this, chunk, addr);
 
-    logging("Sorting %i elements\n", inst_list->get_count(inst_list));
+    LOG_ROP("Sorting %i elements\n", inst_list->get_count(inst_list));
 
     inst_list->bsort(inst_list);
     inst_list->unique(inst_list);
 
-    logging("Unique %i elements\n", inst_list->get_count(inst_list));
+    LOG_ROP("Unique %i elements\n", inst_list->get_count(inst_list));
 
     e = inst_list->create_enumerator(inst_list);
     pthread_mutex_lock(&job_mutex);
@@ -476,7 +489,7 @@ status_t pack(private_plugin_rop_t *this, Elf64_Addr addr, chunk_t chunk)
         jc = job_count;
         pthread_mutex_unlock(&job_mutex);
 
-        logging("j:%i i:%i\n", jc, inst_list->get_count(inst_list));
+        LOG_ROP_DEBUG("j:%i i:%i\n", jc, inst_list->get_count(inst_list));
         usleep(10000);
     }
 
@@ -499,7 +512,7 @@ static status_t apply(private_plugin_rop_t *this)
     section_t *text_section;
     if ((text_section = this->code->get_section_by_name(this->code, ".text")) == NULL)
     {
-        logging("Section %s not found.\n", ".text");
+        LOG_ROP_DEBUG("Section %s not found.\n", ".text");
         return FAILED;
     }
 

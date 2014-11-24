@@ -106,7 +106,7 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
 
     converter_t *converter;
 
-    hexdump(this->chunk.ptr, this->chunk.len);
+    //hexdump(this->chunk.ptr, this->chunk.len);
 /*
 #0  tcg_gen_code (s=s@entry=0x62362ea0 <tcg_ctx>, gen_code_buf=0x6035f820 <static_code_gen_buffer> "") at /home/dad/Outils/packerLLVM/qemu/tcg/tcg.c:2585
 #1  0x00000000600d03c7 in cpu_x86_gen_code (env=env@entry=0x623c6950, tb=tb@entry=0x7ffff2875010, gen_code_size_ptr=gen_code_size_ptr@entry=0x7fffffffd304)
@@ -131,7 +131,7 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
     tb_gen_code(cpu, (uint64_t) this->chunk.ptr, 0, 0x40c0b3, 0);
 
     s = get_tcg_ctx();
-    tcg_dump_ops(s);
+    //tcg_dump_ops(s);
 
     if (this->ctx == NULL)
         LOG_CHAIN("The Z3 context is NULL, will segfault\n");
@@ -139,7 +139,7 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
     converter = converter_create(s, this->ctx);
     converter->set_prefix(converter, prefix);
     converter->tcg_to_llvm(converter);
-    converter->dump(converter);
+    //converter->dump(converter);
 
     map = converter->llvm_to_z3(converter);
 

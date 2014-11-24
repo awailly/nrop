@@ -4,7 +4,7 @@
 
 #include "converter.h"
 
-#define DEBUG_LLVM
+//#define DEBUG_LLVM
 #ifdef DEBUG_LLVM
 #  define LOG_LLVM(...) logging(__VA_ARGS__)
 #else
@@ -1953,7 +1953,6 @@ static map_t *llvm_to_z3(private_converter_t *this)
 
             if (store_name_size > Z3_res_size)
             {
-                logging("store name is greater\n");
                 Z3_ast Z3_res_ext;
 
                 Z3_res_ext = Z3_mk_zero_ext(this->ctx, store_name_size - Z3_res_size, Z3_res);
@@ -1962,7 +1961,6 @@ static map_t *llvm_to_z3(private_converter_t *this)
             }
             else if (store_name_size < Z3_res_size)
             {
-                logging("store name is smaller\n");
                 Z3_ast Z3_res_trunc;
 
                 Z3_res_trunc = Z3_mk_extract(this->ctx, store_name_size - 1, 0, Z3_res);

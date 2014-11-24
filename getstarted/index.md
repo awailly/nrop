@@ -30,35 +30,6 @@ Then you have the shellcode dumped by XED (or capstone), analyzed by the Qemu TC
 
     % ./packer -t 68ccedffff5a4883ec085b4831c04829d0c3 /usr/lib/libc.so.6
 
-# Build the project
-
-## Reset the qemu changes
-
-    cd qemu
-    git stash
-
-## Apply patches to qemu && build
-
-    git apply ../qemu.noprologet.patch
-    make -j32
-    cd ..
-    make -j32 # error wanted regarding "abi_ulong"
-
-## Fix abi_ulong error
-
-    cd qemu
-    git apply ../qemu.patch
-    cd ..
-    make -j32 # error wanted regarding multiple main and icount
-
-## Fix main and use_icount errors
-
-    vim qemu/x86_64-linux-user/linux-user/main.o # :%s/main/ma1n/g
-    vim qemu/stubs/cpu-get-icount.o # :%s/use_icount/use_1count/g
-    make -j32
-
-I know :)
-
 # Use it
 
 You can now follow the [debugging guide][1], as you will encounter tons of bugs

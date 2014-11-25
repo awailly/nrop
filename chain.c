@@ -99,9 +99,7 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
 
     CPUArchState *env;
     CPUState *cpu;
-    /*    
     TranslationBlock *tb;
-    */
     TCGContext *s;
 
     converter_t *converter;
@@ -127,8 +125,8 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
 
     env = cpu_init("qemu64");
     cpu = ENV_GET_CPU(env); 
-    //tb = tb_gen_code(cpu, (uint64_t) this->chunk.ptr, 0, 0x40c0b3, 0);
-    tb_gen_code(cpu, (uint64_t) this->chunk.ptr, 0, 0x40c0b3, 0);
+    tb = tb_gen_code(cpu, (uint64_t) this->chunk.ptr, 0, 0x40c0b3, 0);
+    //tb_gen_code(cpu, (uint64_t) this->chunk.ptr, 0, 0x40c0b3, 0);
 
     s = get_tcg_ctx();
     //tcg_dump_ops(s);
@@ -144,6 +142,8 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
     map = converter->llvm_to_z3(converter);
 
     converter->destroy(converter);
+
+    tb_free(tb);
 
     pthread_mutex_unlock(&map_lock);
 

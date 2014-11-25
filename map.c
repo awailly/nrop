@@ -48,13 +48,12 @@ static Z3_ast mk_var(Z3_context ctx, const char * name, Z3_sort ty)
 
 static gadget_type compare(private_map_t *this, map_t *other)
 {
-    Z3_solver solver, solvernot, solvernot_other;
-    Z3_model model;
+    Z3_solver solver, solvernot;
     enumerator_t *e, *e_other;
     Z3_symbol_cell *c, *c_other;
     linked_list_t *ll_other;
 
-    int solver_res, solver_resnot, solver_resnot_other;
+    int solver_res, solver_resnot;
     gadget_type result;
     bool found_target_register;
 
@@ -98,8 +97,6 @@ static gadget_type compare(private_map_t *this, map_t *other)
     Z3_solver_inc_ref(this->ctx, solver);
     solvernot = Z3_mk_solver(this->ctx);
     Z3_solver_inc_ref(this->ctx, solvernot);
-    solvernot_other = Z3_mk_solver(this->ctx);
-    Z3_solver_inc_ref(this->ctx, solvernot_other);
 
     /*
     LOG_Z3_SOLVE("Making and\n");
@@ -119,9 +116,6 @@ static gadget_type compare(private_map_t *this, map_t *other)
 
     Z3_solver_assert(this->ctx, solvernot, this->ast);
     Z3_solver_assert(this->ctx, solvernot, other->get_ast(other));
-
-    Z3_solver_assert(this->ctx, solvernot_other, this->ast);
-    Z3_solver_assert(this->ctx, solvernot_other, Z3_mk_not(this->ctx, other->get_ast(other)));
 
     //Z3_set_ast_print_mode(this->ctx, Z3_PRINT_SMTLIB2_COMPLIANT);
     LOG_Z3_SOLVE("Dumping AST:%s\n", Z3_ast_to_string(this->ctx, this->ast));
@@ -207,7 +201,6 @@ static gadget_type compare(private_map_t *this, map_t *other)
                     LOG_Z3_SOLVE("Dumping TTI:%s\n", Z3_ast_to_string(this->ctx, eq));
 
                     Z3_solver_assert(this->ctx, solvernot, eq);
-                    Z3_solver_assert(this->ctx, solvernot_other, eq);
 
                     if (need_free_name_a)
                         chunk_free(&name_a);
@@ -268,7 +261,6 @@ static gadget_type compare(private_map_t *this, map_t *other)
                         Z3_solver_assert(this->ctx, solvernot, eq);
                     else
                         Z3_solver_assert(this->ctx, solvernot, Z3_mk_not(this->ctx, eq));
-                    Z3_solver_assert(this->ctx, solvernot_other, eq);
 
                     if (need_free_name_a)
                         chunk_free(&name_a);
@@ -314,10 +306,11 @@ static gadget_type compare(private_map_t *this, map_t *other)
         }
         else
         {
+            //Z3_model model;
             printf("Found PN1\n");
             result = PN1;
-            model = Z3_solver_get_model(this->ctx, solvernot);
-            LOG_Z3_SOLVE("Model: %s\n", Z3_model_to_string(this->ctx, model));
+            //model = Z3_solver_get_model(this->ctx, solvernot);
+            //LOG_Z3_SOLVE("Model: %s\n", Z3_model_to_string(this->ctx, model));
             //Z3_model_dec_ref(this->ctx, model);
         }
 
@@ -325,10 +318,8 @@ static gadget_type compare(private_map_t *this, map_t *other)
         LOG_Z3_SOLVE("Sat result: %x|%x\n", solver_res, solver_resnot);
     }
 
-    LOG_Z3_SOLVE("Checking othernot:%x\n", Z3_solver_check(this->ctx, solvernot_other));
     LOG_Z3_SOLVE("%x:True %x:False %x:Undef\n", Z3_L_TRUE, Z3_L_FALSE, Z3_L_UNDEF);
 
-    Z3_solver_dec_ref(this->ctx, solvernot_other);
     Z3_solver_dec_ref(this->ctx, solvernot);
     Z3_solver_dec_ref(this->ctx, solver);
     

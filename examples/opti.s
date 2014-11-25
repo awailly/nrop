@@ -115,7 +115,7 @@ cha3:
 
 cha4:
     imul rcx, [rsi], 0
-    add rcx, rax
+    add rax, rcx
     ret
 
 cha5:

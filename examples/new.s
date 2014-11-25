@@ -10,8 +10,7 @@ _start:
 
 mov1:
     int 3
-    not rax
-    and rax, rbx
+    pop rax
     ret
 
 section .data

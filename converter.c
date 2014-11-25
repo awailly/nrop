@@ -974,9 +974,9 @@ static void dump(private_converter_t *this)
     
     msg = LLVMPrintModuleToString(this->module);
 
-    LOG_LLVM("Dumping\n");
+    logging("Dumping\n");
     /*LLVMDumpModule(this->module);*/
-    LOG_LLVM("%s\n", msg);
+    logging("%s\n", msg);
 }
 
 /**

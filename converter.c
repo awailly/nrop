@@ -261,7 +261,7 @@ static void tcg_to_llvm(private_converter_t *this)
         if(this->s->temps[i].temp_local) {
             //std::ostringstream pName;
             //pName << "loc_" << (i - s->nb_globals) << "ptr";
-            char *name;
+            const char *name;
             if (this->s->temps[i].name)
                 name = this->s->temps[i].name;
             else

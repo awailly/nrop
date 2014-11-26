@@ -28,3 +28,8 @@
 capstone/*
 qemu/*
 z3/*
+
+peda-session-packer.txt
+.gdb_history
+packer
+

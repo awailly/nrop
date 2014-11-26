@@ -123,7 +123,10 @@ static status_t dump_intel(private_disass_xed_t *this, instruction_t *i, chunk_t
 
     LOG_XED("   = %x\n", xed_error);
 
-    return SUCCESS;
+    if (!xed_error)
+        return FAILED;
+    else
+        return SUCCESS;
 }
 
 static status_t decode(private_disass_xed_t *this, instruction_t **i, chunk_t c)

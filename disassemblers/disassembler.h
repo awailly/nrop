@@ -50,6 +50,9 @@ struct disassembler_t
      * @param instruction   the instruction to dump
      * @param buffer        the chunk to contain the dump
      * @param offset        the offset of the instruction in the executables
+     *
+     * @return              SUCCESS if the dump was successful,
+     *                      FAILED otherwise
      */
     status_t (*dump_intel)(disassembler_t *, instruction_t *, chunk_t, uint64_t);
 

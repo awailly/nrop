@@ -236,7 +236,7 @@ chain_t *chain_create_from_string_disass(disassembler_t *d, uint64_t addr, chunk
         */
         format_chunk = chunk_calloc(4096);
         if (d->dump_intel(d, instruction, format_chunk, addr) == FAILED)
-            LOG_ROP_DEBUG("[x] Error while dump_intel in chain.c\n");
+            LOG_CHAIN("[x] Error while dump_intel in chain.c\n");
 
         LOG_CHAIN("%s\n", format_chunk.ptr);
 

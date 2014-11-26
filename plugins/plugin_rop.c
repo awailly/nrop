@@ -378,7 +378,7 @@ static void job_chain(th_arg *t)
     pthread_mutex_unlock(&job_mutex);
 
     cfg = Z3_mk_config();
-    ctx = Z3_mk_context(cfg);
+    ctx = Z3_mk_context_rc(cfg);
 
     Z3_del_config(cfg);
 

@@ -4,7 +4,7 @@
 
 #include "map.h"
 
-//#define DEBUG_Z3_SOLVE
+#define DEBUG_Z3_SOLVE
 #ifdef DEBUG_Z3_SOLVE
 #  define LOG_Z3_SOLVE(...) logging(__VA_ARGS__)
 #else
@@ -43,7 +43,9 @@ static void dump(private_map_t *this)
 static Z3_ast mk_var(Z3_context ctx, const char * name, Z3_sort ty) 
 {
     Z3_symbol   s  = Z3_mk_string_symbol(ctx, name);
-    return Z3_mk_const(ctx, s, ty);
+    Z3_ast a = Z3_mk_const(ctx, s, ty);
+    Z3_inc_ref(ctx, a);
+    return a;
 }
 
 static gadget_type compare(private_map_t *this, map_t *other)
@@ -56,7 +58,7 @@ static gadget_type compare(private_map_t *this, map_t *other)
     int solver_res, solver_resnot;
     gadget_type result;
     bool found_target_register;
-
+    Z3_sort bv_sort;
 
     /*
     Z3_ast target, Z3_rdx, Z3_0;
@@ -124,6 +126,9 @@ static gadget_type compare(private_map_t *this, map_t *other)
     e = this->symbols->create_enumerator(this->symbols);
     ll_other = other->get_symbols(other);
 
+    bv_sort = Z3_mk_bv_sort(this->ctx, 64);
+    Z3_inc_ref(this->ctx, Z3_sort_to_ast(this->ctx, bv_sort));
+
     while(e->enumerate(e, &c))
     {
         /* For now, must remove after
@@ -143,6 +148,8 @@ static gadget_type compare(private_map_t *this, map_t *other)
 
         e_other = ll_other->create_enumerator(ll_other);
 
+        Z3_dec_ref(this->ctx, c->symbol);
+
         while(e_other->enumerate(e_other, &c_other))
         {
             /*
@@ -154,7 +161,6 @@ static gadget_type compare(private_map_t *this, map_t *other)
             {
                 found_target_register = true;
 
-                Z3_sort bv_sort;
                 Z3_ast a, b, eq;
                 chunk_t new_a, new_b, name_a, name_b;
                 bool need_free_name_a, need_free_name_b;
@@ -191,16 +197,18 @@ static gadget_type compare(private_map_t *this, map_t *other)
 
                     snprintf((char*)new_b.ptr, new_b.len, "%s", name_b.ptr);
                     
-                    bv_sort = Z3_mk_bv_sort(this->ctx, 64);
-
                     a = mk_var(this->ctx, (char*)new_a.ptr, bv_sort);
                     b = mk_var(this->ctx, (char*)new_b.ptr, bv_sort);
                     eq = Z3_mk_eq(this->ctx, a, b);
+                    Z3_inc_ref(this->ctx, eq);
+                    Z3_dec_ref(this->ctx, a);
+                    Z3_dec_ref(this->ctx, b);
 
                     Z3_solver_assert(this->ctx, solver, eq);
                     LOG_Z3_SOLVE("Dumping TTI:%s\n", Z3_ast_to_string(this->ctx, eq));
 
                     Z3_solver_assert(this->ctx, solvernot, eq);
+                    Z3_dec_ref(this->ctx, eq);
 
                     if (need_free_name_a)
                         chunk_free(&name_a);
@@ -247,20 +255,32 @@ static gadget_type compare(private_map_t *this, map_t *other)
                     else
                         snprintf((char*)new_b.ptr, new_b.len, "%s", name_b.ptr);
                     
-                    bv_sort = Z3_mk_bv_sort(this->ctx, 64);
-
                     a = mk_var(this->ctx, (char*)new_a.ptr, bv_sort);
                     b = mk_var(this->ctx, (char*)new_b.ptr, bv_sort);
                     eq = Z3_mk_eq(this->ctx, a, b);
+                    Z3_inc_ref(this->ctx, eq);
+                    Z3_dec_ref(this->ctx, a);
+                    Z3_dec_ref(this->ctx, b);
 
                     Z3_solver_assert(this->ctx, solver, eq);
                     LOG_Z3_SOLVE("Dumping TTO:%s\n", Z3_ast_to_string(this->ctx, eq));
 
                     if ((strcmp((char*)c->name.ptr, "rsp") == 0) || 
                         (strcmp((char*)c->name.ptr, "esp") == 0))
+                    {
                         Z3_solver_assert(this->ctx, solvernot, eq);
+                        Z3_dec_ref(this->ctx, eq);
+                    }
                     else
-                        Z3_solver_assert(this->ctx, solvernot, Z3_mk_not(this->ctx, eq));
+                    {
+                        Z3_ast neq;
+
+                        neq = Z3_mk_not(this->ctx, eq);
+                        Z3_dec_ref(this->ctx, eq);
+                        Z3_inc_ref(this->ctx, neq);
+                        Z3_solver_assert(this->ctx, solvernot, neq);
+                        Z3_dec_ref(this->ctx, neq);
+                    }
 
                     if (need_free_name_a)
                         chunk_free(&name_a);
@@ -288,15 +308,19 @@ static gadget_type compare(private_map_t *this, map_t *other)
 
     e->destroy(e);
 
+    Z3_dec_ref(this->ctx, Z3_sort_to_ast(this->ctx, bv_sort));
+
     if (result == BAD)
         return result;
 
     LOG_Z3_SOLVE("Checking\n");
     solver_res = Z3_solver_check(this->ctx, solver);
+    Z3_solver_dec_ref(this->ctx, solver);
 
     if (solver_res == Z3_L_TRUE)
     {
         solver_resnot = Z3_solver_check(this->ctx, solvernot);
+        Z3_solver_dec_ref(this->ctx, solvernot);
 
         if (solver_resnot == Z3_L_FALSE)
         {
@@ -319,9 +343,6 @@ static gadget_type compare(private_map_t *this, map_t *other)
     }
 
     LOG_Z3_SOLVE("%x:True %x:False %x:Undef\n", Z3_L_TRUE, Z3_L_FALSE, Z3_L_UNDEF);
-
-    Z3_solver_dec_ref(this->ctx, solvernot);
-    Z3_solver_dec_ref(this->ctx, solver);
     
     return result;
 }

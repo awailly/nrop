@@ -1004,11 +1004,7 @@ Z3_ast mk_var(Z3_context ctx, const char * name, Z3_sort ty)
 {
     Z3_symbol   s  = Z3_mk_string_symbol(ctx, name);
     Z3_ast a = Z3_mk_const(ctx, s, ty);
-    /*
-    printf("inc ref for %s\n", name);
     Z3_inc_ref(ctx, a);
-    printf("for %s\n", name);
-    */
     return a;
 }
 
@@ -1105,6 +1101,7 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
     valueref_size = get_llvm_type_size(valueref);
 
     bv_sort = Z3_mk_bv_sort(ctx, valueref_size);
+    Z3_inc_ref(ctx, Z3_sort_to_ast(this->ctx, bv_sort));
 
     e = this->Z3_symbol_list->create_enumerator(this->Z3_symbol_list);
 
@@ -1131,6 +1128,7 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
                 new_chunk = chunk_cat("cm", target_cell->prefix, new_chunk);
 
             LOG_LLVM("Creating incremented z3 variable @%x[%s]\n", new_chunk.ptr, new_chunk.ptr);
+            Z3_dec_ref(ctx, target_cell->symbol);
             target_cell->symbol = mk_var(ctx, (char*)new_chunk.ptr, bv_sort);
 
             chunk_clear(&new_chunk);
@@ -1192,7 +1190,10 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
                  * ConstInt: dst = src
                  */
                 if (LLVMIsAConstantInt(valueref))
+                {
                     res = Z3_mk_unsigned_int64(ctx, LLVMConstIntGetZExtValue(valueref), bv_sort);
+                    Z3_inc_ref(ctx, res);
+                }
                 /*
                  * Named integer: dst = src
                  */
@@ -1260,6 +1261,8 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
         this->Z3_symbol_list->insert_last(this->Z3_symbol_list, target_cell);
     }
 
+    Z3_dec_ref(ctx, Z3_sort_to_ast(this->ctx, bv_sort));
+
     if (res == NULL)
         LOG_LLVM("BEWARE, RETURNING NULL\n");
 
@@ -1311,10 +1314,14 @@ static map_t *llvm_to_z3(private_converter_t *this)
     int operand_num;
 
     bv_sort = Z3_mk_bv_sort(this->ctx, 64);
+    Z3_inc_ref(this->ctx, Z3_sort_to_ast(this->ctx, bv_sort));
     array_sort = Z3_mk_array_sort(this->ctx, bv_sort, bv_sort);
+    Z3_inc_ref(this->ctx, Z3_sort_to_ast(this->ctx, array_sort));
 
     bv_sort_32 = Z3_mk_bv_sort(this->ctx, 32);
+    Z3_inc_ref(this->ctx, Z3_sort_to_ast(this->ctx, bv_sort_32));
     array_sort_32 = Z3_mk_array_sort(this->ctx, bv_sort_32, bv_sort_32);
+    Z3_inc_ref(this->ctx, Z3_sort_to_ast(this->ctx, array_sort_32));
 
     bb = LLVMGetFirstBasicBlock(this->Fn);
     insn = LLVMGetFirstInstruction(bb);
@@ -1434,6 +1441,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
                 Z3_dst = create_Z3_var(this, dst);
 
                 Z3_res = Z3_mk_bvadd(this->ctx, Z3_dst, Z3_src);
+                Z3_inc_ref(this->ctx, Z3_res);
 
                 break;
             }
@@ -1456,6 +1464,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
                 Z3_dst = create_Z3_var(this, dst);
 
                 Z3_res = Z3_mk_bvsub(this->ctx, Z3_src, Z3_dst);
+                Z3_inc_ref(this->ctx, Z3_res);
                 break;
             }
             case LLVMFSub:
@@ -1477,6 +1486,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
                 Z3_dst = create_Z3_var(this, dst);
 
                 Z3_res = Z3_mk_bvmul(this->ctx, Z3_dst, Z3_src);
+                Z3_inc_ref(this->ctx, Z3_res);
                 break;
             }
             case LLVMFMul:
@@ -1528,6 +1538,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
                 Z3_dst = create_Z3_var(this, dst);
 
                 Z3_res = Z3_mk_bvshl(this->ctx, Z3_dst, Z3_src);
+                Z3_inc_ref(this->ctx, Z3_res);
                 break;
             }
             case LLVMLShr:
@@ -1544,6 +1555,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
                 Z3_dst = create_Z3_var(this, dst);
 
                 Z3_res = Z3_mk_bvashr(this->ctx, Z3_dst, Z3_src);
+                Z3_inc_ref(this->ctx, Z3_res);
                 break;
             }
             case LLVMAShr:
@@ -1560,6 +1572,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
                 Z3_dst = create_Z3_var(this, dst);
 
                 Z3_res = Z3_mk_bvashr(this->ctx, Z3_dst, Z3_src);
+                Z3_inc_ref(this->ctx, Z3_res);
                 break;
             }
             case LLVMAnd:
@@ -1576,6 +1589,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
                 Z3_dst = create_Z3_var(this, dst);
 
                 Z3_res = Z3_mk_bvand(this->ctx, Z3_dst, Z3_src);
+                Z3_inc_ref(this->ctx, Z3_res);
                 break;
             }
             case LLVMOr:
@@ -1592,6 +1606,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
                 Z3_dst = create_Z3_var(this, dst);
 
                 Z3_res = Z3_mk_bvor(this->ctx, Z3_dst, Z3_src);
+                Z3_inc_ref(this->ctx, Z3_res);
                 break;
             }
             case LLVMXor:
@@ -1608,6 +1623,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
                 Z3_dst = create_Z3_var(this, dst);
 
                 Z3_res = Z3_mk_bvxor(this->ctx, Z3_dst, Z3_src);
+                Z3_inc_ref(this->ctx, Z3_res);
                 break;
             }
             case LLVMAlloca:
@@ -1644,14 +1660,21 @@ static map_t *llvm_to_z3(private_converter_t *this)
                      */
                     case LLVMPointerTypeKind:
                     {
+
                         if (LLVMIsAGlobalValue(src))
                             Z3_res = Z3_src;
                         else
                         {
                             if (get_z3_size(this, Z3_src) == 32)
+                            {
                                 Z3_res = Z3_mk_select(this->ctx, env->symbol, Z3_src);
+                                Z3_inc_ref(this->ctx, Z3_res);
+                            }
                             else
+                            {
                                 Z3_res = Z3_mk_select(this->ctx, ram->symbol, Z3_src);
+                                Z3_inc_ref(this->ctx, Z3_res);
+                            }
                         }
                         break;
                     }
@@ -1686,6 +1709,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
                     {
                         Z3_dst = create_Z3_var_inc(this, dst);
                         Z3_res = Z3_mk_eq(this->ctx, Z3_dst, Z3_src);
+                        Z3_inc_ref(this->ctx, Z3_res);
                         break;
                     }
                     /*
@@ -1746,6 +1770,8 @@ static map_t *llvm_to_z3(private_converter_t *this)
 
                             store_name = new->symbol;
                             Z3_res = Z3_mk_store(this->ctx, previous, Z3_dst, Z3_src);
+                            Z3_inc_ref(this->ctx, Z3_res);
+                            Z3_dec_ref(this->ctx, previous);
 
                             chunk_clear(&new_chunk);
                         }
@@ -1775,6 +1801,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
                 Z3_dst = create_Z3_var(this, dst);
 
                 Z3_res = Z3_mk_extract(this->ctx, get_z3_size(this, store_name)-1, 0, Z3_dst);
+                Z3_inc_ref(this->ctx, Z3_res);
                 break;
             }
             case LLVMZExt:
@@ -1789,6 +1816,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
                 Z3_dst = create_Z3_var(this, dst);
 
                 Z3_res = Z3_mk_zero_ext(this->ctx, get_z3_size(this, store_name) - get_z3_size(this, Z3_dst), Z3_dst);
+                Z3_inc_ref(this->ctx, Z3_res);
                 break;
             }
             case LLVMSExt:
@@ -1996,6 +2024,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
                 Z3_ast Z3_res_ext;
 
                 Z3_res_ext = Z3_mk_zero_ext(this->ctx, store_name_size - Z3_res_size, Z3_res);
+                Z3_inc_ref(this->ctx, Z3_res_ext);
 
                 Z3_res = Z3_res_ext;
             }
@@ -2004,11 +2033,14 @@ static map_t *llvm_to_z3(private_converter_t *this)
                 Z3_ast Z3_res_trunc;
 
                 Z3_res_trunc = Z3_mk_extract(this->ctx, store_name_size - 1, 0, Z3_res);
+                Z3_inc_ref(this->ctx, Z3_res_trunc);
 
                 Z3_res = Z3_res_trunc;
             }
 
             tmp = Z3_mk_eq(this->ctx, store_name, Z3_res);
+            Z3_inc_ref(this->ctx, tmp);
+
             Z3_res = tmp;
 
             /* Uncomment to dump each instruction 
@@ -2022,8 +2054,18 @@ static map_t *llvm_to_z3(private_converter_t *this)
             args[0] = this->formula;
             args[1] = Z3_res;
             this->formula = Z3_mk_and(this->ctx, 2, args);
+            Z3_inc_ref(this->ctx, this->formula);
+            Z3_dec_ref(this->ctx, args[0]);
+            Z3_dec_ref(this->ctx, args[1]);
         }
     } while ((insn = (LLVMGetNextInstruction(insn))));
+
+    Z3_dec_ref(this->ctx, Z3_sort_to_ast(this->ctx, bv_sort));
+    Z3_dec_ref(this->ctx, Z3_sort_to_ast(this->ctx, array_sort));
+    Z3_dec_ref(this->ctx, Z3_sort_to_ast(this->ctx, bv_sort_32));
+    Z3_dec_ref(this->ctx, Z3_sort_to_ast(this->ctx, array_sort_32));
+    Z3_dec_ref(this->ctx, env->symbol);
+    Z3_dec_ref(this->ctx, ram->symbol);
 
     LOG_LLVM("AST: %s\n", Z3_ast_to_string(this->ctx, this->formula));
 
@@ -2139,6 +2181,7 @@ converter_t *converter_create(TCGContext *s, Z3_context ctx)
 
     this->ctx = ctx;
     this->formula = Z3_mk_true(this->ctx);
+    Z3_inc_ref(this->ctx, this->formula);
     this->prefix = chunk_empty;
 
     Z3_set_error_handler(this->ctx, error_handler);

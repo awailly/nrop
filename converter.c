@@ -238,6 +238,7 @@ static void tcg_to_llvm(private_converter_t *this)
     LLVMTypeRef FnType;
     LLVMTypeRef ParamTypes[1];
     LLVMBasicBlockRef bbi;
+    int i;
 
     /*
     LLVMValueRef zero = LLVMConstInt(wordType(), 0, 0);
@@ -254,6 +255,22 @@ static void tcg_to_llvm(private_converter_t *this)
     /*
     bbi = LLVMGetEntryBasicBlock(this->Fn);
     this->builder->SetInsertPoint(bb);*/
+
+    // Allocate local temps
+    for(i=this->s->nb_globals; i<TCG_MAX_TEMPS; ++i) {
+        if(this->s->temps[i].temp_local) {
+            //std::ostringstream pName;
+            //pName << "loc_" << (i - s->nb_globals) << "ptr";
+            char *name;
+            if (this->s->temps[i].name)
+                name = this->s->temps[i].name;
+            else
+                name = "ALLOA";
+            this->m_memValuesPtr[i] = LLVMBuildAlloca(this->builder,
+                tcgType(this->s->temps[i].type), name);
+        }
+    }
+
 
     args = this->s->gen_opparam_buf;
     op_index = 0;
@@ -914,6 +931,7 @@ static void optimize_llvm(private_converter_t *this)
     error = NULL;
 
     LOG_LLVM("Verification of the module\n");
+    //this->public.dump(&this->public);
     /*LLVMVerifyModule(this->module, LLVMPrintMessageAction, &error);*/
     LLVMVerifyModule(this->module, LLVMAbortProcessAction, &error);
     LLVMDisposeMessage(error);
@@ -985,7 +1003,13 @@ static void dump(private_converter_t *this)
 Z3_ast mk_var(Z3_context ctx, const char * name, Z3_sort ty) 
 {
     Z3_symbol   s  = Z3_mk_string_symbol(ctx, name);
-    return Z3_mk_const(ctx, s, ty);
+    Z3_ast a = Z3_mk_const(ctx, s, ty);
+    /*
+    printf("inc ref for %s\n", name);
+    Z3_inc_ref(ctx, a);
+    printf("for %s\n", name);
+    */
+    return a;
 }
 
 /**
@@ -2109,23 +2133,6 @@ converter_t *converter_create(TCGContext *s, Z3_context ctx)
             this->m_globalsIdx[i] = reg_to_idx[this->m_globalsIdx[i]];
         }
     }
-
-    // Allocate local temps
-    /*
-    for(i=s->nb_globals; i<TCG_MAX_TEMPS; ++i) {
-        if(s->temps[i].temp_local) {
-            //std::ostringstream pName;
-            //pName << "loc_" << (i - s->nb_globals) << "ptr";
-            char *name;
-            if (s->temps[i].name)
-                name = s->temps[i].name;
-            else
-                name = "ALLOA";
-            this->m_memValuesPtr[i] = LLVMBuildAlloca(this->builder,
-                tcgType(s->temps[i].type), name);
-        }
-    }
-    */
 
     LLVMInitializeNativeTarget ();
     LLVMLinkInJIT();

@@ -1008,42 +1008,6 @@ Z3_ast mk_var(Z3_context ctx, const char * name, Z3_sort ty)
     return a;
 }
 
-/**
-   \brief Create a boolean variable using the given name.
-*/
-Z3_ast mk_bool_var(Z3_context ctx, const char * name) 
-{
-    Z3_sort ty = Z3_mk_bool_sort(ctx);
-    return mk_var(ctx, name, ty);
-}
-
-/**
-   \brief Create an integer variable using the given name.
-*/
-Z3_ast mk_int_var(Z3_context ctx, const char * name) 
-{
-    Z3_sort ty = Z3_mk_int_sort(ctx);
-    return mk_var(ctx, name, ty);
-}
-
-/**
-   \brief Create a Z3 integer node using a C int. 
-*/
-Z3_ast mk_int(Z3_context ctx, int v) 
-{
-    Z3_sort ty = Z3_mk_int_sort(ctx);
-    return Z3_mk_int(ctx, v, ty);
-}
-
-/**
-   \brief Create a real variable using the given name.
-*/
-Z3_ast mk_real_var(Z3_context ctx, const char * name) 
-{
-    Z3_sort ty = Z3_mk_real_sort(ctx);
-    return mk_var(ctx, name, ty);
-}
-
 uint64_t get_llvm_type_size(LLVMValueRef valueref)
 {
     uint64_t valueref_size;
@@ -1081,6 +1045,45 @@ uint64_t get_z3_size(private_converter_t *this, Z3_ast z3value)
         return 1;
 
     return Z3_get_bv_sort_size(this->ctx, sort);
+}
+
+Z3_ast create_named_var(private_converter_t *this, Z3_symbol_cell *target_cell)
+{
+    Z3_ast res;
+    const char *name;
+    chunk_t final_name;
+    bool need_final_free;
+    Z3_sort bv_sort;
+    uint64_t valueref_size;
+
+    need_final_free = false;
+
+    name = LLVMGetValueName(target_cell->valueref);
+
+    valueref_size = get_llvm_type_size(target_cell->valueref);
+    bv_sort = Z3_mk_bv_sort(this->ctx, valueref_size);
+    Z3_inc_ref(this->ctx, Z3_sort_to_ast(this->ctx, bv_sort));
+
+    if (*name == 0)
+        name = "_";
+
+    target_cell->name = chunk_calloc(strlen(name)+1);
+    strncpy((char*)target_cell->name.ptr, name, target_cell->name.len);
+    final_name = target_cell->name;
+
+    if (this->prefix.ptr)
+    {
+        final_name = chunk_cat("cc", this->prefix, target_cell->name);
+        need_final_free = true;
+    }
+
+    res = mk_var(this->ctx, (char*)final_name.ptr, bv_sort);
+    Z3_dec_ref(this->ctx, Z3_sort_to_ast(this->ctx, bv_sort));
+
+    if (need_final_free)
+        chunk_free(&final_name);
+
+    return res;
 }
 
 Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, int need_inc, int read_access)
@@ -1138,10 +1141,6 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
     }
     else
     {
-        bool need_final_free;
-
-        need_final_free = false;
-
         if ((target_cell = malloc(sizeof(*target_cell))) == NULL)
             LOG_LLVM("Error while allocating target_cell in create_Z3_var_internal\n");
 
@@ -1152,6 +1151,7 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
         target_cell->is_global = LLVMIsAGlobalValue(valueref);
         target_cell->read_access = read_access;
         target_cell->write_access = need_inc;
+        target_cell->ctx = ctx;
 
         type = LLVMGetTypeKind(LLVMTypeOf(valueref));
 
@@ -1163,25 +1163,7 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
              */
             case LLVMVoidTypeKind:
             {
-                const char *name;
-                chunk_t final_name;
-
-                name = LLVMGetValueName(valueref);
-                target_cell->name = chunk_calloc(strlen(name)+1);
-                strncpy((char*)target_cell->name.ptr, name, target_cell->name.len);
-                final_name = target_cell->name;
-
-                if (this->prefix.ptr)
-                {
-                    final_name = chunk_cat("cc", this->prefix, target_cell->name);
-                    need_final_free = true;
-                }
-
-                res = mk_var(ctx, (char*)final_name.ptr, bv_sort);
-
-                if (need_final_free)
-                    chunk_free(&final_name);
-
+                res = create_named_var(this, target_cell);
                 break;
             }
             case LLVMIntegerTypeKind:
@@ -1199,29 +1181,8 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
                  */
                 else
                 {
-                    const char *name;
-                    chunk_t final_name;
-
-                    name = LLVMGetValueName(valueref);
-
-                    if (*name == 0)
-                        name = "_";
-
-                    target_cell->name = chunk_calloc(strlen(name)+1);
-                    strncpy((char*)target_cell->name.ptr, name, target_cell->name.len);
-                    final_name = target_cell->name;
-
-                    if (this->prefix.ptr)
-                    {
-                        final_name = chunk_cat("cc", this->prefix, target_cell->name);
-                        need_final_free = true;
-                    }
-
-                    res = mk_var(ctx, (char*)final_name.ptr, bv_sort);
-
-                    if (need_final_free)
-                        chunk_free(&final_name);
-                    }
+                    res = create_named_var(this, target_cell);
+                }
 
                 break;
             }
@@ -1230,30 +1191,14 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
              */
             case LLVMPointerTypeKind:
             {
-                const char *name;
-                chunk_t final_name;
-
-                name = LLVMGetValueName(valueref);
-                target_cell->name = chunk_calloc(strlen(name)+1);
-                strncpy((char*)target_cell->name.ptr, name, target_cell->name.len);
-                final_name = target_cell->name;
-
-                if (this->prefix.ptr)
-                {
-                    final_name = chunk_cat("cc", this->prefix, target_cell->name);
-                    need_final_free = true;
-                }
-
-                res = mk_var(ctx, (char*)final_name.ptr, bv_sort);
-
-                if (need_final_free)
-                    chunk_free(&final_name);
+                res = create_named_var(this, target_cell);
                 break;
             }
             default:
             {
                 LOG_LLVM("       Found something BAD: %x\n", type);
                 res = NULL;
+                break;
             }
         }
 
@@ -2124,8 +2069,8 @@ static void destroy(private_converter_t *this)
      * freeing.
      *
     Z3_del_context(this->ctx);
-     */
     this->Z3_symbol_list->destroy_function(this->Z3_symbol_list, destroy_target_cell);
+     */
     chunk_clear(&this->prefix);
 
     free(this);

@@ -148,8 +148,6 @@ static gadget_type compare(private_map_t *this, map_t *other)
 
         e_other = ll_other->create_enumerator(ll_other);
 
-        Z3_dec_ref(this->ctx, c->symbol);
-
         while(e_other->enumerate(e_other, &c_other))
         {
             /*
@@ -373,6 +371,8 @@ static void destroy_target_cell(void *target_cell)
 
     c = (Z3_symbol_cell*) target_cell;
 
+    Z3_dec_ref(c->ctx, c->symbol);
+
     if ((c) && (c->name.ptr))
         chunk_clear(&c->name);
 
@@ -397,7 +397,8 @@ map_t *map_create(Z3_context ctx, Z3_ast ast, linked_list_t *symbols)
 
     this->ctx = ctx;
     this->ast = ast;
-    this->symbols = symbols->clone_function(symbols, clone_target_cell);
+    //this->symbols = symbols->clone_function(symbols, clone_target_cell);
+    this->symbols = symbols;
 
     this->public.get_ast = (Z3_ast (*)(map_t *)) get_ast;
     this->public.get_symbols = (linked_list_t *(*)(map_t *)) get_symbols;

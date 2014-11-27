@@ -35,6 +35,7 @@ typedef struct Z3_symbol_cell
 {
     LLVMValueRef valueref;
     Z3_ast symbol;
+    Z3_context ctx;
     chunk_t name;
     unsigned int index;
     chunk_t prefix;

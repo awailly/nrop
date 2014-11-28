@@ -121,7 +121,7 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
 #9  0x00000000600087a5 in _start ()
     */
 
-    pthread_mutex_lock(&map_lock);
+    //pthread_mutex_lock(&map_lock);
 
     env = cpu_init("qemu64");
     cpu = ENV_GET_CPU(env); 
@@ -141,11 +141,12 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
 
     map = converter->llvm_to_z3(converter);
 
+    //pthread_mutex_unlock(&map_lock);
+
     converter->destroy(converter);
 
     tb_free(tb);
 
-    pthread_mutex_unlock(&map_lock);
 
     /*
     chain_list = this->public.get_instructions(&this->public);

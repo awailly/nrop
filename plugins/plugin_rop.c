@@ -129,13 +129,14 @@ static bool bad_insn(private_plugin_rop_t *this, unsigned char *itext)
 
 uint64_t job_reverse_disass_ret_count;
 pthread_mutex_t job_reverse_disass_ret_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t job_reverse_disass_ret_count_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void job_reverse_disass_ret(job_reverse_disass_ret_th_arg *th)
 {
     th->this->reverse_disass_ret(th->this, th->function_chunk, th->addr, th->byte+1, th->inst_list);
-    pthread_mutex_lock(&job_reverse_disass_ret_mutex);
+    pthread_mutex_lock(&job_reverse_disass_ret_count_mutex);
     job_reverse_disass_ret_count++;
-    pthread_mutex_unlock(&job_reverse_disass_ret_mutex);
+    pthread_mutex_unlock(&job_reverse_disass_ret_count_mutex);
 }
 
 static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, Elf64_Addr addr, uint64_t ret_byte, linked_list_t *inst_list)
@@ -398,9 +399,10 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
 
     while(job_reverse_disass_ret_count_local < job_reverse_disass_ret_total)
     {
-        pthread_mutex_lock(&job_reverse_disass_ret_mutex);
+        LOG_ROP_DEBUG("jr:%i ir:%i\n", job_reverse_disass_ret_count_local, job_reverse_disass_ret_total);
+        pthread_mutex_lock(&job_reverse_disass_ret_count_mutex);
         job_reverse_disass_ret_count_local = job_reverse_disass_ret_count;
-        pthread_mutex_unlock(&job_reverse_disass_ret_mutex);
+        pthread_mutex_unlock(&job_reverse_disass_ret_count_mutex);
 
         LOG_ROP_DEBUG("jr:%i ir:%i\n", job_reverse_disass_ret_count_local, job_reverse_disass_ret_total);
         usleep(10000);

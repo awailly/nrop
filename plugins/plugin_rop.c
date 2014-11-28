@@ -289,7 +289,8 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
             /*LOG_ROP_DEBUG("wrong decoding\n");*/
         }
 
-        //this->d->destroy_instruction(inst);
+        if (current_byte >=0)
+            this->d->destroy_instruction(inst);
 
         current_byte--;
     }

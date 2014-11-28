@@ -11,7 +11,7 @@
 #  define LOG_ROP(...) do { } while (0)
 #endif
 
-//#define DEBUG_ROP_DEBUG
+#define DEBUG_ROP_DEBUG
 #ifdef DEBUG_ROP_DEBUG
 #  define LOG_ROP_DEBUG(...) logging(__VA_ARGS__)
 #else
@@ -38,6 +38,17 @@ struct private_plugin_rop_t
     status_t (*pack)(private_plugin_rop_t *, Elf64_Addr, chunk_t);
     linked_list_t *(*find_rop_chains)(private_plugin_rop_t *, chunk_t, Elf64_Addr);
     status_t (*reverse_disass_ret)(private_plugin_rop_t *, chunk_t, Elf64_Addr, uint64_t, linked_list_t*);
+};
+
+typedef struct job_reverse_disass_ret_th_arg job_reverse_disass_ret_th_arg;
+
+struct job_reverse_disass_ret_th_arg
+{
+    private_plugin_rop_t *this;
+    chunk_t function_chunk;
+    Elf64_Addr addr;
+    uint64_t byte;
+    linked_list_t *inst_list;
 };
 
 static status_t disassemble(private_plugin_rop_t *this, chunk_t function_chunk)
@@ -114,6 +125,17 @@ static bool bad_insn(private_plugin_rop_t *this, unsigned char *itext)
     }
 
     return is_bad;
+}
+
+uint64_t job_reverse_disass_ret_count;
+pthread_mutex_t job_reverse_disass_ret_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static void job_reverse_disass_ret(job_reverse_disass_ret_th_arg *th)
+{
+    th->this->reverse_disass_ret(th->this, th->function_chunk, th->addr, th->byte+1, th->inst_list);
+    pthread_mutex_lock(&job_reverse_disass_ret_mutex);
+    job_reverse_disass_ret_count++;
+    pthread_mutex_unlock(&job_reverse_disass_ret_mutex);
 }
 
 static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, Elf64_Addr addr, uint64_t ret_byte, linked_list_t *inst_list)
@@ -281,7 +303,9 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
 
                 chain = chain_create_from_insn_disass(this->d, addr + last_decoded_byte, chain_insns);
 
+                pthread_mutex_lock(&job_reverse_disass_ret_mutex);
                 inst_list->insert_last(inst_list, chain);
+                pthread_mutex_unlock(&job_reverse_disass_ret_mutex);
             }
         }
         else
@@ -308,6 +332,9 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
     unsigned char itext[XED_MAX_INSTRUCTION_BYTES];
     uint64_t byte;
     linked_list_t *inst_list;
+    uint64_t job_reverse_disass_ret_count_local;
+    uint64_t job_reverse_disass_ret_total;
+    job_reverse_disass_ret_th_arg *ta;
 
     disassembler_t *d;
     instruction_t *instruction;
@@ -322,6 +349,9 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
 
     d = this->d;
     instruction = NULL;
+    job_reverse_disass_ret_count = 0;
+    job_reverse_disass_ret_count_local = 0;
+    job_reverse_disass_ret_total = 0;
 
     for (byte = 0; byte < function_chunk.len; byte++)
     {
@@ -347,12 +377,33 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
                 xed_decoded_inst_dump(&xedd,buffer, sizeof(buffer));
                 printf("%s\n",buffer);
                 */
-                //this->reverse_disass_ret(this, function_chunk, addr, &instruction, byte+1, inst_list);
-                this->reverse_disass_ret(this, function_chunk, addr, byte+1, inst_list);
+                //this->reverse_disass_ret(this, function_chunk, addr, byte+1, inst_list);
+
+                job_reverse_disass_ret_total++;
+                ta = malloc_thing(job_reverse_disass_ret_th_arg);
+                
+                ta->this = this;
+                ta->function_chunk = function_chunk;
+                ta->addr = addr;
+                ta->byte = byte;
+                ta->inst_list = inst_list;
+
+                thpool_add_work(this->threadpool, (void*)job_reverse_disass_ret, (void*)ta);
+                //job_reverse_disass_ret(ta);
             }
         }
 
         d->destroy_instruction(instruction);
+    }
+
+    while(job_reverse_disass_ret_count_local < job_reverse_disass_ret_total)
+    {
+        pthread_mutex_lock(&job_reverse_disass_ret_mutex);
+        job_reverse_disass_ret_count_local = job_reverse_disass_ret_count;
+        pthread_mutex_unlock(&job_reverse_disass_ret_mutex);
+
+        LOG_ROP_DEBUG("jr:%i ir:%i\n", job_reverse_disass_ret_count_local, job_reverse_disass_ret_total);
+        usleep(10000);
     }
 
     return inst_list;
@@ -569,7 +620,7 @@ plugin_rop_t *plugin_rop_create(code_t *code, char *constraints, chunk_t target)
     tcg_exec_init(0);
     cpu_exec_init_all();
 
-    this->threadpool=thpool_init(8);
+    this->threadpool=thpool_init(32);
     this->d = (disassembler_t*) create_xed();
 
     this->code = (elf_t *) code;

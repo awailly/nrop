@@ -1981,6 +1981,11 @@ static map_t *llvm_to_z3(private_converter_t *this)
 
     free(ram);
 
+    chunk_free(&env->name);
+    chunk_free(&env->prefix);
+
+    free(env);
+
     return map_create(this->ctx, this->formula, this->Z3_symbol_list);
 }
 

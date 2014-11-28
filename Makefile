@@ -44,8 +44,8 @@ MAIN=packer
 all: $(MAIN)
 
 .c.o:
-	#$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@ `llvm-config --cflags`
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@ -I/usr/include  -DNDEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -fPIC
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@ `llvm-config --cflags`
+	#$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@ -I/usr/include  -DNDEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -fPIC
 
 $(MAIN): $(OBJS)
 	g++ $^ $(INCLUDES) -o $@ $(LIBS) $(CFLAGS) 

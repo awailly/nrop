@@ -298,7 +298,7 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
         if (d->encode(d, &new_chunk, instruction) == FAILED)
         {
             LOG_CHAIN("Error while encoding chunk in chain_create_from_insn\n");
-            return NULL;
+            break;
         }
 
         if (strlen(insns_str) > 0)

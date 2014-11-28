@@ -345,7 +345,7 @@ static void tcg_to_llvm(private_converter_t *this)
                     if (LLVMTypeOf(v2) == intType(32))                                                    \
                         adjustTypeSize(this, 32, &v1, &v2);                             \
                     v = LLVMBuildICmp(this->builder, cond,                   \
-                            v1, v2, "B");      \
+                            v1, v2, "BranchC");      \
                     }\
                 break;
 
@@ -383,7 +383,7 @@ static void tcg_to_llvm(private_converter_t *this)
 
 #define __OP_SETCOND_C(tcg_cond, cond)                              \
                 case tcg_cond:                                          \
-                    v = LLVMBuildICmp(this->builder,cond, v1, v2, "B");           \
+                    v = LLVMBuildICmp(this->builder,cond, v1, v2, "SetCond");           \
                 break;
 
 #define __OP_SETCOND(opc_name, bits)                                \
@@ -1142,7 +1142,10 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
     else
     {
         if ((target_cell = malloc(sizeof(*target_cell))) == NULL)
+        {
             LOG_LLVM("Error while allocating target_cell in create_Z3_var_internal\n");
+            return NULL;
+        }
 
         target_cell->valueref = valueref;
         target_cell->index = 0;

@@ -298,7 +298,7 @@ static gadget_type compare(private_map_t *this, map_t *other)
 
         if (!found_target_register)
         {
-            LOG_Z3_SOLVE("Found bad [%s::%s]\n", c->name.ptr, c_other->name.ptr);
+            LOG_Z3_SOLVE("Found bad [%s]\n", c->name.ptr);
             result = BAD;
             break;
         }
@@ -308,40 +308,41 @@ static gadget_type compare(private_map_t *this, map_t *other)
 
     Z3_dec_ref(this->ctx, Z3_sort_to_ast(this->ctx, bv_sort));
 
-    if (result == BAD)
-        return result;
-
-    LOG_Z3_SOLVE("Checking\n");
-    solver_res = Z3_solver_check(this->ctx, solver);
-    Z3_solver_dec_ref(this->ctx, solver);
-
-    if (solver_res == Z3_L_TRUE)
+    if (result != BAD)
     {
-        solver_resnot = Z3_solver_check(this->ctx, solvernot);
-        Z3_solver_dec_ref(this->ctx, solvernot);
+        LOG_Z3_SOLVE("Checking\n");
+        solver_res = Z3_solver_check(this->ctx, solver);
 
-        if (solver_resnot == Z3_L_FALSE)
+        if (solver_res == Z3_L_TRUE)
         {
-            printf("Found PN2\n");
-            LOG_Z3_SOLVE("Solver: %s\n", Z3_solver_to_string(this->ctx, solvernot));
-            result = PN2;
-        }
-        else
-        {
-            //Z3_model model;
-            printf("Found PN1\n");
-            result = PN1;
-            //model = Z3_solver_get_model(this->ctx, solvernot);
-            //LOG_Z3_SOLVE("Model: %s\n", Z3_model_to_string(this->ctx, model));
-            //Z3_model_dec_ref(this->ctx, model);
-        }
+            solver_resnot = Z3_solver_check(this->ctx, solvernot);
+
+            if (solver_resnot == Z3_L_FALSE)
+            {
+                printf("Found PN2\n");
+                LOG_Z3_SOLVE("Solver: %s\n", Z3_solver_to_string(this->ctx, solvernot));
+                result = PN2;
+            }
+            else
+            {
+                //Z3_model model;
+                printf("Found PN1\n");
+                result = PN1;
+                //model = Z3_solver_get_model(this->ctx, solvernot);
+                //LOG_Z3_SOLVE("Model: %s\n", Z3_model_to_string(this->ctx, model));
+                //Z3_model_dec_ref(this->ctx, model);
+            }
 
 
-        LOG_Z3_SOLVE("Sat result: %x|%x\n", solver_res, solver_resnot);
+            LOG_Z3_SOLVE("Sat result: %x|%x\n", solver_res, solver_resnot);
+        }
+
+        LOG_Z3_SOLVE("%x:True %x:False %x:Undef\n", Z3_L_TRUE, Z3_L_FALSE, Z3_L_UNDEF);
     }
-
-    LOG_Z3_SOLVE("%x:True %x:False %x:Undef\n", Z3_L_TRUE, Z3_L_FALSE, Z3_L_UNDEF);
     
+    Z3_solver_dec_ref(this->ctx, solver);
+    Z3_solver_dec_ref(this->ctx, solvernot);
+
     return result;
 }
 

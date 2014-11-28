@@ -205,6 +205,7 @@ static element_t* remove_element(private_linked_list_t *this, element_t *element
 	next = element->next;
 	previous = element->previous;
 	free(element);
+    element = NULL;
 	if (next)
 	{
 		next->previous = previous;
@@ -602,17 +603,20 @@ static void unique(private_linked_list_t *this)
 	{
         c = (chain_t*) current->value;
 
-        if (prev_name == NULL)
-            prev_name = c->get_str(c);
-        else if (!strcmp(prev_name, c->get_str(c)))
+        if ((prev_name == NULL) || (strcmp(prev_name, c->get_str(c))))
         {
-            c->destroy(c);
-            remove_element(this, current);
+            prev_name = c->get_str(c);
+            current = current->next;
         }
         else
-            prev_name = c->get_str(c);
+        {
+            element_t *cn;
 
-		current = current->next;
+            c->destroy(c);
+            cn = current->next;
+            remove_element(this, current);
+            current = cn;
+        }
 	}
 }
 

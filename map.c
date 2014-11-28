@@ -4,7 +4,7 @@
 
 #include "map.h"
 
-#define DEBUG_Z3_SOLVE
+//#define DEBUG_Z3_SOLVE
 #ifdef DEBUG_Z3_SOLVE
 #  define LOG_Z3_SOLVE(...) logging(__VA_ARGS__)
 #else

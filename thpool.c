@@ -56,6 +56,7 @@ thpool_t* thpool_init(int threadsN){
 	tp_p->threads=(pthread_t*)malloc(threadsN*sizeof(pthread_t));          /* MALLOC thread IDs */
 	if (tp_p->threads==NULL){
 		fprintf(stderr, "thpool_init(): Could not allocate memory for thread IDs\n");
+        free(tp_p);
 		return NULL;
 	}
 	tp_p->threadsN=threadsN;
@@ -63,6 +64,8 @@ thpool_t* thpool_init(int threadsN){
 	/* Initialise the job queue */
 	if (thpool_jobqueue_init(tp_p)==-1){
 		fprintf(stderr, "thpool_init(): Could not allocate memory for job queue\n");
+        free(tp_p->threads);
+        free(tp_p);
 		return NULL;
 	}
 	

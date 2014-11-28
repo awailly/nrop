@@ -1621,16 +1621,17 @@ elf_t *create_elf(chunk_t type, region_t *region)
     this->public.interface.destroy = (void (*)(code_t*)) destroy;
 
     /* Feeding local object */
-    this->symbols_elf(this);
-    this->map_sections(this);
-    this->map_program_headers(this);
-
-    if (this->arch == 32)
-        this->public.interface.entry = this->elf32_ehdr->e_entry;
-    else if (this->arch == 64)
-        this->public.interface.entry = this->elf64_ehdr->e_entry;
-    else
-        printf("Unknown architecture for entry point definition in create_elf (elf_type.c)\n");
+    if ((this->symbols_elf(this) == SUCCESS) &&
+        (this->map_sections(this) == SUCCESS) &&
+        (this->map_program_headers(this) == SUCCESS))
+    {
+        if (this->arch == 32)
+            this->public.interface.entry = this->elf32_ehdr->e_entry;
+        else if (this->arch == 64)
+            this->public.interface.entry = this->elf64_ehdr->e_entry;
+        else
+            printf("Unknown architecture for entry point definition in create_elf (elf_type.c)\n");
+    }
 
     return &this->public;
 }

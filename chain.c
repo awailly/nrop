@@ -81,7 +81,9 @@ static void set_Z3_context(private_chain_t *this, Z3_context ctx)
     this->ctx = ctx;
 }
 
-pthread_mutex_t map_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t qemu_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t llvm_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t z3_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static map_t *get_map(private_chain_t *this)
 {
@@ -121,7 +123,7 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
 #9  0x00000000600087a5 in _start ()
     */
 
-    //pthread_mutex_lock(&map_lock);
+    pthread_mutex_lock(&qemu_lock);
 
     env = cpu_init("qemu64");
     cpu = ENV_GET_CPU(env); 
@@ -134,19 +136,24 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
     if (this->ctx == NULL)
         LOG_CHAIN("The Z3 context is NULL, will segfault\n");
 
+    pthread_mutex_unlock(&qemu_lock);
+    pthread_mutex_lock(&llvm_lock);
+
     converter = converter_create(s, this->ctx);
     converter->set_prefix(converter, prefix);
     converter->tcg_to_llvm(converter);
     //converter->dump(converter);
 
-    map = converter->llvm_to_z3(converter);
+    pthread_mutex_unlock(&llvm_lock);
+    pthread_mutex_lock(&z3_lock);
 
-    //pthread_mutex_unlock(&map_lock);
+    map = converter->llvm_to_z3(converter);
 
     converter->destroy(converter);
 
     tb_free(tb);
 
+    pthread_mutex_unlock(&z3_lock);
 
     /*
     chain_list = this->public.get_instructions(&this->public);

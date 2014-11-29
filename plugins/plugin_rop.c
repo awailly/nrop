@@ -427,10 +427,6 @@ static void job_chain(th_arg *t)
     LOG_ROP_DEBUG("***************************************************************************************************\n");
     LOG_ROP_DEBUG("***************************************************************************************************\n");
 
-    pthread_mutex_lock(&job_mutex);
-    job_count++;
-    pthread_mutex_unlock(&job_mutex);
-
     cfg = Z3_mk_config();
     ctx = Z3_mk_context(cfg);
 
@@ -438,11 +434,15 @@ static void job_chain(th_arg *t)
 
     c = t->c;
 
+    pthread_mutex_lock(&job_mutex);
+    job_count++;
+
     LOG_ROP_DEBUG("%08x: %s\n", c->get_addr(c), c->get_str(c));
     /*hexdump(c->get_chunk(c).ptr, c->get_chunk(c).len);*/
 
     //target_map = t->target_map;
     t->target->set_Z3_context(t->target, ctx);
+
     target_map = t->target->get_map(t->target);
 
     /*
@@ -455,6 +455,8 @@ static void job_chain(th_arg *t)
     prefix = chunk_calloc(3);
     snprintf((char*)prefix.ptr, prefix.len, "t_");
     map = c->get_map_prefix(c, prefix);
+
+    pthread_mutex_unlock(&job_mutex);
 
     g = target_map->compare(target_map, map);
     if (g != BAD)
@@ -533,8 +535,8 @@ status_t pack(private_plugin_rop_t *this, Elf64_Addr addr, chunk_t chunk)
         //ta->target_map = target_map;
         ta->target = this->target;
         ta->c = c;
-        //thpool_add_work(this->threadpool, (void*)job_chain, (void*)ta);
-        job_chain(ta);
+        thpool_add_work(this->threadpool, (void*)job_chain, (void*)ta);
+        //job_chain(ta);
     }
 
     while(jc < inst_list->get_count(inst_list))

@@ -1011,7 +1011,9 @@ uint64_t get_llvm_type_size(LLVMValueRef valueref)
 {
     uint64_t valueref_size;
 
-    if (LLVMTypeOf(valueref) == intType(128) || (LLVMTypeOf(valueref) == intPtrType(128)))
+    if (LLVMTypeOf(valueref) == intType(256) || (LLVMTypeOf(valueref) == intPtrType(256)))
+        valueref_size = 256;
+    else if (LLVMTypeOf(valueref) == intType(128) || (LLVMTypeOf(valueref) == intPtrType(128)))
         valueref_size = 128;
     else if (LLVMTypeOf(valueref) == intType(64) || (LLVMTypeOf(valueref) == intPtrType(64)))
         valueref_size = 64;
@@ -1025,10 +1027,22 @@ uint64_t get_llvm_type_size(LLVMValueRef valueref)
         valueref_size = 1;
     else
     {
-        logging("Size not supported (%x) in create_Z3_var_internal\n", LLVMTypeOf(valueref));
-        logging("int64:%08x pint64:%08x int32:%08x pint32:%08x\n", intType(64), intPtrType(64), intType(32), intPtrType(32));
-        logging("int16:%08x pint16:%08x int8:%08x pint8:%08x\n", intType(16), intPtrType(16), intType(8), intPtrType(8));
+        unsigned int bla;
+        logging("COucou %x %x %x\n", LLVMGetIntTypeWidth(LLVMTypeOf(valueref)), intType(4), intPtrType(4));
+        for (bla=1; bla<512; bla++)
+        {
+            if (LLVMTypeOf(valueref) == intType(bla))
+                printf("Helllo %x\n", bla);
+            if (LLVMTypeOf(valueref) == intPtrType(bla))
+                printf("Helllo %x\n", bla);
+        }
+
+        logging("Size not supported (%x) for %s in create_Z3_var_internal\n", LLVMGetValueName(valueref), LLVMTypeOf(valueref));
+        logging("int128:%08x pint128:%08x int64:%08x pint64:%08x int32:%08x pint32:%08x\n", intType(128), intPtrType(128), intType(64), intPtrType(64), intType(32), intPtrType(32));
+        logging("int16:%08x pint16:%08x int8:%08x pint8:%08x int1:%08x pint1:%08x\n", intType(16), intPtrType(16), intType(8), intPtrType(8), intType(1), intPtrType(1));
         valueref_size = 0;
+
+        logging("Size Is %x == %x\n", LLVMGetIntTypeWidth(LLVMTypeOf(valueref)), valueref_size);
     }
 
     return valueref_size;
@@ -1098,10 +1112,6 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
     target_cell = NULL;
     ctx = this->ctx;
 
-    valueref_size = get_llvm_type_size(valueref);
-
-    bv_sort = Z3_mk_bv_sort(ctx, valueref_size);
-
     e = this->Z3_symbol_list->create_enumerator(this->Z3_symbol_list);
 
     while ((target_cell == NULL) && (e->enumerate(e, &c)))
@@ -1119,6 +1129,10 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
             chunk_t new_chunk;
 
             target_cell->index++;
+
+            valueref_size = get_llvm_type_size(valueref);
+
+            bv_sort = Z3_mk_bv_sort(ctx, valueref_size);
 
             new_chunk = chunk_calloc(255);
             snprintf((char*) new_chunk.ptr, new_chunk.len, "%s%i", target_cell->name.ptr, target_cell->index);
@@ -1153,7 +1167,6 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
 
         type = LLVMGetTypeKind(LLVMTypeOf(valueref));
 
-        /* FIXME Refactor */
         switch (type)
         {
             /* 
@@ -1171,6 +1184,9 @@ Z3_ast create_Z3_var_internal(private_converter_t *this, LLVMValueRef valueref, 
                  */
                 if (LLVMIsAConstantInt(valueref))
                 {
+                    valueref_size = get_llvm_type_size(valueref);
+
+                    bv_sort = Z3_mk_bv_sort(ctx, valueref_size);
                     res = Z3_mk_unsigned_int64(ctx, LLVMConstIntGetZExtValue(valueref), bv_sort);
                 }
                 /*

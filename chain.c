@@ -341,7 +341,7 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
 
         LOG_CHAIN("new chunk is %x:%x\n", new_chunk.ptr, new_chunk.len);
 
-        insns_chunk = chunk_cat("mm", insns_chunk, new_chunk);
+        insns_chunk = chunk_cat("cm", insns_chunk, new_chunk);
 
         offset_addr+= d->get_length(d, instruction);
 

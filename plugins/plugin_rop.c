@@ -301,8 +301,8 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
 
                 memcpy(new_insn, inst, d->get_instruction_size(d));
 
-                //new_insn->bytes = chunk_calloc(insn_len);
-                //memcpy(new_insn->bytes.ptr, code_chunk.ptr, insn_len);
+                new_insn->bytes = chunk_calloc(insn_len);
+                memcpy(new_insn->bytes.ptr, code_chunk.ptr, insn_len);
 
                 chain_insns->insert_first(chain_insns, new_insn);
 

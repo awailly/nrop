@@ -297,10 +297,13 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
     {
         chunk_t new_str;
         chunk_t new_chunk;
+        bool need_free_str;
+        bool need_free_chunk;
 
         /**
          * Create string representation
          */
+        need_free_str = false;
         new_str = instruction->str;
 
         LOG_CHAIN("new str is %x:%x\n", new_str.ptr, new_str.len);
@@ -311,6 +314,8 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
 
             LOG_CHAIN("dumping instruction %x\n", instruction);
             d->dump_intel(d, instruction, new_str, offset_addr);
+
+            need_free_str = true;
         }
 
         LOG_CHAIN("new str is now %x:%x\n", new_str.ptr, new_str.len);
@@ -327,6 +332,7 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
         /**
          * Create bytes representing the instruction
          */
+        need_free_chunk = false;
         new_chunk = instruction->bytes;
         LOG_CHAIN("new chunk is %x:%x\n", new_chunk.ptr, new_chunk.len);
 
@@ -337,15 +343,20 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
                 LOG_CHAIN("Error while encoding chunk in chain_create_from_insn\n");
                 break;
             }
+
+            need_free_chunk = true;
         }
 
         LOG_CHAIN("new chunk is %x:%x\n", new_chunk.ptr, new_chunk.len);
 
-        insns_chunk = chunk_cat("cm", insns_chunk, new_chunk);
+        insns_chunk = chunk_cat("cc", insns_chunk, new_chunk);
+
+        if (need_free_str)
+            chunk_clear(&new_str);
+        if (need_free_chunk)
+            chunk_clear(&new_chunk);
 
         offset_addr+= d->get_length(d, instruction);
-
-        chunk_clear(&new_str);
     }
 
     e->destroy(e);

@@ -145,7 +145,7 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
     //converter->dump(converter);
 
     pthread_mutex_unlock(&llvm_lock);
-    pthread_mutex_lock(&z3_lock);
+    //pthread_mutex_lock(&z3_lock);
 
     map = converter->llvm_to_z3(converter);
 
@@ -153,7 +153,7 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
 
     tb_free(tb);
 
-    pthread_mutex_unlock(&z3_lock);
+    //pthread_mutex_unlock(&z3_lock);
 
     /*
     chain_list = this->public.get_instructions(&this->public);

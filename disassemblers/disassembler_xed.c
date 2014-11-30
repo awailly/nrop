@@ -139,6 +139,8 @@ static status_t decode(private_disass_xed_t *this, instruction_t **i, chunk_t c)
         logging("[x] Error while allocating xed_instruction_t in disassembler_xed.c\n");
 
     xedd = &((xed_instruction_t*) *i)->xedd;
+    (*i)->bytes = chunk_empty;
+    (*i)->str= chunk_empty;
     LOG_XED("instruction @%x xedd @%x\n", *i, xedd);
 
     xed_decoded_inst_zero(xedd);
@@ -235,6 +237,9 @@ static instruction_t *alloc_instruction(private_disass_xed_t *this)
         logging("Error while allocating instruction in disassembler_xed\n");
         return NULL;
     }
+
+    new_insn->interface.bytes = chunk_empty;
+    new_insn->interface.str = chunk_empty;
 
     return (instruction_t*) new_insn;
 }

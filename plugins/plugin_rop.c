@@ -154,6 +154,8 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
     bool byte_to_disass;
     char *item;
 
+    chunk_t code_chunk;
+
     disassembler_t *d;
     instruction_t *inst;
 
@@ -204,7 +206,6 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
                  * Removing last decoded instruction and continue to explore
                  */
                 uint64_t inst_size;
-                chunk_t code_chunk;
 
                 if ((last_byte - current_byte) >= XED_MAX_INSTRUCTION_BYTES)
                     bytes = XED_MAX_INSTRUCTION_BYTES;
@@ -236,8 +237,6 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
          */
         if (current_byte >=0)
         {
-        chunk_t code_chunk;
-
         if ((last_byte - current_byte) >= XED_MAX_INSTRUCTION_BYTES)
             bytes = XED_MAX_INSTRUCTION_BYTES;
         else
@@ -292,13 +291,18 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
             else
             {
                 instruction_t *new_insn;
+                uint64_t insn_len;
 
+                insn_len = d->get_length(d, inst);
                 last_decoded_byte = current_byte;
                 /*current_byte-= xed_decoded_inst_get_length(&xedd);*/
 
                 new_insn = d->alloc_instruction(d);
 
                 memcpy(new_insn, inst, d->get_instruction_size(d));
+
+                //new_insn->bytes = chunk_calloc(insn_len);
+                //memcpy(new_insn->bytes.ptr, code_chunk.ptr, insn_len);
 
                 chain_insns->insert_first(chain_insns, new_insn);
 
@@ -535,8 +539,8 @@ status_t pack(private_plugin_rop_t *this, Elf64_Addr addr, chunk_t chunk)
         //ta->target_map = target_map;
         ta->target = this->target;
         ta->c = c;
-        thpool_add_work(this->threadpool, (void*)job_chain, (void*)ta);
-        //job_chain(ta);
+        //thpool_add_work(this->threadpool, (void*)job_chain, (void*)ta);
+        job_chain(ta);
     }
 
     while(jc < inst_list->get_count(inst_list))

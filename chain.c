@@ -8,7 +8,7 @@
 #include "qemu/tcg/tcg.h"
 #include "converter.h"
 
-//#define DEBUG_CHAIN
+#define DEBUG_CHAIN
 #ifdef DEBUG_CHAIN
 #  define LOG_CHAIN(...) logging(__VA_ARGS__)
 #else
@@ -246,7 +246,7 @@ chain_t *chain_create_from_string_disass(disassembler_t *d, uint64_t addr, chunk
         if (d->dump_intel(d, instruction, format_chunk, addr) == FAILED)
             LOG_CHAIN("[x] Error while dump_intel in chain.c\n");
 
-        LOG_CHAIN("%s\n", format_chunk.ptr);
+        LOG_CHAIN("create from string_disass %s\n", format_chunk.ptr);
 
         chunk_free(&format_chunk);
 
@@ -298,16 +298,22 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
         chunk_t new_str;
         chunk_t new_chunk;
 
-        new_str = chunk_calloc(4096);
+        /**
+         * Create string representation
+         */
+        new_str = instruction->str;
 
-        LOG_CHAIN("dumping instruction %x %x\n", instruction);
-        d->dump_intel(d, instruction, new_str, offset_addr);
+        LOG_CHAIN("new str is %x:%x\n", new_str.ptr, new_str.len);
 
-        if (d->encode(d, &new_chunk, instruction) == FAILED)
-        {
-            LOG_CHAIN("Error while encoding chunk in chain_create_from_insn\n");
-            break;
+        if (new_str.ptr == chunk_empty.ptr)
+        { 
+            new_str = chunk_calloc(4096);
+
+            LOG_CHAIN("dumping instruction %x\n", instruction);
+            d->dump_intel(d, instruction, new_str, offset_addr);
         }
+
+        LOG_CHAIN("new str is now %x:%x\n", new_str.ptr, new_str.len);
 
         if (strlen(insns_str) > 0)
         {
@@ -317,6 +323,23 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
         }
         else
             sprintf(insns_str, "%s ;", (char*) new_str.ptr);
+
+        /**
+         * Create bytes representing the instruction
+         */
+        new_chunk = instruction->bytes;
+        LOG_CHAIN("new chunk is %x:%x\n", new_chunk.ptr, new_chunk.len);
+
+        if (new_chunk.ptr == chunk_empty.ptr)
+        {
+            if (d->encode(d, &new_chunk, instruction) == FAILED)
+            {
+                LOG_CHAIN("Error while encoding chunk in chain_create_from_insn\n");
+                break;
+            }
+        }
+
+        LOG_CHAIN("new chunk is %x:%x\n", new_chunk.ptr, new_chunk.len);
 
         insns_chunk = chunk_cat("mm", insns_chunk, new_chunk);
 

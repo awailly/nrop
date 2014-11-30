@@ -9,13 +9,8 @@ typedef struct instruction_t instruction_t;
 
 struct instruction_t
 {
-    /**
-     * Add instruction bytes to instruction.
-     *
-     * @param insn      the byte to add.
-     * @return          SUCCESS if the byte was successfully added, FAILED otherwise
-     */
-    status_t (*add_chunk)(instruction_t*, chunk_t);
+    chunk_t bytes;
+    chunk_t str;
 
     /**
      * Destroys an instruction_t object.

@@ -12,6 +12,8 @@
 #include "elf_type.h"
 #include "disassembler.h"
 
+//#define DISASSINSTANCE create_xed
+
 typedef struct disass_xed_t disass_xed_t;
 
 struct disass_xed_t

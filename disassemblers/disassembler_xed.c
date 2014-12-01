@@ -107,7 +107,7 @@ static status_t format(private_disass_xed_t *this, instruction_t *i, chunk_t for
     return SUCCESS;
 }
 
-static status_t dump_intel(private_disass_xed_t *this, instruction_t *i, chunk_t buffer, uint64_t offset_addr)
+static status_t dump_intel(private_disass_xed_t *this, instruction_t *i, chunk_t *buffer, uint64_t offset_addr)
 {
     xed_decoded_inst_t *x;
     xed_bool_t xed_error;
@@ -117,9 +117,9 @@ static status_t dump_intel(private_disass_xed_t *this, instruction_t *i, chunk_t
 
     x = &((xed_instruction_t*) i)->xedd;
 
-    LOG_XED("[XED] dump_intel(%x, %x, %x, %x): %x\n", x, buffer.ptr, buffer.len, offset_addr, *x);
+    LOG_XED("[XED] dump_intel(%x, %x, %x, %x): %x\n", x, buffer->ptr, buffer->len, offset_addr, *x);
 
-    xed_error = xed_decoded_inst_dump_intel_format(x, (char*)buffer.ptr, buffer.len, offset_addr);
+    xed_error = xed_decoded_inst_dump_intel_format(x, (char*)buffer->ptr, buffer->len, offset_addr);
 
     LOG_XED("   = %x\n", xed_error);
 
@@ -136,7 +136,10 @@ static status_t decode(private_disass_xed_t *this, instruction_t **i, chunk_t c)
     status_t status;
 
     if ((*i = (instruction_t*) malloc_thing(xed_instruction_t)) == NULL)
+    {
         logging("[x] Error while allocating xed_instruction_t in disassembler_xed.c\n");
+        return FAILED;
+    }
 
     xedd = &((xed_instruction_t*) *i)->xedd;
     (*i)->bytes = chunk_empty;
@@ -301,7 +304,7 @@ disass_xed_t *create_xed()
     this->public.interface.get_category = (category_t (*)(disassembler_t*, instruction_t*)) get_category;
     this->public.interface.get_length = (uint64_t (*)(disassembler_t*, instruction_t*)) get_length;
     this->public.interface.format = (status_t (*)(disassembler_t*, instruction_t *, chunk_t)) format;
-    this->public.interface.dump_intel = (status_t (*)(disassembler_t*, instruction_t *, chunk_t, uint64_t)) dump_intel;
+    this->public.interface.dump_intel = (status_t (*)(disassembler_t*, instruction_t *, chunk_t *, uint64_t)) dump_intel;
     this->public.interface.decode = (status_t (*)(disassembler_t*, instruction_t **, chunk_t)) decode;
     this->public.interface.encode = (status_t (*)(disassembler_t*, chunk_t *, instruction_t *)) encode;
     this->public.interface.alloc_instruction = (instruction_t *(*)(disassembler_t*)) alloc_instruction;

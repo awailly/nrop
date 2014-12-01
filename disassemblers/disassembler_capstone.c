@@ -30,7 +30,7 @@ struct capstone_instruction_t
 {
     instruction_t interface;
 
-    cs_insn insn;
+    cs_insn *insn;
 };
 
 static status_t initialize(private_disass_capstone_t *this, chunk_t c)
@@ -54,23 +54,29 @@ static status_t initialize(private_disass_capstone_t *this, chunk_t c)
         return FAILED;
     }
 
+    cs_option(this->handle, CS_OPT_DETAIL, CS_OPT_ON);
+
     return SUCCESS;
 }
 
 static category_t get_category(private_disass_capstone_t *this, instruction_t *i)
 {
+    cs_insn *insn;
+
     if (!this)
         return NO_CAT;
 
-    if (cs_insn_group(this->handle, &((capstone_instruction_t*) i)->insn, X86_GRP_JUMP))
+    insn = ((capstone_instruction_t*) i)->insn;
+
+    if (cs_insn_group(this->handle, insn, X86_GRP_JUMP))
         return COND_BR;
-    else if (cs_insn_group(this->handle, &((capstone_instruction_t*) i)->insn, X86_GRP_JUMP))
+    else if (cs_insn_group(this->handle, insn, X86_GRP_JUMP))
         return UNCOND_BR;
-    else if (cs_insn_group(this->handle, &((capstone_instruction_t*) i)->insn, X86_GRP_INT))
+    else if (cs_insn_group(this->handle, insn, X86_GRP_INT))
         return SYSCALL;
-    else if (cs_insn_group(this->handle, &((capstone_instruction_t*) i)->insn, X86_GRP_CALL))
+    else if (cs_insn_group(this->handle, insn, X86_GRP_CALL))
         return CALL;
-    else if (cs_insn_group(this->handle, &((capstone_instruction_t*) i)->insn, X86_GRP_RET))
+    else if (cs_insn_group(this->handle, insn, X86_GRP_RET))
         return RET;
     else
         return NO_CAT;
@@ -78,50 +84,60 @@ static category_t get_category(private_disass_capstone_t *this, instruction_t *i
 
 static uint64_t get_length(private_disass_capstone_t *this, instruction_t *i)
 {
+    cs_insn *insn;
+
     if (!this)
         return 0;
 
-    return ((capstone_instruction_t*) i)->insn.size;
+    insn = ((capstone_instruction_t*) i)->insn;
+
+    LOG_CAPSTONE("[x] get_length() = %zx\n", insn->size);
+
+    return insn->size;
 }
 
 static status_t format(private_disass_capstone_t *this, instruction_t *i, chunk_t format)
 {
-    cs_insn *capstoned;
+    cs_insn *x;
 
     if (!this)
         return FAILED;
 
-    capstoned = &((capstone_instruction_t*) i)->insn;
+    x = ((capstone_instruction_t*) i)->insn;
 
-    format.ptr = (char*) (capstoned->op_str);
-    format.len = strlen(capstoned->op_str);
+    format.len = strlen(x->op_str) + 1;
+    memcpy(format.ptr, x->op_str, format.len);
 
     return SUCCESS;
 }
 
-static status_t dump_intel(private_disass_capstone_t *this, instruction_t *i, chunk_t buffer, uint64_t offset_addr)
+static status_t dump_intel(private_disass_capstone_t *this, instruction_t *i, chunk_t *buffer, uint64_t offset_addr)
 {
     cs_insn *x;
-    bool capstone_error;
-    chunk_t address;
+    //chunk_t address;
+    chunk_t mnemonic;
+    chunk_t str;
+    chunk_t res;
 
     if (!this)
         return FAILED;
 
-    x = &((capstone_instruction_t*) i)->insn;
+    x = ((capstone_instruction_t*) i)->insn;
 
-    address = chunk_calloc(20);
-    snprintf((char*)address.ptr, address.len, "%16lx: ", offset_addr);
+    //address = chunk_calloc(21);
+    //snprintf((char*)address.ptr, address.len, "%16lx: ", offset_addr);
+    mnemonic.len = strlen(x->mnemonic) + 1;
+    mnemonic.ptr = (u_char*) x->mnemonic;
 
-    buffer.ptr = x->op_str;
-    buffer.len = strlen(x->op_str);
+    str.len = strlen(x->op_str) + 1;
+    str.ptr = (u_char*) x->op_str;
 
-    buffer = chunk_cat("mm", address, buffer);
+    res = chunk_cat("cc", mnemonic, str);
 
-    if (!capstone_error)
-        return FAILED;
-    else
-        return SUCCESS;
+    buffer->ptr = res.ptr;
+    buffer->len = res.len;
+
+    return SUCCESS;
 }
 
 static status_t decode(private_disass_capstone_t *this, instruction_t **i, chunk_t c)
@@ -132,21 +148,36 @@ static status_t decode(private_disass_capstone_t *this, instruction_t **i, chunk
     status_t status;
 
     if ((*i = (instruction_t*) malloc_thing(capstone_instruction_t)) == NULL)
+    {
         logging("[x] Error while allocating capstone_instruction_t in disassembler_capstone.c\n");
-
-    insn = &((capstone_instruction_t*) *i)->insn;
-    (*i)->bytes = chunk_empty;
-    (*i)->str= chunk_empty;
-    LOG_CAPSTONE("instruction @%x capstoned @%x\n", *i, insn);
+        return FAILED;
+    }
 
     capstone_error_code = cs_disasm(this->handle, c.ptr, c.len, 0x1000, 1, &insn);
 
-    if (capstone_error_code == 0)
+    LOG_CAPSTONE("instruction @%x capstoned @%x chunk.ptr:%x chunk.len:%x\n", *i, insn, c.ptr, c.len);
+
+    if (capstone_error_code == 1)
+    {
+        LOG_CAPSTONE("[x] Successfully decoded: %s\n", insn->op_str);
+
+        ((capstone_instruction_t*) *i)->insn = insn;
+        (*i)->bytes = chunk_calloc(insn->size + 1);
+        memcpy((*i)->bytes.ptr, c.ptr, insn->size);
+
+        (*i)->str= chunk_empty;
+
         status = SUCCESS;
+    }
     else{
         capstone_error = cs_errno(this->handle);
 
-        LOG_CAPSTONE("[x] Error while decoding chunk: %s\n", cs_strerror(capstone_error));
+        LOG_CAPSTONE("[x] Error while decoding chunk: [%x]:%s\n", capstone_error_code, cs_strerror(capstone_error));
+
+        ((capstone_instruction_t*) *i)->insn = NULL;
+        (*i)->bytes = chunk_empty;
+        (*i)->str= chunk_empty;
+
         status = FAILED;
     }
 
@@ -155,7 +186,7 @@ static status_t decode(private_disass_capstone_t *this, instruction_t **i, chunk
 
 static status_t encode(private_disass_capstone_t *this, chunk_t *c, instruction_t *i)
 {
-    LOG_CAPSTONE("Capstone does not encode ...\n");
+    LOG_CAPSTONE("Capstone does not encode ... %x %x %x\n", this, c, i);
 
     return SUCCESS;
 }
@@ -176,27 +207,53 @@ static instruction_t *alloc_instruction(private_disass_capstone_t *this)
     new_insn->interface.bytes = chunk_empty;
     new_insn->interface.str = chunk_empty;
 
-
     return (instruction_t*) new_insn;
 }
 
 static void *clone_instruction(void *instruction)
 {
-    cs_insn *new_instruction;
+    capstone_instruction_t *new_instruction;
+    capstone_instruction_t *insn;
 
-    if ((new_instruction = malloc(sizeof(cs_insn))) == NULL)
+    if ((new_instruction = malloc(sizeof(*new_instruction))) == NULL)
     {
         LOG_CAPSTONE("Error while allocating instruction in clone_instruction from chain.c\n");
         return NULL;
     }
 
-    memcpy(new_instruction, instruction, sizeof(cs_insn));
+    memcpy(new_instruction, instruction, sizeof(*new_instruction));
+
+    insn = ((capstone_instruction_t*) instruction);
+
+    new_instruction->interface.bytes = chunk_clone(insn->interface.bytes);
+    new_instruction->interface.str = chunk_clone(insn->interface.str);
+
+    if ((new_instruction->insn = malloc(sizeof(cs_insn))) == NULL)
+    {
+        LOG_CAPSTONE("Error while allocating cs_insn in clone_instruction from chain.c\n");
+        free(new_instruction);
+        return NULL;
+    }
+
+    memcpy(new_instruction->insn, insn->insn, sizeof(cs_insn));
 
     return new_instruction;
 }
 
 static void destroy_instruction(void *instruction)
 {
+    cs_insn *capstone_insn;
+    capstone_instruction_t *insn;
+
+    insn = ((capstone_instruction_t*) instruction);
+    //capstone_insn = insn->insn;
+
+    //if (capstone_insn)
+    //    cs_free(capstone_insn, 1);
+
+    chunk_clear(&insn->interface.bytes);
+    chunk_clear(&insn->interface.str);
+
     free(instruction);
     instruction = NULL;
 }
@@ -206,7 +263,7 @@ static uint64_t get_instruction_size(private_disass_capstone_t *this)
     if (!this)
         return FAILED;
 
-    return sizeof(cs_insn);
+    return sizeof(capstone_instruction_t);
 }
 
 static void destroy(private_disass_capstone_t *this)
@@ -226,7 +283,7 @@ disass_capstone_t *create_capstone()
     this->public.interface.get_category = (category_t (*)(disassembler_t*, instruction_t*)) get_category;
     this->public.interface.get_length = (uint64_t (*)(disassembler_t*, instruction_t*)) get_length;
     this->public.interface.format = (status_t (*)(disassembler_t*, instruction_t *, chunk_t)) format;
-    this->public.interface.dump_intel = (status_t (*)(disassembler_t*, instruction_t *, chunk_t, uint64_t)) dump_intel;
+    this->public.interface.dump_intel = (status_t (*)(disassembler_t*, instruction_t *, chunk_t *, uint64_t)) dump_intel;
     this->public.interface.decode = (status_t (*)(disassembler_t*, instruction_t **, chunk_t)) decode;
     this->public.interface.encode = (status_t (*)(disassembler_t*, chunk_t *, instruction_t *)) encode;
     this->public.interface.alloc_instruction = (instruction_t *(*)(disassembler_t*)) alloc_instruction;

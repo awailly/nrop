@@ -11,6 +11,7 @@
 #include "linked_list.h"
 #include "xed-interface.h"
 #include "disassembler_xed.h"
+#include "disassembler_capstone.h"
 
 /*
  * Using -isystem qemu to handle warnings

@@ -49,12 +49,12 @@ struct disassembler_t
      *
      * @param instruction   the instruction to dump
      * @param buffer        the chunk to contain the dump
-     * @param offset        the offset of the instruction in the executables
+     * @param offset        the offset of the instruction in the executable
      *
      * @return              SUCCESS if the dump was successful,
      *                      FAILED otherwise
      */
-    status_t (*dump_intel)(disassembler_t *, instruction_t *, chunk_t, uint64_t);
+    status_t (*dump_intel)(disassembler_t *, instruction_t *, chunk_t *, uint64_t);
 
     /**
      * Decode a sequence of bytes to a string. The format can be modified

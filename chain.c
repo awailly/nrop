@@ -190,7 +190,7 @@ chain_t *chain_create_from_string(chunk_t type, uint64_t addr, chunk_t chunk_str
 {
     disassembler_t *d;
 
-    d = (disassembler_t*) create_xed();
+    d = (disassembler_t*) DISASSINSTANCE();
     d->initialize(d, type);
 
     LOG_CHAIN("Creating chain of type %s[%u] @%x : %s\n", type.ptr, type.len, addr, chunk_str.ptr);
@@ -243,7 +243,7 @@ chain_t *chain_create_from_string_disass(disassembler_t *d, uint64_t addr, chunk
         LOG_CHAIN("%s\n", buf);
         */
         format_chunk = chunk_calloc(4096);
-        if (d->dump_intel(d, instruction, format_chunk, addr) == FAILED)
+        if (d->dump_intel(d, instruction, &format_chunk, addr) == FAILED)
             LOG_CHAIN("[x] Error while dump_intel in chain.c\n");
 
         LOG_CHAIN("create from string_disass %s\n", format_chunk.ptr);
@@ -266,7 +266,7 @@ chain_t *chain_create_from_insn(chunk_t type, uint64_t addr, linked_list_t *inst
 {
     disassembler_t *d;
 
-    d = (disassembler_t*) create_xed();
+    d = (disassembler_t*) DISASSINSTANCE();
     d->initialize(d, type);
 
     return chain_create_from_insn_disass(d, addr, instructions);
@@ -313,7 +313,7 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
             new_str = chunk_calloc(4096);
 
             LOG_CHAIN("dumping instruction %x\n", instruction);
-            d->dump_intel(d, instruction, new_str, offset_addr);
+            d->dump_intel(d, instruction, &new_str, offset_addr);
 
             need_free_str = true;
         }

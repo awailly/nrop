@@ -374,6 +374,7 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
 
         if (status == SUCCESS)
         {
+            printf("adding biatch ************************************************************************ %x\n", this->is_last_inst(this, instruction));
             if (this->is_last_inst(this, instruction))
             {
                 /*
@@ -629,7 +630,8 @@ plugin_rop_t *plugin_rop_create(code_t *code, char *constraints, chunk_t target)
     cpu_exec_init_all();
 
     this->threadpool=thpool_init(32);
-    this->d = (disassembler_t*) create_xed();
+    //this->d = (disassembler_t*) create_xed();
+    this->d = (disassembler_t*) DISASSINSTANCE();
 
     this->code = (elf_t *) code;
     this->constraints = constraints;

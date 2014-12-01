@@ -42,7 +42,7 @@ struct disassembler_t
      * @param format        the format to dump instructions
      * @return              STATUS of the dump format modification
      */
-    status_t (*format)(disassembler_t *, instruction_t *, chunk_t);
+    status_t (*format)(disassembler_t *, instruction_t *, chunk_t *);
 
     /**
      * Dump the instruction in the INTEL format.

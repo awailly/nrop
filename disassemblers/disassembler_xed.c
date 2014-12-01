@@ -84,7 +84,7 @@ static uint64_t get_length(private_disass_xed_t *this, instruction_t *i)
     return xed_decoded_inst_get_length(&((xed_instruction_t*) i)->xedd);
 }
 
-static status_t format(private_disass_xed_t *this, instruction_t *i, chunk_t format)
+static status_t format(private_disass_xed_t *this, instruction_t *i, chunk_t *format)
 {
     xed_bool_t ok;
     xed_decoded_inst_t *xedd;
@@ -94,7 +94,7 @@ static status_t format(private_disass_xed_t *this, instruction_t *i, chunk_t for
 
     xedd = &((xed_instruction_t*) i)->xedd;
 
-    ok = xed_format(XED_SYNTAX_INTEL, xedd, (char*)format.ptr, format.len, 0);
+    ok = xed_format(XED_SYNTAX_INTEL, xedd, (char*)format->ptr, format->len, 0);
 
     if (ok)
         return SUCCESS;
@@ -303,7 +303,7 @@ disass_xed_t *create_xed()
     this->public.interface.initialize = (status_t (*)(disassembler_t*, chunk_t)) initialize;
     this->public.interface.get_category = (category_t (*)(disassembler_t*, instruction_t*)) get_category;
     this->public.interface.get_length = (uint64_t (*)(disassembler_t*, instruction_t*)) get_length;
-    this->public.interface.format = (status_t (*)(disassembler_t*, instruction_t *, chunk_t)) format;
+    this->public.interface.format = (status_t (*)(disassembler_t*, instruction_t *, chunk_t *)) format;
     this->public.interface.dump_intel = (status_t (*)(disassembler_t*, instruction_t *, chunk_t *, uint64_t)) dump_intel;
     this->public.interface.decode = (status_t (*)(disassembler_t*, instruction_t **, chunk_t)) decode;
     this->public.interface.encode = (status_t (*)(disassembler_t*, chunk_t *, instruction_t *)) encode;

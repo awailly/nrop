@@ -96,17 +96,32 @@ static uint64_t get_length(private_disass_capstone_t *this, instruction_t *i)
     return insn->size;
 }
 
-static status_t format(private_disass_capstone_t *this, instruction_t *i, chunk_t format)
+static status_t format(private_disass_capstone_t *this, instruction_t *i, chunk_t *format)
 {
     cs_insn *x;
+    //chunk_t address;
+    chunk_t mnemonic;
+    chunk_t str;
+    chunk_t res;
 
     if (!this)
         return FAILED;
 
     x = ((capstone_instruction_t*) i)->insn;
 
-    format.len = strlen(x->op_str) + 1;
-    memcpy(format.ptr, x->op_str, format.len);
+    //address = chunk_calloc(21);
+    //snprintf((char*)address.ptr, address.len, "%16lx: ", offset_addr);
+    mnemonic.len = strlen(x->mnemonic) + 1;
+    mnemonic.ptr = (u_char*) x->mnemonic;
+
+    str.len = strlen(x->op_str) + 1;
+    str.ptr = (u_char*) x->op_str;
+
+    res = chunk_calloc(mnemonic.len + 1 + str.len);
+    snprintf((char*)res.ptr, res.len, "%s %s", mnemonic.ptr, str.ptr);
+
+    format->ptr = res.ptr;
+    format->len = res.len;
 
     return SUCCESS;
 }
@@ -187,9 +202,9 @@ static status_t decode(private_disass_capstone_t *this, instruction_t **i, chunk
 
 static status_t encode(private_disass_capstone_t *this, chunk_t *c, instruction_t *i)
 {
-    LOG_CAPSTONE("Capstone does not encode ... %x %x %x\n", this, c, i);
+    printf("Capstone does not encode ... %x %x %x\n", this, c, i);
 
-    return SUCCESS;
+    return FAILED;
 }
 
 static instruction_t *alloc_instruction(private_disass_capstone_t *this)
@@ -247,10 +262,10 @@ static void destroy_instruction(void *instruction)
     capstone_instruction_t *insn;
 
     insn = ((capstone_instruction_t*) instruction);
-    //capstone_insn = insn->insn;
+    capstone_insn = insn->insn;
 
-    //if (capstone_insn)
-    //    cs_free(capstone_insn, 1);
+    if (capstone_insn)
+        cs_free(capstone_insn, 1);
 
     chunk_clear(&insn->interface.bytes);
     chunk_clear(&insn->interface.str);
@@ -283,7 +298,7 @@ disass_capstone_t *create_capstone()
     this->public.interface.initialize = (status_t (*)(disassembler_t*, chunk_t)) initialize;
     this->public.interface.get_category = (category_t (*)(disassembler_t*, instruction_t*)) get_category;
     this->public.interface.get_length = (uint64_t (*)(disassembler_t*, instruction_t*)) get_length;
-    this->public.interface.format = (status_t (*)(disassembler_t*, instruction_t *, chunk_t)) format;
+    this->public.interface.format = (status_t (*)(disassembler_t*, instruction_t *, chunk_t *)) format;
     this->public.interface.dump_intel = (status_t (*)(disassembler_t*, instruction_t *, chunk_t *, uint64_t)) dump_intel;
     this->public.interface.decode = (status_t (*)(disassembler_t*, instruction_t **, chunk_t)) decode;
     this->public.interface.encode = (status_t (*)(disassembler_t*, chunk_t *, instruction_t *)) encode;

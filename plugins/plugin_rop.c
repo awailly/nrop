@@ -374,7 +374,6 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
 
         if (status == SUCCESS)
         {
-            printf("adding biatch ************************************************************************ %x\n", this->is_last_inst(this, instruction));
             if (this->is_last_inst(this, instruction))
             {
                 /*

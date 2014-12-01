@@ -20,7 +20,7 @@ struct disassembler_t
     status_t (*initialize)(disassembler_t *, chunk_t);
 
     /**
-     * Get the category of the instruction.
+     * Get the category of the instruction. Described as category_t
      *
      * @param instruction   the instruction to analyze
      * @return category     the category of the instruction
@@ -102,7 +102,9 @@ struct disassembler_t
     void (*destroy_instruction)(void *instruction);
 
     /**
-     * Return the size of disassembler instance of instruction.
+     * Return the size of disassembler instance of instruction. It is not
+     * the size of the decoded instruction in bytes, but the internal
+     * structure used by the disassembler.
      *
      * @return              the size of the expected instructions
      */

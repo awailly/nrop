@@ -12,7 +12,7 @@
 #include "elf_type.h"
 #include "disassembler.h"
 
-#define DISASSINSTANCE create_xed
+#define DISASSINSTANCE create_capstone
 
 typedef struct disass_capstone_t disass_capstone_t;
 

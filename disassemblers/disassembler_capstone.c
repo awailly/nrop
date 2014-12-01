@@ -6,7 +6,7 @@
 
 #define BUFLEN  1000
 
-#define DEBUG_CAPSTONE
+//#define DEBUG_CAPSTONE
 #ifdef DEBUG_CAPSTONE
 #  define LOG_CAPSTONE(...) logging(__VA_ARGS__)
 #else
@@ -132,7 +132,8 @@ static status_t dump_intel(private_disass_capstone_t *this, instruction_t *i, ch
     str.len = strlen(x->op_str) + 1;
     str.ptr = (u_char*) x->op_str;
 
-    res = chunk_cat("cc", mnemonic, str);
+    res = chunk_calloc(mnemonic.len + 1 + str.len);
+    snprintf((char*)res.ptr, res.len, "%s %s", mnemonic.ptr, str.ptr);
 
     buffer->ptr = res.ptr;
     buffer->len = res.len;
@@ -162,7 +163,7 @@ static status_t decode(private_disass_capstone_t *this, instruction_t **i, chunk
         LOG_CAPSTONE("[x] Successfully decoded: %s\n", insn->op_str);
 
         ((capstone_instruction_t*) *i)->insn = insn;
-        (*i)->bytes = chunk_calloc(insn->size + 1);
+        (*i)->bytes = chunk_calloc(insn->size);
         memcpy((*i)->bytes.ptr, c.ptr, insn->size);
 
         (*i)->str= chunk_empty;
@@ -217,7 +218,7 @@ static void *clone_instruction(void *instruction)
 
     if ((new_instruction = malloc(sizeof(*new_instruction))) == NULL)
     {
-        LOG_CAPSTONE("Error while allocating instruction in clone_instruction from chain.c\n");
+        LOG_CAPSTONE("Error while allocating instruction in clone_instruction from disassembler_capstone.c\n");
         return NULL;
     }
 
@@ -230,7 +231,7 @@ static void *clone_instruction(void *instruction)
 
     if ((new_instruction->insn = malloc(sizeof(cs_insn))) == NULL)
     {
-        LOG_CAPSTONE("Error while allocating cs_insn in clone_instruction from chain.c\n");
+        LOG_CAPSTONE("Error while allocating cs_insn in clone_instruction from disassembler_capstone.c\n");
         free(new_instruction);
         return NULL;
     }

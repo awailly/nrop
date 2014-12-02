@@ -123,7 +123,7 @@ void thpool_thread_do(thpool_t* tp_p){
 		}
 	}
 
-    printf("bad exit: %x\n", thpool_keepalive);
+    //printf("bad exit: %x\n", thpool_keepalive);
 	return;
 }
 

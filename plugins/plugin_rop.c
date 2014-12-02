@@ -11,7 +11,7 @@
 #  define LOG_ROP(...) do { } while (0)
 #endif
 
-#define DEBUG_ROP_DEBUG
+//#define DEBUG_ROP_DEBUG
 #ifdef DEBUG_ROP_DEBUG
 #  define LOG_ROP_DEBUG(...) logging(__VA_ARGS__)
 #else
@@ -83,8 +83,7 @@ static status_t disassemble(private_plugin_rop_t *this, chunk_t function_chunk)
 
         i+= d->get_length(d, instruction);
 
-        free(instruction);
-        instruction = NULL;
+        d->destroy_instruction(instruction);
     }
 
     return SUCCESS;
@@ -181,21 +180,22 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
     {
         if ((current_byte == 0) && (last_decoded_byte == last_byte))
         {
-            /*LOG_ROP_DEBUG("start of chunk reached\n");*/
+            LOG_ROP_DEBUG("start of chunk reached\n");
             byte_to_disass = false;
         }
         else if /*((last_decoded_byte > 0) &&*/ (((ret_byte - current_byte > 50)))
         {
-            /*LOG_ROP_DEBUG("max decoding size reached\n");*/
+            LOG_ROP_DEBUG("max decoding size reached\n");
             byte_to_disass = false;
         }
         else if ((last_decoded_byte > 0) && (((last_decoded_byte - current_byte) > 15) || (current_byte < 0)))
         {
-            /*LOG_ROP_DEBUG("no instruction found within maximum instruction length range\n");*/
+            LOG_ROP_DEBUG("no instruction found within maximum instruction length range\n");
             current_byte = last_decoded_byte;
 
             if (last_decoded_byte == last_byte)
             {
+                LOG_ROP_DEBUG("reached last_decoded_byte == last_byte\n");
                 byte_to_disass = false;
             }
             else
@@ -203,6 +203,7 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
                 /*
                  * Removing last decoded instruction and continue to explore
                  */
+                LOG_ROP_DEBUG("removing last decoded instruction\n");
                 chain_insns->remove_first(chain_insns, (void**)&item);
 
                 // Recovering offsets and chain string
@@ -246,22 +247,24 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
             */
             if ((last_decoded_byte > 0) && (d->get_length(d, inst) != (last_decoded_byte - current_byte)))
             {
-                /*
                 LOG_ROP_DEBUG("instruction length is not valid\n");
+                /*
                 LOG_ROP_DEBUG("decoded:%u vs. l-c:%u\n", xed_decoded_inst_get_length(&xedd), last_decoded_byte - current_byte);
                 xed_decoded_inst_dump(&xedd, buf, sizeof(buf));
                 LOG_ROP_DEBUG("Invalid:\n%s\n", buf);
                 */
             }
             else if ((last_decoded_byte == 0) && (d->get_length(d, inst) != (last_byte - current_byte)))
-            {}
+            {
+                LOG_ROP_DEBUG("last_decoded_byte == 0\n");
+            }
             else if ((this->is_last_inst(this, inst)) && (chain_insns->get_last(chain_insns, (void**)&item) != NOT_FOUND))
             {
-                /*LOG_ROP_DEBUG("found ending instruction, skipping as position != end (ret; bla; ret)\n");*/
+                LOG_ROP_DEBUG("found ending instruction, skipping as position != end (ret; bla; ret)\n");
             }
             else if ((this->is_last_inst(this, inst) == 0) && (chain_insns->get_last(chain_insns, (void**)&item) == NOT_FOUND))
             {
-                /*LOG_ROP_DEBUG("found last instruction not being an ending instruction, skipping\n");*/
+                LOG_ROP_DEBUG("found last instruction not being an ending instruction, skipping\n");
             }
             /*
              * Filtering not wanted insns. HLT/STI
@@ -270,10 +273,13 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
              */
             else if ((d->get_length(d, inst) == 1) && (this->bad_insn(this, itext)))
             {
+                LOG_ROP_DEBUG("found unwanted instruction\n");
             }
             else
             {
                 instruction_t *new_insn;
+
+                LOG_ROP_DEBUG("adding new chain\n");
 
                 last_decoded_byte = current_byte;
 
@@ -290,7 +296,8 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
         }
         else 
         {
-            /*LOG_ROP_DEBUG("wrong decoding\n");*/
+            LOG_ROP_DEBUG("wrong decoding\n");
+            //hexdump(code_chunk.ptr, code_chunk.len);
         }
 
         if (current_byte >= 0)
@@ -352,12 +359,10 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
         if ((status == SUCCESS) && (this->is_last_inst(this, instruction)))
         {
             /*
-            LOG_ROP_DEBUG("Found a RET ins @%x\n", instruction);
-            char buffer[4096];
-            xed_decoded_inst_dump(&xedd,buffer, sizeof(buffer));
-            printf("%s\n",buffer);
+            chunk_t a = chunk_calloc(1024);
+            d->dump_intel(d, instruction, &a, byte);
+            LOG_ROP_DEBUG("[x] found last (%x) %s\n", d->get_length(d, instruction), a.ptr);
             */
-            //this->reverse_disass_ret(this, function_chunk, addr, byte+1, inst_list);
 
             job_reverse_disass_ret_total++;
             ta = malloc_thing(job_reverse_disass_ret_th_arg);
@@ -365,7 +370,7 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
             ta->this = this;
             ta->function_chunk = function_chunk;
             ta->addr = addr;
-            ta->byte = byte;
+            ta->byte = byte + d->get_length(d, instruction) - 1;
             ta->inst_list = inst_list;
 
 #ifdef MULTITHREAD
@@ -445,6 +450,8 @@ static void job_chain(th_arg *t)
         LOG_ROP("Found equivalent! %u\n", g);
         LOG_ROP("   [X] %s\n", c->get_str(c));
         LOG_ROP("   [X] %s\n", t->target->get_str(t->target));
+        if (g == PN2)
+            printf("   [X] %s\n", c->get_str(c));
     }
 
     target_map->destroy(target_map);
@@ -512,15 +519,23 @@ status_t pack(private_plugin_rop_t *this, Elf64_Addr addr, chunk_t chunk)
 
     while(e->enumerate(e, &c))
     {
-        ta = malloc_thing(th_arg);
-        //ta->target_map = target_map;
-        ta->target = this->target;
-        ta->c = c;
+        if (this->target->get_chunk(this->target).ptr == NULL)
+        {
+            printf("0x%016lx: %s\n", c->get_addr(c), c->get_str(c));
+            job_count++;
+        }
+        else
+        {
+            ta = malloc_thing(th_arg);
+            //ta->target_map = target_map;
+            ta->target = this->target;
+            ta->c = c;
 #ifdef MULTITHREAD
-        thpool_add_work(this->threadpool, (void*)job_chain, (void*)ta);
+            thpool_add_work(this->threadpool, (void*)job_chain, (void*)ta);
 #else
-        job_chain(ta);
+            job_chain(ta);
 #endif
+        }
     }
 
     while(jc < inst_list->get_count(inst_list))

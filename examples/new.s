@@ -10,7 +10,7 @@ _start:
 
 mov1:
     int 3
-    pop rax
+    call rax
     ret
 
 section .data

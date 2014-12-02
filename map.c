@@ -305,14 +305,14 @@ static gadget_type compare(private_map_t *this, map_t *other)
 
             if (solver_resnot == Z3_L_FALSE)
             {
-                printf("Found PN2\n");
+                LOG_Z3_SOLVE("Found PN2\n");
                 LOG_Z3_SOLVE("Solver: %s\n", Z3_solver_to_string(this->ctx, solvernot));
                 result = PN2;
             }
             else
             {
                 //Z3_model model;
-                printf("Found PN1\n");
+                LOG_Z3_SOLVE("Found PN1\n");
                 result = PN1;
                 //model = Z3_solver_get_model(this->ctx, solvernot);
                 //LOG_Z3_SOLVE("Model: %s\n", Z3_model_to_string(this->ctx, model));

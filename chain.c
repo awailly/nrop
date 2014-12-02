@@ -8,7 +8,7 @@
 #include "qemu/tcg/tcg.h"
 #include "converter.h"
 
-//#define DEBUG_CHAIN
+#define DEBUG_CHAIN
 #ifdef DEBUG_CHAIN
 #  define LOG_CHAIN(...) logging(__VA_ARGS__)
 #else
@@ -311,10 +311,10 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
         LOG_CHAIN("new str is %x:%x\n", new_str.ptr, new_str.len);
 
         if (new_str.ptr == chunk_empty.ptr)
-        { 
+        {
             new_str = chunk_calloc(4096);
 
-            LOG_CHAIN("dumping instruction %x\n", instruction);
+            LOG_CHAIN("dumping @instruction %x:%x\n", instruction, offset_addr);
             d->dump_intel(d, instruction, &new_str, offset_addr);
 
             need_free_str = true;

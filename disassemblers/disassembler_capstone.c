@@ -6,7 +6,7 @@
 
 #define BUFLEN  1000
 
-//#define DEBUG_CAPSTONE
+#define DEBUG_CAPSTONE
 #ifdef DEBUG_CAPSTONE
 #  define LOG_CAPSTONE(...) logging(__VA_ARGS__)
 #else
@@ -54,7 +54,16 @@ static status_t initialize(private_disass_capstone_t *this, chunk_t c)
         return FAILED;
     }
 
+    /*
+     * The CS_OPT_DETAIL will feed the group_id, but can be avoided for ROP.
+     * Also, it will imply a double free when cloned as insn->detail is
+     * not fully copied.
+     *
+     * You will need to implement a small reference manager if you need
+     * details :)
+     *
     cs_option(this->handle, CS_OPT_DETAIL, CS_OPT_ON);
+    */
 
     return SUCCESS;
 }
@@ -68,15 +77,42 @@ static category_t get_category(private_disass_capstone_t *this, instruction_t *i
 
     insn = ((capstone_instruction_t*) i)->insn;
 
-    if (cs_insn_group(this->handle, insn, X86_GRP_JUMP))
+    if ((insn->id == X86_INS_JE) ||
+        (insn->id == X86_INS_JE) ||
+        (insn->id == X86_INS_JAE) ||
+        (insn->id == X86_INS_JA) ||
+        (insn->id == X86_INS_JBE) ||
+        (insn->id == X86_INS_JB) ||
+        (insn->id == X86_INS_JCXZ) ||
+        (insn->id == X86_INS_JECXZ) ||
+        (insn->id == X86_INS_JE) ||
+        (insn->id == X86_INS_JGE) ||
+        (insn->id == X86_INS_JG) ||
+        (insn->id == X86_INS_JLE) ||
+        (insn->id == X86_INS_JL) ||
+        (insn->id == X86_INS_JMP) ||
+        (insn->id == X86_INS_JNE) ||
+        (insn->id == X86_INS_JNO) ||
+        (insn->id == X86_INS_JNP) ||
+        (insn->id == X86_INS_JNS) ||
+        (insn->id == X86_INS_JO) ||
+        (insn->id == X86_INS_JP) ||
+        (insn->id == X86_INS_JRCXZ) ||
+        (insn->id == X86_INS_JS))
         return COND_BR;
-    else if (cs_insn_group(this->handle, insn, X86_GRP_JUMP))
+    else if ((insn->id == X86_INS_JMP) ||
+             (insn->id == X86_INS_LJMP))
         return UNCOND_BR;
-    else if (cs_insn_group(this->handle, insn, X86_GRP_INT))
+    else if ((insn->id == X86_INS_INT) ||
+             (insn->id == X86_INS_SYSCALL))
         return SYSCALL;
-    else if (cs_insn_group(this->handle, insn, X86_GRP_CALL))
+    else if ((insn->id == X86_INS_CALL) ||
+             (insn->id == X86_INS_LCALL))
         return CALL;
-    else if (cs_insn_group(this->handle, insn, X86_GRP_RET))
+    else if ((insn->id == X86_INS_RET) ||
+             (insn->id == X86_INS_RETF) ||
+             (insn->id == X86_INS_RETFQ) ||
+             (insn->id == X86_INS_RETF))
         return RET;
     else
         return NO_CAT;
@@ -139,6 +175,8 @@ static status_t dump_intel(private_disass_capstone_t *this, instruction_t *i, ch
 
     x = ((capstone_instruction_t*) i)->insn;
 
+    LOG_CAPSTONE("[x] dumping intel %lx\n", offset_addr);
+
     //address = chunk_calloc(21);
     //snprintf((char*)address.ptr, address.len, "%16lx: ", offset_addr);
     mnemonic.len = strlen(x->mnemonic) + 1;
@@ -160,7 +198,6 @@ static status_t decode(private_disass_capstone_t *this, instruction_t **i, chunk
 {
     cs_insn *insn;
     size_t capstone_error_code;
-    cs_err capstone_error;
     status_t status;
 
     if ((*i = (instruction_t*) malloc_thing(capstone_instruction_t)) == NULL)
@@ -175,7 +212,7 @@ static status_t decode(private_disass_capstone_t *this, instruction_t **i, chunk
 
     if (capstone_error_code == 1)
     {
-        LOG_CAPSTONE("[x] Successfully decoded: %s\n", insn->op_str);
+        LOG_CAPSTONE("[x] Successfully decoded: %s %s\n", insn->mnemonic, insn->op_str);
 
         ((capstone_instruction_t*) *i)->insn = insn;
         (*i)->bytes = chunk_calloc(insn->size);
@@ -186,9 +223,7 @@ static status_t decode(private_disass_capstone_t *this, instruction_t **i, chunk
         status = SUCCESS;
     }
     else{
-        capstone_error = cs_errno(this->handle);
-
-        LOG_CAPSTONE("[x] Error while decoding chunk: [%x]:%s\n", capstone_error_code, cs_strerror(capstone_error));
+        LOG_CAPSTONE("[x] Error while decoding chunk: [%x]:%s\n", capstone_error_code, cs_strerror(cs_errno(this->handle)));
 
         ((capstone_instruction_t*) *i)->insn = NULL;
         (*i)->bytes = chunk_empty;
@@ -200,9 +235,10 @@ static status_t decode(private_disass_capstone_t *this, instruction_t **i, chunk
     return status;
 }
 
-static status_t encode(private_disass_capstone_t *this, chunk_t *c, instruction_t *i)
+/* Remove compiler warning about unused */
+static status_t encode(private_disass_capstone_t __attribute__((__unused__)) *this, chunk_t __attribute__((__unused__)) *c, instruction_t __attribute__((__unused__)) *i)
 {
-    printf("Capstone does not encode ... %x %x %x\n", this, c, i);
+    LOG_CAPSTONE("Capstone does not encode ... %x %x %x\n", this, c, i);
 
     return FAILED;
 }
@@ -248,6 +284,7 @@ static void *clone_instruction(void *instruction)
     {
         LOG_CAPSTONE("Error while allocating cs_insn in clone_instruction from disassembler_capstone.c\n");
         free(new_instruction);
+        new_instruction = NULL;
         return NULL;
     }
 
@@ -265,7 +302,10 @@ static void destroy_instruction(void *instruction)
     capstone_insn = insn->insn;
 
     if (capstone_insn)
+    {
         cs_free(capstone_insn, 1);
+        insn->insn = NULL;
+    }
 
     chunk_clear(&insn->interface.bytes);
     chunk_clear(&insn->interface.str);

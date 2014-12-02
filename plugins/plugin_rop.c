@@ -152,7 +152,7 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
     linked_list_t *chain_insns;
     chain_t *chain;
     bool byte_to_disass;
-    char *item;
+    instruction_t *item;
 
     chunk_t code_chunk;
 
@@ -202,10 +202,10 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
             }
             else
             {
+                uint64_t inst_size;
                 /*
                  * Removing last decoded instruction and continue to explore
-                 */
-                uint64_t inst_size;
+                 *
 
                 if ((last_byte - current_byte) >= XED_MAX_INSTRUCTION_BYTES)
                     bytes = XED_MAX_INSTRUCTION_BYTES;
@@ -215,18 +215,18 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
                 memcpy(itext, chunk.ptr + current_byte, bytes);
                 code_chunk = chunk_create(itext, bytes);
 
-                /* No error as we already tested it */
+                // No error as we already tested it
                 d->decode(d, &inst, code_chunk);
+                d->destroy_instruction(inst);
+                */
+                chain_insns->remove_first(chain_insns, (void**)&item);
 
-                /* Recovering offsets and chain string */
-                inst_size = d->get_length(d, inst);
+                // Recovering offsets and chain string
+                inst_size = d->get_length(d, item);
                 last_decoded_byte+= inst_size;
                 current_byte--;
 
-                d->destroy_instruction(inst);
-                chain_insns->remove_first(chain_insns, (void**)&item);
-                free(item);
-                item = NULL;
+                this->d->destroy_instruction(item);
             }
         }
 
@@ -313,13 +313,11 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
                 pthread_mutex_unlock(&job_reverse_disass_ret_mutex);
             }
         }
-        else
+        else if (current_byte > 0)
         {
             /*LOG_ROP_DEBUG("wrong decoding\n");*/
-        }
-
-        if (current_byte >=0)
             this->d->destroy_instruction(inst);
+        }
 
         current_byte--;
     }
@@ -372,30 +370,27 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
 
         status = d->decode(d, &instruction, code_chunk);
 
-        if (status == SUCCESS)
+        if ((status == SUCCESS) && (this->is_last_inst(this, instruction)))
         {
-            if (this->is_last_inst(this, instruction))
-            {
-                /*
-                LOG_ROP_DEBUG("Found a RET ins @%x\n", instruction);
-                char buffer[4096];
-                xed_decoded_inst_dump(&xedd,buffer, sizeof(buffer));
-                printf("%s\n",buffer);
-                */
-                //this->reverse_disass_ret(this, function_chunk, addr, byte+1, inst_list);
+            /*
+            LOG_ROP_DEBUG("Found a RET ins @%x\n", instruction);
+            char buffer[4096];
+            xed_decoded_inst_dump(&xedd,buffer, sizeof(buffer));
+            printf("%s\n",buffer);
+            */
+            //this->reverse_disass_ret(this, function_chunk, addr, byte+1, inst_list);
 
-                job_reverse_disass_ret_total++;
-                ta = malloc_thing(job_reverse_disass_ret_th_arg);
-                
-                ta->this = this;
-                ta->function_chunk = function_chunk;
-                ta->addr = addr;
-                ta->byte = byte;
-                ta->inst_list = inst_list;
+            job_reverse_disass_ret_total++;
+            ta = malloc_thing(job_reverse_disass_ret_th_arg);
+            
+            ta->this = this;
+            ta->function_chunk = function_chunk;
+            ta->addr = addr;
+            ta->byte = byte;
+            ta->inst_list = inst_list;
 
-                thpool_add_work(this->threadpool, (void*)job_reverse_disass_ret, (void*)ta);
-                //job_reverse_disass_ret(ta);
-            }
+            //thpool_add_work(this->threadpool, (void*)job_reverse_disass_ret, (void*)ta);
+            job_reverse_disass_ret(ta);
         }
 
         d->destroy_instruction(instruction);

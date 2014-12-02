@@ -17,6 +17,8 @@
 #include "disassembler_xed.h"
 #include "disassembler_capstone.h"
 
+#define MULTITHREAD
+
 typedef struct plugin_rop_t plugin_rop_t;
 
 struct plugin_rop_t

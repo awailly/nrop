@@ -368,8 +368,11 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
             ta->byte = byte;
             ta->inst_list = inst_list;
 
+#ifdef MULTITHREAD
             thpool_add_work(this->threadpool, (void*)job_reverse_disass_ret, (void*)ta);
-            //job_reverse_disass_ret(ta);
+#else
+            job_reverse_disass_ret(ta);
+#endif
         }
 
         d->destroy_instruction(instruction);
@@ -513,8 +516,11 @@ status_t pack(private_plugin_rop_t *this, Elf64_Addr addr, chunk_t chunk)
         //ta->target_map = target_map;
         ta->target = this->target;
         ta->c = c;
+#ifdef MULTITHREAD
         thpool_add_work(this->threadpool, (void*)job_chain, (void*)ta);
-        //job_chain(ta);
+#else
+        job_chain(ta);
+#endif
     }
 
     while(jc < inst_list->get_count(inst_list))

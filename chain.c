@@ -8,7 +8,7 @@
 #include "qemu/tcg/tcg.h"
 #include "converter.h"
 
-#define DEBUG_CHAIN
+//#define DEBUG_CHAIN
 #ifdef DEBUG_CHAIN
 #  define LOG_CHAIN(...) logging(__VA_ARGS__)
 #else
@@ -127,8 +127,6 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
 
     env = cpu_init("qemu64");
     cpu = ENV_GET_CPU(env); 
-    printf("the chunk is : ");
-    hexdump(this->chunk.ptr, this->chunk.len);
     tb = tb_gen_code(cpu, (uint64_t) this->chunk.ptr, 0, 0x40c0b3, 0);
     //tb_gen_code(cpu, (uint64_t) this->chunk.ptr, 0, 0x40c0b3, 0);
 

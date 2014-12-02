@@ -174,6 +174,9 @@ static status_t decode(private_disass_xed_t *this, instruction_t **i, chunk_t c)
     if (status == FAILED)
         return status;
 
+    (*i)->bytes = chunk_calloc(xed_decoded_inst_get_length(xedd));
+    memcpy((*i)->bytes.ptr, c.ptr, xed_decoded_inst_get_length(xedd));
+
     /* FIXME
      * Why is this code here??
      *
@@ -249,21 +252,34 @@ static instruction_t *alloc_instruction(private_disass_xed_t *this)
 
 static void *clone_instruction(void *instruction)
 {
-    xed_decoded_inst_t *new_instruction;
+    xed_instruction_t *new_instruction;
+    xed_instruction_t *insn;
 
-    if ((new_instruction = malloc(sizeof(xed_decoded_inst_t))) == NULL)
+    if ((new_instruction = malloc(sizeof(*new_instruction))) == NULL)
     {
         LOG_XED("Error while allocating instruction in clone_instruction from chain.c\n");
         return NULL;
     }
 
-    memcpy(new_instruction, instruction, sizeof(xed_decoded_inst_t));
+    memcpy(new_instruction, instruction, sizeof(*new_instruction));
+
+    insn = ((xed_instruction_t*) instruction);
+
+    new_instruction->interface.bytes = chunk_clone(insn->interface.bytes);
+    new_instruction->interface.str = chunk_clone(insn->interface.str);
 
     return new_instruction;
 }
 
 static void destroy_instruction(void *instruction)
 {
+    xed_instruction_t *insn;
+
+    insn = ((xed_instruction_t*) instruction);
+
+    chunk_clear(&insn->interface.bytes);
+    chunk_clear(&insn->interface.str);
+
     free(instruction);
     instruction = NULL;
 }

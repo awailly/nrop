@@ -18,6 +18,8 @@
  */
 #include <include/exec/user/abitypes.h>
 
+#define DISASSINSTANCE create_xed
+
 void gen_intermediate_code(CPUArchState *env, struct TranslationBlock *tb);
 
 typedef struct chain_t chain_t;

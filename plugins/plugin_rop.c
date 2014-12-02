@@ -159,6 +159,9 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
     disassembler_t *d;
     instruction_t *inst;
 
+    if (!this)
+        return FAILED;
+
     inst = NULL;
     chain_insns = linked_list_create();
     /*
@@ -169,11 +172,6 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
     current_byte = last_byte;
     last_decoded_byte = 0;
     byte_to_disass = true;
-
-    if (!this)
-    {
-        return FAILED;
-    }
 
     d = this->d;
 
@@ -202,28 +200,13 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
             }
             else
             {
-                uint64_t inst_size;
                 /*
                  * Removing last decoded instruction and continue to explore
-                 *
-
-                if ((last_byte - current_byte) >= XED_MAX_INSTRUCTION_BYTES)
-                    bytes = XED_MAX_INSTRUCTION_BYTES;
-                else
-                    bytes = last_byte - current_byte;
-
-                memcpy(itext, chunk.ptr + current_byte, bytes);
-                code_chunk = chunk_create(itext, bytes);
-
-                // No error as we already tested it
-                d->decode(d, &inst, code_chunk);
-                d->destroy_instruction(inst);
-                */
+                 */
                 chain_insns->remove_first(chain_insns, (void**)&item);
 
                 // Recovering offsets and chain string
-                inst_size = d->get_length(d, item);
-                last_decoded_byte+= inst_size;
+                last_decoded_byte+= d->get_length(d, item);
                 current_byte--;
 
                 this->d->destroy_instruction(item);
@@ -233,7 +216,7 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
         status = FAILED;
 
         /* Quick fix TODO
-         * The memcpy while current_byte<0
+         * The memcpy while current_byte<0 (maybe do{}while();)
          */
         if (current_byte >=0)
         {
@@ -291,18 +274,10 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
             else
             {
                 instruction_t *new_insn;
-                uint64_t insn_len;
 
-                insn_len = d->get_length(d, inst);
                 last_decoded_byte = current_byte;
-                /*current_byte-= xed_decoded_inst_get_length(&xedd);*/
 
-                new_insn = d->alloc_instruction(d);
-
-                memcpy(new_insn, inst, d->get_instruction_size(d));
-
-                new_insn->bytes = chunk_calloc(insn_len);
-                memcpy(new_insn->bytes.ptr, code_chunk.ptr, insn_len);
+                new_insn = d->clone_instruction(inst);
 
                 chain_insns->insert_first(chain_insns, new_insn);
 
@@ -313,9 +288,13 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
                 pthread_mutex_unlock(&job_reverse_disass_ret_mutex);
             }
         }
-        else if (current_byte > 0)
+        else 
         {
             /*LOG_ROP_DEBUG("wrong decoding\n");*/
+        }
+
+        if (current_byte >= 0)
+        {
             this->d->destroy_instruction(inst);
         }
 
@@ -389,8 +368,8 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
             ta->byte = byte;
             ta->inst_list = inst_list;
 
-            //thpool_add_work(this->threadpool, (void*)job_reverse_disass_ret, (void*)ta);
-            job_reverse_disass_ret(ta);
+            thpool_add_work(this->threadpool, (void*)job_reverse_disass_ret, (void*)ta);
+            //job_reverse_disass_ret(ta);
         }
 
         d->destroy_instruction(instruction);
@@ -534,8 +513,8 @@ status_t pack(private_plugin_rop_t *this, Elf64_Addr addr, chunk_t chunk)
         //ta->target_map = target_map;
         ta->target = this->target;
         ta->c = c;
-        //thpool_add_work(this->threadpool, (void*)job_chain, (void*)ta);
-        job_chain(ta);
+        thpool_add_work(this->threadpool, (void*)job_chain, (void*)ta);
+        //job_chain(ta);
     }
 
     while(jc < inst_list->get_count(inst_list))

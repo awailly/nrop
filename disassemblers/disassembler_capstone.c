@@ -6,7 +6,7 @@
 
 #define BUFLEN  1000
 
-#define DEBUG_CAPSTONE
+//#define DEBUG_CAPSTONE
 #ifdef DEBUG_CAPSTONE
 #  define LOG_CAPSTONE(...) logging(__VA_ARGS__)
 #else

@@ -26,10 +26,10 @@ RUN cd /nrop/qemu && git apply ../qemu.patch \
 	&& tar xvzf pin-2.13-65163-gcc.4.4.7-linux.tar.gz \
 	&& cp -r pin-2.13-65163-gcc.4.4.7-linux/extras/xed2-i* . \
 	&& rm -rf pin-2.13-65163-gcc.4.4.7-linux* \
-	&& cd capstone
-	&& ./make.sh
-	&& ./make.sh install
-    && cd ..
+	&& cd capstone \
+	&& ./make.sh \
+	&& ./make.sh install \
+    && cd .. \
 	&& sed -i 's/main/ma1n/g' qemu/x86_64-linux-user/linux-user/main.o \
 	&& sed -i 's/use_icount/use_1count/g' qemu/stubs/cpu-get-icount.o \
 	&& make -j32

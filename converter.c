@@ -2025,22 +2025,6 @@ static void set_prefix(private_converter_t *this, chunk_t prefix)
     }
 }
 
-static void destroy_target_cell(void *target_cell)
-{
-    Z3_symbol_cell *c;
-
-    c = (Z3_symbol_cell*) target_cell;
-
-    if ((c) && (c->name.ptr))
-        chunk_clear(&c->name);
-
-    if ((c) && (c->prefix.ptr))
-        chunk_clear(&c->prefix);
-
-    free(target_cell);
-    target_cell = NULL;
-}
-
 static void destroy(private_converter_t *this)
 {
     LLVMDisposePassManager(this->pass_mgr);

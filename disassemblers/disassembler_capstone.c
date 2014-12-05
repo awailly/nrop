@@ -162,7 +162,7 @@ static status_t format(private_disass_capstone_t *this, instruction_t *i, chunk_
     return SUCCESS;
 }
 
-static status_t dump_intel(private_disass_capstone_t *this, instruction_t *i, chunk_t *buffer, uint64_t offset_addr)
+static status_t dump_intel(private_disass_capstone_t *this, instruction_t *i, chunk_t *buffer, uint64_t __attribute__((__unused__))offset_addr)
 {
     cs_insn *x;
     //chunk_t address;

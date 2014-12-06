@@ -299,6 +299,7 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
 {
     char *insns_str;
     chunk_t insns_chunk;
+    chunk_t tmp_insns_chunk;
     enumerator_t *e;
     uint64_t offset_addr;
     chain_t *ret_chain;
@@ -372,11 +373,11 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
 
         LOG_CHAIN("new chunk is %x:%x\n", new_chunk.ptr, new_chunk.len);
 
-        /**
-         * FIXME
-         * Terrible mem leak here, should replace with tmpvar
-         */
-        insns_chunk = chunk_cat("cc", insns_chunk, new_chunk);
+        tmp_insns_chunk = chunk_cat("cc", insns_chunk, new_chunk);
+        chunk_clear(&insns_chunk);
+
+        insns_chunk.ptr = tmp_insns_chunk.ptr;
+        insns_chunk.len = tmp_insns_chunk.len;
 
         if (need_free_str)
             chunk_clear(&new_str);

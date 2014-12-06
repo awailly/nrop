@@ -200,7 +200,7 @@ static status_t decode(private_disass_capstone_t *this, instruction_t **i, chunk
     size_t capstone_error_code;
     status_t status;
 
-    if ((*i = (instruction_t*) malloc_thing(capstone_instruction_t)) == NULL)
+    if ((*i = this->public.interface.alloc_instruction(&this->public.interface)) == NULL)
     {
         logging("[x] Error while allocating capstone_instruction_t in disassembler_capstone.c\n");
         return FAILED;
@@ -222,7 +222,8 @@ static status_t decode(private_disass_capstone_t *this, instruction_t **i, chunk
 
         status = SUCCESS;
     }
-    else{
+    else
+    {
         LOG_CAPSTONE("[x] Error while decoding chunk: [%x]:%s\n", capstone_error_code, cs_strerror(cs_errno(this->handle)));
 
         ((capstone_instruction_t*) *i)->insn = NULL;
@@ -241,25 +242,6 @@ static status_t encode(private_disass_capstone_t __attribute__((__unused__)) *th
     LOG_CAPSTONE("Capstone does not encode ... %x %x %x\n", this, c, i);
 
     return FAILED;
-}
-
-static instruction_t *alloc_instruction(private_disass_capstone_t *this)
-{
-    capstone_instruction_t *new_insn;
-
-    if (!this)
-        return NULL;
-
-    if ((new_insn = malloc(sizeof(*new_insn))) == NULL)
-    {
-        logging("Error while allocating instruction in disassembler_capstone\n");
-        return NULL;
-    }
-
-    new_insn->interface.bytes = chunk_empty;
-    new_insn->interface.str = chunk_empty;
-
-    return (instruction_t*) new_insn;
 }
 
 static void *clone_instruction(void *instruction)
@@ -314,12 +296,25 @@ static void destroy_instruction(void *instruction)
     instruction = NULL;
 }
 
-static uint64_t get_instruction_size(private_disass_capstone_t *this)
+static instruction_t *alloc_instruction(private_disass_capstone_t *this)
 {
-    if (!this)
-        return FAILED;
+    capstone_instruction_t *new_insn;
 
-    return sizeof(capstone_instruction_t);
+    if (!this)
+        return NULL;
+
+    if ((new_insn = malloc(sizeof(*new_insn))) == NULL)
+    {
+        logging("Error while allocating instruction in disassembler_capstone\n");
+        return NULL;
+    }
+
+    new_insn->interface.bytes = chunk_empty;
+    new_insn->interface.str = chunk_empty;
+    new_insn->interface.clone = (instruction_t *(*)(instruction_t *)) clone_instruction;
+    new_insn->interface.destroy = (void (*)(instruction_t *)) destroy_instruction;
+
+    return (instruction_t*) new_insn;
 }
 
 static void destroy(private_disass_capstone_t *this)
@@ -343,9 +338,6 @@ disass_capstone_t *create_capstone()
     this->public.interface.decode = (status_t (*)(disassembler_t*, instruction_t **, chunk_t)) decode;
     this->public.interface.encode = (status_t (*)(disassembler_t*, chunk_t *, instruction_t *)) encode;
     this->public.interface.alloc_instruction = (instruction_t *(*)(disassembler_t*)) alloc_instruction;
-    this->public.interface.clone_instruction = (void *(*)(void *)) clone_instruction;
-    this->public.interface.destroy_instruction = (void (*)(void *)) destroy_instruction;
-    this->public.interface.get_instruction_size = (uint64_t (*)(disassembler_t*)) get_instruction_size;
     this->public.interface.destroy = (void (*)(disassembler_t*)) destroy;
 
     return &this->public;

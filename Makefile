@@ -28,6 +28,7 @@ SRCS=packer.c\
 	 converter.c\
 	 disassemblers/disassembler_xed.c\
 	 disassemblers/disassembler_capstone.c\
+	 disassemblers/disassembler_meta.c\
      parsers/section.c\
      parsers/program_header.c\
      parsers/parser_builder.c\

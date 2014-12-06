@@ -83,7 +83,7 @@ static status_t disassemble(private_plugin_rop_t *this, chunk_t function_chunk)
 
         i+= d->get_length(d, instruction);
 
-        d->destroy_instruction(instruction);
+        instruction->destroy(instruction);
     }
 
     return SUCCESS;
@@ -210,7 +210,7 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
                 last_decoded_byte+= d->get_length(d, item);
                 current_byte--;
 
-                this->d->destroy_instruction(item);
+                item->destroy(item);
             }
         }
 
@@ -283,7 +283,7 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
 
                 last_decoded_byte = current_byte;
 
-                new_insn = d->clone_instruction(inst);
+                new_insn = inst->clone(inst);
 
                 chain_insns->insert_first(chain_insns, new_insn);
 
@@ -302,14 +302,14 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
 
         if (current_byte >= 0)
         {
-            this->d->destroy_instruction(inst);
+            inst->destroy(inst);
         }
 
         current_byte--;
     }
     /*LOG_ROP_DEBUG("%08x: %s\n", addr + last_decoded_byte, chain_str);*/
 
-    chain_insns->destroy_function(chain_insns, this->d->destroy_instruction);
+    //chain_insns->destroy_function(chain_insns, this->d->destroy_instruction);
 
     return SUCCESS;
 }
@@ -380,7 +380,7 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
 #endif
         }
 
-        d->destroy_instruction(instruction);
+        instruction->destroy(instruction);
     }
 
     while(job_reverse_disass_ret_count_local < job_reverse_disass_ret_total)
@@ -632,7 +632,6 @@ plugin_rop_t *plugin_rop_create(code_t *code, char *constraints, chunk_t target)
 
     this->code_type = ((code_t*) this->code)->get_type((code_t*) this->code);
     this->d->initialize(this->d, this->code_type);
-
     this->target = chain_create_from_string_disass(this->d, 0x400000, target);
 
     this->public.interface.apply = (status_t (*)(plugin_t *)) apply;

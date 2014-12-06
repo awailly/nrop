@@ -55,7 +55,20 @@ static char *get_str(private_chain_t *this)
 
 static void set_instructions(private_chain_t *this, linked_list_t *instructions)
 {
-    this->instructions = instructions->clone_function(instructions, this->d->clone_instruction);
+    enumerator_t *e;
+    instruction_t *instruction;
+
+	linked_list_t *clone = linked_list_create();
+
+    e = instructions->create_enumerator(instructions);
+
+    while (e->enumerate(e, &instruction))
+        clone->insert_last(clone, instruction->clone(instruction));
+
+    e->destroy(e);
+
+    //this->instructions = instructions->clone_function(instructions, this->d->clone_instruction);
+    this->instructions = clone;
 }
 
 static linked_list_t *get_instructions(private_chain_t *this)
@@ -174,13 +187,21 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
 
 static void destroy(private_chain_t *this)
 {
+    enumerator_t *e;
+    instruction_t *instruction;
+
     free(this->str);
     this->str = NULL;
 
     chunk_clear(&this->chunk);
     this->chunk = chunk_empty;
 
-    this->instructions->destroy_function(this->instructions, this->d->destroy_instruction);
+    e = this->instructions->create_enumerator(this->instructions);
+
+    while (e->enumerate(e, &instruction))
+        instruction->destroy(instruction);
+
+    this->instructions->destroy(this->instructions);
 
     free(this);
     this = NULL;

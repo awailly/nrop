@@ -13,7 +13,12 @@ struct instruction_t
     chunk_t str;
 
     /**
-     * Destroys an instruction_t object.
+     * Clone an instruction_t object. Is implemented by the disassembler.
+     */
+    instruction_t *(*clone)(instruction_t *);
+
+    /**
+     * Destroys an instruction_t object. Implemented by the disassembler.
      */
     void (*destroy)(instruction_t *);
 };

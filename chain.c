@@ -203,6 +203,8 @@ static void destroy(private_chain_t *this)
 
     this->instructions->destroy(this->instructions);
 
+    e->destroy(e);
+
     free(this);
     this = NULL;
 }

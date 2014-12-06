@@ -142,6 +142,15 @@ static void job_reverse_disass_ret(job_reverse_disass_ret_th_arg *th)
     th = NULL;
 }
 
+void chain_destroy(void *instruction)
+{
+    instruction_t *i;
+
+    i = (instruction_t *) instruction;
+
+    i->destroy(i);
+}
+
 static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, Elf64_Addr addr, uint64_t ret_byte, linked_list_t *inst_list)
 {
     /*char buffer[BUFLEN];*/
@@ -313,7 +322,7 @@ static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, El
     }
     /*LOG_ROP_DEBUG("%08x: %s\n", addr + last_decoded_byte, chain_str);*/
 
-    //chain_insns->destroy_function(chain_insns, this->d->destroy_instruction);
+    chain_insns->destroy_function(chain_insns, chain_destroy);
 
     return SUCCESS;
 }
@@ -554,7 +563,7 @@ status_t pack(private_plugin_rop_t *this, Elf64_Addr addr, chunk_t chunk)
 
     e->destroy(e);
 
-    //inst_list->destroy_function(inst_list, destroy_inst_list);
+    inst_list->destroy_function(inst_list, destroy_inst_list);
 
     return SUCCESS;
 }

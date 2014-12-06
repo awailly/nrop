@@ -133,9 +133,13 @@ pthread_mutex_t job_reverse_disass_ret_count_mutex = PTHREAD_MUTEX_INITIALIZER;
 static void job_reverse_disass_ret(job_reverse_disass_ret_th_arg *th)
 {
     th->this->reverse_disass_ret(th->this, th->function_chunk, th->addr, th->byte+1, th->inst_list);
+
     pthread_mutex_lock(&job_reverse_disass_ret_count_mutex);
     job_reverse_disass_ret_count++;
     pthread_mutex_unlock(&job_reverse_disass_ret_count_mutex);
+
+    free(th);
+    th = NULL;
 }
 
 static status_t reverse_disass_ret(private_plugin_rop_t *this, chunk_t chunk, Elf64_Addr addr, uint64_t ret_byte, linked_list_t *inst_list)

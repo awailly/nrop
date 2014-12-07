@@ -30,7 +30,8 @@ typedef enum
     UNCOND_BR,
     SYSCALL,
     CALL,
-    RET
+    RET,
+    ERR,
 } category_t;
 
 instruction_t *create_instruction(chunk_t bytes);

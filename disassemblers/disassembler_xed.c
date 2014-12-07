@@ -19,6 +19,8 @@ struct private_disass_xed_t
 {
     disass_xed_t public;
 
+    instruction_t *(*alloc_instruction)(private_disass_xed_t*);
+
     xed_machine_mode_enum_t mmode;
     xed_address_width_enum_t stack_addr_width;
 };
@@ -135,7 +137,7 @@ static status_t decode(private_disass_xed_t *this, instruction_t **i, chunk_t c)
     xed_error_enum_t xed_error;
     status_t status;
 
-    if ((*i = this->public.interface.alloc_instruction(&this->public.interface)) == NULL)
+    if ((*i = this->alloc_instruction(this)) == NULL)
     {
         logging("[x] Error while allocating xed_instruction_t in disassembler_xed.c\n");
         return FAILED;
@@ -308,6 +310,8 @@ disass_xed_t *create_xed()
 
     xed_format_set_options( format_options );
 
+    this->alloc_instruction = (instruction_t *(*)(private_disass_xed_t*)) alloc_instruction;
+
     /* Interface implementation */
     this->public.interface.initialize = (status_t (*)(disassembler_t*, chunk_t)) initialize;
     this->public.interface.get_category = (category_t (*)(disassembler_t*, instruction_t*)) get_category;
@@ -316,7 +320,6 @@ disass_xed_t *create_xed()
     this->public.interface.dump_intel = (status_t (*)(disassembler_t*, instruction_t *, chunk_t *, uint64_t)) dump_intel;
     this->public.interface.decode = (status_t (*)(disassembler_t*, instruction_t **, chunk_t)) decode;
     this->public.interface.encode = (status_t (*)(disassembler_t*, chunk_t *, instruction_t *)) encode;
-    this->public.interface.alloc_instruction = (instruction_t *(*)(disassembler_t*)) alloc_instruction;
     this->public.interface.destroy = (void (*)(disassembler_t*)) destroy;
 
     return &this->public;

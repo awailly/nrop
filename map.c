@@ -130,7 +130,7 @@ static gadget_type compare(private_map_t *this, map_t *other)
     while(e->enumerate(e, &c))
     {
         /* For now, must remove after
-         * XXX */
+         * XXX 
         if ((c->name.ptr) && ((strcmp((char*)c->name.ptr, "rip") == 0) ||
             (strcmp((char*)c->name.ptr, "eip") == 0)))
             continue;
@@ -138,6 +138,7 @@ static gadget_type compare(private_map_t *this, map_t *other)
         if ((c->name.ptr) && ((strcmp((char*)c->name.ptr, "rsp") == 0) ||
             (strcmp((char*)c->name.ptr, "esp") == 0)))
             continue;
+            */
 
         if (!c->is_global)
             continue;
@@ -311,11 +312,11 @@ static gadget_type compare(private_map_t *this, map_t *other)
             }
             else
             {
-                //Z3_model model;
+                Z3_model model;
                 LOG_Z3_SOLVE("Found PN1\n");
                 result = PN1;
-                //model = Z3_solver_get_model(this->ctx, solvernot);
-                //LOG_Z3_SOLVE("Model: %s\n", Z3_model_to_string(this->ctx, model));
+                model = Z3_solver_get_model(this->ctx, solvernot);
+                LOG_Z3_SOLVE("Model: %s\n", Z3_model_to_string(this->ctx, model));
                 //Z3_model_dec_ref(this->ctx, model);
             }
 

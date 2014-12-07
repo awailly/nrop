@@ -56,10 +56,10 @@ static category_t get_category(private_disass_meta_t *this, instruction_t *i)
     if (!this)
         return NO_CAT;
 
-    cat = NO_CAT;
+    cat = ERR;
     e = this->disassemblers->create_enumerator(this->disassemblers);
 
-    while ((e->enumerate(e, &d)) && (cat == NO_CAT))
+    while ((e->enumerate(e, &d)) && (cat == ERR))
         cat = d->get_category(d, i);
     
     e->destroy(e);
@@ -77,11 +77,11 @@ static uint64_t get_length(private_disass_meta_t *this, instruction_t *i)
     if (!this)
         return 0;
 
-    result = 0;
+    result = -1;
     e = this->disassemblers->create_enumerator(this->disassemblers);
 
-    while ((e->enumerate(e, &d)) && (result == 0))
-        result = d->get_category(d, i);
+    while ((e->enumerate(e, &d)) && (result == -1))
+        result = d->get_length(d, i);
     
     e->destroy(e);
 
@@ -138,16 +138,65 @@ static status_t decode(private_disass_meta_t *this, instruction_t **i, chunk_t c
 
     enumerator_t *e;
     disassembler_t *d;
+    int num;
+    chunk_t str;
 
     if (!this)
         return 0;
 
+    str = chunk_calloc(1024);
+
+    num = 0;
     status = FAILED;
 
     e = this->disassemblers->create_enumerator(this->disassemblers);
 
-    while ((e->enumerate(e, &d)) && (status == FAILED))
-        status = d->decode(d, i, c);
+    while (e->enumerate(e, &d))
+    {
+        if (num == 0)
+        {
+            status = d->decode(d, i, c);
+            if (status == SUCCESS)
+            {
+                d->dump_intel(d, *i, &str, 0);
+            }
+        }
+        else
+        {
+            status_t s;
+            instruction_t *i2;
+
+            s = d->decode(d, &i2, c);
+            if (s != status)
+            {
+                LOG_META("********************************\n");
+                LOG_META("Different decoding d%x:%x and d%x:%x\n", 0, status, num, s);
+                //hexdump(c.ptr, c.len);
+
+                if (s == SUCCESS)
+                {
+                    chunk_t str2;
+
+                    str2 = chunk_calloc(1024);
+                    d->dump_intel(d, i2, &str2, 0);
+
+                    LOG_META("%s\n", str2.ptr);
+
+                    chunk_clear(&str2);
+                }
+                else
+                {
+                    LOG_META("%s\n", str.ptr);
+                }
+            }
+
+            i2->destroy(i2);
+        }
+
+        num++;
+    }
+
+    chunk_clear(&str);
     
     e->destroy(e);
     
@@ -174,61 +223,6 @@ static status_t encode(private_disass_meta_t *this, chunk_t *c, instruction_t *i
     e->destroy(e);
     
     return status;
-}
-
-static void *clone_instruction(void *instruction)
-{
-    meta_instruction_t *new_instruction;
-    meta_instruction_t *insn;
-
-    if ((new_instruction = malloc(sizeof(*new_instruction))) == NULL)
-    {
-        LOG_META("Error while allocating instruction in clone_instruction from chain.c\n");
-        return NULL;
-    }
-
-    memcpy(new_instruction, instruction, sizeof(*new_instruction));
-
-    insn = ((meta_instruction_t*) instruction);
-
-    new_instruction->interface.bytes = chunk_clone(insn->interface.bytes);
-    new_instruction->interface.str = chunk_clone(insn->interface.str);
-
-    return new_instruction;
-}
-
-static void destroy_instruction(void *instruction)
-{
-    meta_instruction_t *insn;
-
-    insn = ((meta_instruction_t*) instruction);
-
-    chunk_clear(&insn->interface.bytes);
-    chunk_clear(&insn->interface.str);
-
-    free(instruction);
-    instruction = NULL;
-}
-
-static instruction_t *alloc_instruction(private_disass_meta_t *this)
-{
-    meta_instruction_t *new_insn;
-
-    if (!this)
-        return NULL;
-
-    if ((new_insn = malloc(sizeof(*new_insn))) == NULL)
-    {
-        logging("Error while allocating instruction in disassembler_meta\n");
-        return NULL;
-    }
-
-    new_insn->interface.bytes = chunk_empty;
-    new_insn->interface.str = chunk_empty;
-    new_insn->interface.clone = (instruction_t *(*)(instruction_t *)) clone_instruction;
-    new_insn->interface.destroy = (void (*)(instruction_t *)) destroy_instruction;
-
-    return (instruction_t*) new_insn;
 }
 
 static void destroy(private_disass_meta_t *this)
@@ -266,7 +260,6 @@ disass_meta_t *create_meta()
     this->public.interface.dump_intel = (status_t (*)(disassembler_t*, instruction_t *, chunk_t *, uint64_t)) dump_intel;
     this->public.interface.decode = (status_t (*)(disassembler_t*, instruction_t **, chunk_t)) decode;
     this->public.interface.encode = (status_t (*)(disassembler_t*, chunk_t *, instruction_t *)) encode;
-    this->public.interface.alloc_instruction = (instruction_t *(*)(disassembler_t*)) alloc_instruction;
     this->public.interface.destroy = (void (*)(disassembler_t*)) destroy;
 
     return &this->public;

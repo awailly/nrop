@@ -2088,8 +2088,8 @@ converter_t *converter_create(TCGContext *s, Z3_context ctx)
         }
     }
 
-    //LLVMInitializeNativeTarget ();
-    //LLVMLinkInJIT();
+    LLVMInitializeNativeTarget ();
+    LLVMLinkInJIT();
 
     this->ctx = ctx;
     this->formula = Z3_mk_true(this->ctx);

@@ -19,6 +19,8 @@ struct private_disass_capstone_t
 {
     disass_capstone_t public;
 
+    instruction_t *(*alloc_instruction)(private_disass_capstone_t*);
+
     uint64_t arch;
     uint64_t mmode;
     csh handle;
@@ -168,7 +170,6 @@ static status_t dump_intel(private_disass_capstone_t *this, instruction_t *i, ch
     //chunk_t address;
     chunk_t mnemonic;
     chunk_t str;
-    chunk_t res;
 
     if (!this)
         return FAILED;
@@ -185,11 +186,7 @@ static status_t dump_intel(private_disass_capstone_t *this, instruction_t *i, ch
     str.len = strlen(x->op_str) + 1;
     str.ptr = (u_char*) x->op_str;
 
-    res = chunk_calloc(mnemonic.len + 1 + str.len);
-    snprintf((char*)res.ptr, res.len, "%s %s", mnemonic.ptr, str.ptr);
-
-    buffer->ptr = res.ptr;
-    buffer->len = res.len;
+    snprintf((char*)buffer->ptr, buffer->len, "%s %s", mnemonic.ptr, str.ptr);
 
     return SUCCESS;
 }
@@ -200,7 +197,7 @@ static status_t decode(private_disass_capstone_t *this, instruction_t **i, chunk
     size_t capstone_error_code;
     status_t status;
 
-    if ((*i = this->public.interface.alloc_instruction(&this->public.interface)) == NULL)
+    if ((*i = this->alloc_instruction(this)) == NULL)
     {
         logging("[x] Error while allocating capstone_instruction_t in disassembler_capstone.c\n");
         return FAILED;
@@ -329,6 +326,8 @@ disass_capstone_t *create_capstone()
 {
     private_disass_capstone_t *this = malloc_thing(private_disass_capstone_t);
 
+    this->alloc_instruction = (instruction_t *(*)(private_disass_capstone_t*)) alloc_instruction;
+
     /* Interface implementation */
     this->public.interface.initialize = (status_t (*)(disassembler_t*, chunk_t)) initialize;
     this->public.interface.get_category = (category_t (*)(disassembler_t*, instruction_t*)) get_category;
@@ -337,7 +336,6 @@ disass_capstone_t *create_capstone()
     this->public.interface.dump_intel = (status_t (*)(disassembler_t*, instruction_t *, chunk_t *, uint64_t)) dump_intel;
     this->public.interface.decode = (status_t (*)(disassembler_t*, instruction_t **, chunk_t)) decode;
     this->public.interface.encode = (status_t (*)(disassembler_t*, chunk_t *, instruction_t *)) encode;
-    this->public.interface.alloc_instruction = (instruction_t *(*)(disassembler_t*)) alloc_instruction;
     this->public.interface.destroy = (void (*)(disassembler_t*)) destroy;
 
     return &this->public;

@@ -12,6 +12,7 @@
 #include "xed-interface.h"
 #include "disassembler_xed.h"
 #include "disassembler_capstone.h"
+#include "disassembler_meta.h"
 
 /*
  * Using -isystem qemu to handle warnings

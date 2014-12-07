@@ -77,15 +77,6 @@ struct disassembler_t
     status_t (*encode)(disassembler_t *, chunk_t *, instruction_t *);
 
     /**
-     * Allocate an instruction with the size specific to the disassembler.
-     * This is needed as every disassembler has its own vision of an
-     * instruction.
-     *
-     * @return              a pointer to the allocated instruction
-     */
-    instruction_t *(*alloc_instruction)(disassembler_t *);
-
-    /**
      * Destroy a disassembler_t object.
      */
     void (*destroy)(disassembler_t *);

@@ -4,7 +4,7 @@
 
 #include "plugin_rop.h"
 
-#define DEBUG_ROP
+//#define DEBUG_ROP
 #ifdef DEBUG_ROP
 #  define LOG_ROP(...) logging(__VA_ARGS__)
 #else
@@ -470,7 +470,7 @@ static void job_chain(th_arg *t)
     target_map->destroy(target_map);
     map->destroy(map);
 
-    c->destroy(c);
+    //c->destroy(c);
 
     Z3_del_context(ctx);
     ctx = NULL;

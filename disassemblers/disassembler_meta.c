@@ -8,7 +8,7 @@
 
 #define BUFLEN  1000
 
-//#define DEBUG_META
+#define DEBUG_META
 #ifdef DEBUG_META
 #  define LOG_META(...) logging(__VA_ARGS__)
 #else
@@ -80,7 +80,7 @@ static uint64_t get_length(private_disass_meta_t *this, instruction_t *i)
     result = -1;
     e = this->disassemblers->create_enumerator(this->disassemblers);
 
-    while ((e->enumerate(e, &d)) && (result == -1))
+    while ((e->enumerate(e, &d)) && (result == (uint64_t)-1))
         result = d->get_length(d, i);
     
     e->destroy(e);
@@ -171,7 +171,6 @@ static status_t decode(private_disass_meta_t *this, instruction_t **i, chunk_t c
             {
                 LOG_META("********************************\n");
                 LOG_META("Different decoding d%x:%x and d%x:%x\n", 0, status, num, s);
-                //hexdump(c.ptr, c.len);
 
                 if (s == SUCCESS)
                 {
@@ -180,14 +179,19 @@ static status_t decode(private_disass_meta_t *this, instruction_t **i, chunk_t c
                     str2 = chunk_calloc(1024);
                     d->dump_intel(d, i2, &str2, 0);
 
-                    LOG_META("%s\n", str2.ptr);
+                    LOG_META(":: %s :: ", str2.ptr);
 
                     chunk_clear(&str2);
                 }
                 else
                 {
-                    LOG_META("%s\n", str.ptr);
+                    LOG_META(":: %s :: ", str.ptr);
                 }
+
+#ifdef DEBUG_META
+                hexdump(c.ptr, c.len);
+#endif
+                LOG_META("\n");
             }
 
             i2->destroy(i2);

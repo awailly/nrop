@@ -19,7 +19,7 @@
  */
 #include <include/exec/user/abitypes.h>
 
-#define DISASSINSTANCE create_xed
+#define DISASSINSTANCE create_meta
 
 void gen_intermediate_code(CPUArchState *env, struct TranslationBlock *tb);
 

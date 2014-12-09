@@ -47,15 +47,21 @@
       
       <h1 id="build-it">Build it</h1>
       
-      <p>The process to build the program is described in the <a href="http://aurelien.wail.ly/nrop/download">Documentation page</a></p>
+      <p>The process to build the program is described in the <a href="../download">Documentation page</a></p>
       
       <h1 id="usage">Usage</h1>
       
-      <p>The program expect a target (<code>-t</code>) shellcode, say x86 here, and the binary to analyze in the last position (<code>argv[argc - 1]</code>).</p>
+      <p>The program expect the binary to analyze in the last position (<code>argv[argc - 1]</code>). Without any option it is a fast ROP gadget finder for the binary.</p>
       
-      <p>The <code>-o</code> option output a new binary file if you modified the binary to analyze with a plugin (look into the <code>plugins/</code> directory for examples). It is not needed to use the nROP program.</p>
+      <p>The <code>-t</code> option create a target shellcode from the hexadecimal representation.</p>
       
-      <p>The <code>-c</code> option specify constraints to respect when building the ROP payload. It is not needed to use the nROP program.</p>
+      <p>The <code>-o</code> option output a new binary file if you modified the binary to analyze with a plugin (look into the <code>plugins/</code> directory for examples).</p>
+      
+      <p>The <code>-c</code> option specify constraints to respect when building the ROP payload.</p>
+      
+      <p>So the simplest usage of nROP is :</p>
+      
+      <pre><code>% ./packer /usr/lib/libc.so.6&#x000A;</code></pre>
       
       <h1 id="creating-a-target">Creating a target</h1>
       
@@ -69,9 +75,11 @@
       
       <pre><code>% ./packer -t 68ccedffff5a4883ec085b4831c04829d0c3 /usr/lib/libc.so.6&#x000A;</code></pre>
       
+      <p>For advanced examples and usages see the <a href="../demos">demonstrations</a>.</p>
+      
       <h1 id="use-it">Use it</h1>
       
-      <p>You can now follow the <a href="http://aurelien.wail.ly/nrop/doc">debugging guide</a>, as you will encounter tons of bugs</p>
+      <p>You can now follow the <a href="../doc">debugging guide</a>, as you will encounter tons of bugs</p>
       <hr>
       <footer>
         <p>&copy; NoName 2014</p>

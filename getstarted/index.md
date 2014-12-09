@@ -3,8 +3,9 @@ title: Download nROP
 layout: base
 ---
 
-[1]: http://aurelien.wail.ly/nrop/doc
-[2]: http://aurelien.wail.ly/nrop/download
+[1]: ../doc
+[2]: ../download
+[3]: ../demos
 
 # Build it
 
@@ -12,11 +13,17 @@ The process to build the program is described in the [Documentation page][2]
 
 # Usage
 
-The program expect a target (`-t`) shellcode, say x86 here, and the binary to analyze in the last position (`argv[argc - 1]`).
+The program expect the binary to analyze in the last position (`argv[argc - 1]`). Without any option it is a fast ROP gadget finder for the binary.
 
-The `-o` option output a new binary file if you modified the binary to analyze with a plugin (look into the `plugins/` directory for examples). It is not needed to use the nROP program.
+The `-t` option create a target shellcode from the hexadecimal representation.
 
-The `-c` option specify constraints to respect when building the ROP payload. It is not needed to use the nROP program.
+The `-o` option output a new binary file if you modified the binary to analyze with a plugin (look into the `plugins/` directory for examples).
+
+The `-c` option specify constraints to respect when building the ROP payload.
+
+So the simplest usage of nROP is :
+
+    % ./packer /usr/lib/libc.so.6
 
 # Creating a target
 
@@ -29,6 +36,8 @@ You can see the entrypoint of the file at first. nROP look for gadgets in all PH
 Then you have the shellcode dumped by XED (or capstone), analyzed by the Qemu TCG and dumped again, finally translated into LLVM and optimized.
 
     % ./packer -t 68ccedffff5a4883ec085b4831c04829d0c3 /usr/lib/libc.so.6
+
+For advanced examples and usages see the [demonstrations][3].
 
 # Use it
 

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>nROP Homepage</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <style>
+      body {
+        padding-top: 60px;
+      }
+    </style>
+    <link href="http://aurelien.wail.ly/nrop/stylesheets/styles.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js" type="text/javascript"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="http://aurelien.wail.ly/nrop">nROP</a>
+          <ul class="nav navbar-nav">
+            <li>
+              <a href="http://aurelien.wail.ly/nrop">Home</a>
+            </li>
+            <li>
+              <li>
+                <a href="http://aurelien.wail.ly/nrop/getstarted">Get Started</a>
+              </li>
+            </li>
+            <li>
+              <li>
+                <a href="http://aurelien.wail.ly/nrop/download">Download</a>
+              </li>
+            </li>
+            <li>
+              <li>
+                <a href="http://aurelien.wail.ly/nrop/doc">Documentation</a>
+              </li>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      
+      <h1 id="faq">FAQ</h1>
+      
+      <h2 id="binsh-llvm-config--commande-introuvable">/bin/sh: llvm-config : commande introuvable</h2>
+      
+      <p>pacaur -S llvm</p>
+      
+      <h2 id="make--no-rule-to-make-target-usrincludestdc-predefh-needed-by-packero--stop">make: *** No rule to make target <code>/usr/include/stdc-predef.h', needed by </code>packer.o'.  Stop.</h2>
+      
+      <p>Remove the lines below <code>DO NOT REMOVE</code> in the makefile, or update it with <code>make depend</code>.</p>
+      
+      <h2 id="usrincludeglib-20glibgtypesh3424-fatal-error-glibconfigh-no-such-file-or-directory">/usr/include/glib-2.0/glib/gtypes.h:34:24: fatal error: glibconfig.h: No such file or directory</h2>
+      
+      <p>Replace the static end of <code>INCLUDES</code> line in the Makefile by</p>
+      
+      <pre><code>`pkg-config --cflags glib-2.0`&#x000A;</code></pre>
+      
+      <p>If you don't have the <code>pkg-config</code> executable, replace with correct location</p>
+      
+      <h2 id="out-of-tree-build">Out of tree build</h2>
+      
+      <p>Run the following command:</p>
+      
+      <pre><code>PYTHON=$(which python2) ./configure --target-list=x86_64-linux-user --disable-sparse --disable-strip --disable-werror --disable-sdl --disable-gtk --disable-virtfs --disable-vnc --disable-cocoa --disable-xen --disable-xen-pci-passthrough --disable-brlapi --disable-vnc-tls --disable-vnc-sasl --disable-vnc-jpeg --disable-vnc-png --disable-vnc-ws --disable-curses --disable-curl --disable-fdt --disable-bluez --disable-slirp --disable-kvm --disable-rdma --disable-system --disable-guest-base --disable-pie --disable-uuid --disable-vde --disable-netmap --disable-linux-aio --disable-cap-ng --disable-attr --disable-blobs --disable-docs --disable-vhost-net --disable-spice --disable-libiscsi --disable-libnfs --disable-smartcard-nss --disable-libusb --disable-usb-redir --disable-guest-agent --disable-seccomp --disable-coroutine-pool --disable-glusterfs --disable-libssh2 --disable-vhdx --disable-quorum --disable-bsd-user&#x000A;</code></pre>
+      
+      <h2 id="qemurulesmak33-recipe-for-target-coroutine-ucontexto-failed">qemu/rules.mak:33: recipe for target 'coroutine-ucontext.o' failed</h2>
+      
+      <p>Install valgrind</p>
+      
+      <h2 id="error-indexopqemust8-undeclared-first-use-in-this-function">error: ‘INDEX_op_qemu_st8’ undeclared (first use in this function)</h2>
+      
+      <p>With new qemu the TCG operations may change their names, so comment out the line and make again.</p>
+      
+      <h2 id="while-making-nrop-g-error-qemutracedefaulto-no-such-file-or-directory">While making nrop: g++: error: qemu/trace/default.o: No such file or directory</h2>
+      
+      <p>Welcome to Sparta. the <code>QEMU_ALL</code> variable in the Makefile is a dirty step to link against all qemu objects. Some will be deleted from qemu and have to be removed in <code>QEMU_ALL</code>. Others have to be added and will appear as </p>
+      
+      <pre><code>undefined reference to `qapi_event_send_block_job_error'&#x000A;</code></pre>
+      
+      <p>You thus have to include the new object file in the QEMU_ALL variable. The current version was built again qemu commit :</p>
+      
+      <pre><code>commit e9d818b8b1a7fadc6c92256b716f1bc21b8daabc&#x000A;</code></pre>
+      
+      <p>If you are brave enough, you can feed the QEMU_ALL variable with the output of <code>find qemu/ -name "*.o" | awk '{print}' ORS=' '</code></p>
+      
+      <h3 id="yes-i-am">Yes I am</h3>
+      
+      <p>Ok,</p>
+      
+      <pre><code>find qemu/ -name "*.o" | awk '{print}' ORS=' '&#x000A;# Out conflicts&#x000A;make 2&gt;&amp;1 | grep "In function" | awk '{ print $1 }' | uniq | awk '{print substr($0, 0, length($0))}' ORS='|'&#x000A;find qemu/ -name "*.o" | egrep -v "($_)" | awk '{print}' ORS=' '&#x000A;</code></pre>
+      
+      <p>I think qemu/x86*/linux-user/main.o is filtered, so add it manually. Then for each undefined</p>
+      
+      <pre><code>grep -Rni vmstate_register_with_alias_id qemu # to find multiple references&#x000A;# Remove the module from QEMU_ALL&#x000A;</code></pre>
+      
+      <p>Something about jit_register_code happens, replace <code>__jit</code> by <code>__jat</code> in qemu/tcg/tcg.c.</p>
+      
+      <h1 id="development-specific">Development specific</h1>
+      
+      <h2 id="from-1x-to-2x">From 1.X to 2.X</h2>
+      
+      <p>The raise_exception moved from </p>
+      
+      <pre><code>00125615: adc al, 0x1 ; pshufb xmm0, xmm2 ; pcmpistri xmm1, xmm0, 0x12 ; movsxd rax, ecx ; mov ecx, 0x10 ; sub ecx, esi ; cmp ecx, eax ; mov esi, ecx ; jnle 0x1255a2 ;&#x000A;000000: \x14\x01\x66\x0f\x38\x00\xc2\x66\x0f\x3a\x63\xc8\x12\x48\x63\xc1 ..f.8..f.:c..Hc.&#x000A;000010: \xb9\x10\x00\x00\x00\x29\xf1\x39\xc1\x89\xce\x0f\x8f\x6c\xff\xff .....).9.....l..&#x000A;000020: \xff                                              .&#x000A; movi_i64 tmp1,$0x1&#x000A; nopn $0x2,$0x2&#x000A; movi_i64 tmp11,$cc_compute_c&#x000A; call tmp11,$0x50,$1,tmp7,cc_dst,cc_src,cc_src2,cc_op&#x000A; add_i64 tmp0,rax,tmp1&#x000A; add_i64 tmp0,tmp0,tmp7&#x000A; deposit_i64 rax,rax,tmp0,$0x0,$0x8&#x000A; mov_i64 cc_src2,tmp7&#x000A; movi_i64 cc_src,$0x1&#x000A; mov_i64 cc_dst,tmp0&#x000A; discard cc_op&#x000A; movi_i32 cc_op,$0xa&#x000A; movi_i64 tmp3,$0x1055acc2&#x000A; st_i64 tmp3,env,$0x80&#x000A; movi_i32 tmp12,$0x6&#x000A; movi_i64 tmp11,$raise_exception&#x000A; call tmp11,$0x0,$0,env,tmp12&#x000A; end &#x000A;</code></pre>
+      
+      <p>to</p>
+      
+      <pre><code>00125615: adc al, 0x1 ; pshufb xmm0, xmm2 ; pcmpistri xmm1, xmm0, 0x12 ; movsxd rax, ecx ; mov ecx, 0x10 ; sub ecx, esi ; cmp ecx, eax ; mov esi, ecx ; jnle 0x1255a2 ;&#x000A;000000: \x14\x01\x66\x0f\x38\x00\xc2\x66\x0f\x3a\x63\xc8\x12\x48\x63\xc1 ..f.8..f.:c..Hc.&#x000A;000010: \xb9\x10\x00\x00\x00\x29\xf1\x39\xc1\x89\xce\x0f\x8f\x6c\xff\xff .....).9.....l..&#x000A;000020: \xff                                              .&#x000A; movi_i64 tmp1,$0x1&#x000A; nopn $0x2,$0x2&#x000A; call cc_compute_c,$0x50,$1,tmp7,cc_dst,cc_src,cc_src2,cc_op&#x000A; add_i64 tmp0,rax,tmp1&#x000A; add_i64 tmp0,tmp0,tmp7&#x000A; deposit_i64 rax,rax,tmp0,$0x0,$0x8&#x000A; mov_i64 cc_src2,tmp7&#x000A; movi_i64 cc_src,$0x1&#x000A; mov_i64 cc_dst,tmp0&#x000A; discard cc_op&#x000A; movi_i32 cc_op,$0xa&#x000A; movi_i64 tmp3,$0x1084b622&#x000A; st_i64 tmp3,env,$0x80&#x000A; movi_i32 tmp11,$0x6&#x000A; call raise_exception,$0x0,$0,env,tmp11&#x000A; end&#x000A;</code></pre>
+      
+      <p>Note that the <code>call</code> now use the <code>raise_exception</code> name and not <code>tmp11</code>, thus I filter on call for now. I will do the same for <code>pause</code> and <code>raise_interrupt</code>. The <code>INDEX_op_call</code> handling in qemu/tcg/tcg.c is different with qemu2.X and I imported the new <code>tcg_find_helper</code>.</p>
+      <hr>
+      <footer>
+        <p>&copy; NoName 2014</p>
+      </footer>
+    </div>
+  </body>
+</html>

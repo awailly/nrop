@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>nROP Homepage</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <style>
+      body {
+        padding-top: 60px;
+      }
+    </style>
+    <link href="http://aurelien.wail.ly/nrop/stylesheets/styles.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js" type="text/javascript"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="http://aurelien.wail.ly/nrop">nROP</a>
+          <ul class="nav navbar-nav">
+            <li>
+              <a href="http://aurelien.wail.ly/nrop">Home</a>
+            </li>
+            <li>
+              <li>
+                <a href="http://aurelien.wail.ly/nrop/getstarted">Get Started</a>
+              </li>
+            </li>
+            <li>
+              <li>
+                <a href="http://aurelien.wail.ly/nrop/download">Download</a>
+              </li>
+            </li>
+            <li>
+              <li>
+                <a href="http://aurelien.wail.ly/nrop/doc">Documentation</a>
+              </li>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      
+      <p>The nrop tool relies on disassemblers to find instructions with correct size. The question of the best disassembler is thus legitimate to find all of the instructions. These section present the various disassemblers used by nrop and how the handle tricky ones. The default disassembler is defined in the <code>chain.h</code> file.</p>
+      
+      <h1 id="interface">Interface</h1>
+      
+      <p>The tool is designed to integrate new disassembler easily. The only step needed is to create a new file under the <code>disassemblers/</code> directory and implement the <code>disassemblers/disassembler.h</code> interface.</p>
+      
+      <pre><code>struct disassembler_t&#x000A;{&#x000A;    /**&#x000A;     * Initialize the disassembler for the architecture.&#x000A;     *&#x000A;     * @param arch      the architecture name&#x000A;     * @return          STATUS of the initialization&#x000A;     */&#x000A;    status_t (*initialize)(disassembler_t *, chunk_t);&#x000A;&#x000A;    /**&#x000A;     * Get the category of the instruction. Described as category_t&#x000A;     *&#x000A;     * @param instruction   the instruction to analyze&#x000A;     * @return category     the category of the instruction&#x000A;     */&#x000A;    category_t (*get_category)(disassembler_t *, instruction_t *);&#x000A;&#x000A;    /**&#x000A;     * Get the instruction length.&#x000A;     *&#x000A;     * @param instruction   the instruction to analyze&#x000A;     * @return length       the length of the instruction&#x000A;     */&#x000A;    uint64_t (*get_length)(disassembler_t *, instruction_t *);&#x000A;&#x000A;    /**&#x000A;     * Dump in the disassembler default format.&#x000A;     *&#x000A;     * @param instruction   the instruction to dump&#x000A;     * @param format        the format to dump instructions&#x000A;     * @return              STATUS of the dump format modification&#x000A;     */&#x000A;    status_t (*format)(disassembler_t *, instruction_t *, chunk_t *);&#x000A;&#x000A;    /**&#x000A;     * Dump the instruction in the INTEL format.&#x000A;     *&#x000A;     * @param instruction   the instruction to dump&#x000A;     * @param buffer        the chunk to contain the dump&#x000A;     * @param offset        the offset of the instruction in the executable&#x000A;     *&#x000A;     * @return              SUCCESS if the dump was successful,&#x000A;     *                      FAILED otherwise&#x000A;     */&#x000A;    status_t (*dump_intel)(disassembler_t *, instruction_t *, chunk_t *, uint64_t);&#x000A;&#x000A;    /**&#x000A;     * Decode a sequence of bytes to a string. The format can be modified&#x000A;     * through the set_format function.&#x000A;     *&#x000A;     * @param bytes         instruction to decode&#x000A;     * @param chunk         corresponding string&#x000A;     * @return              STATUS of the decoding&#x000A;     */&#x000A;    status_t (*decode)(disassembler_t *, instruction_t **, chunk_t);&#x000A;&#x000A;    /**&#x000A;     * Encode a sequence of bytes to a string. The format can be modified&#x000A;     * through the set_format function.&#x000A;     *&#x000A;     * @param bytes         string to encode&#x000A;     * @param chunk         corresponding sequence of bytes&#x000A;     * @return              STATUS of the encoding&#x000A;     */&#x000A;    status_t (*encode)(disassembler_t *, chunk_t *, instruction_t *);&#x000A;&#x000A;    /**&#x000A;     * Destroy a disassembler_t object.&#x000A;     */&#x000A;    void (*destroy)(disassembler_t *);&#x000A;};&#x000A;</code></pre>
+      
+      <h1 id="xed">XED</h1>
+      
+      <p>The <a href="https://software.intel.com/en-us/articles/pin-a-binary-instrumentation-tool-downloads">XED disassembler from pintools</a> always performed well on tricky instructions, so it was the first choice for nROP. It is the faster, but only support x86 and x86_64.</p>
+      
+      <h1 id="capstone">Capstone</h1>
+      
+      <p>The new <a href="http://capstone-engine.org">capstone framework</a> go a step further by supporting numerous architecture through a convenient API. Howerer the solution is ongoing and does not provide the same speed as XED, and does not encode.</p>
+      
+      <h1 id="meta">Meta</h1>
+      
+      <p>The meta disassembler aims at using all previous disassemblers for better coverage. It is slower, but it is a nice way to compare the <code>decode()</code> results. For example, the <a href="http://ix.io/17D">list of instructions decoded by xed and not by capstone</a> reveals some missing handlers for the REX prefix and FPU-related opcodes. On the other side, the <a href="http://ix.io/18a">list of instructions decoded by capstone and not by xed</a> is showing the AVX512 decoding, together with false positives (repz on FPU).</p>
+      
+      <p>Here is a snippet of code to run the instruction bytes in gdb:</p>
+      
+      <pre><code>int main()&#x000A;{&#x000A;    // Decoded by capstone :: pminub xmm0, xmm10 :: 000000: \xf3\x66\x41\x0f\xda\xc2\xf3\x0f                         .fA.....&#x000A;    char *code = "\xf3\x66\x41\x0f\xda\xc2\xf3\x0f";&#x000A;&#x000A;    ((void (*)()) code)();&#x000A;&#x000A;    return 0;&#x000A;}&#x000A;</code></pre>
+      
+      <p>Resulting here in a nice SIGILL :)</p>
+      <hr>
+      <footer>
+        <p>&copy; NoName 2014</p>
+      </footer>
+    </div>
+  </body>
+</html>

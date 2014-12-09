@@ -8,7 +8,7 @@ layout: base
 
 # Documentation
 
-The nrop components and tricks are detailed in the following sections.
+The nrop components and tricks are detailed in the following sections. If you feel that something is poorly explained feel free to contact me :)
 
 # Disassemblers
 

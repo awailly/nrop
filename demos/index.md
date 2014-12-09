@@ -17,81 +17,28 @@ The first category of gadgets sets a register to another register.
 
 Command to launch:
 
-    % ./packer -t 4889d8c3 examples/opti | grep "equivalent! 3" -A2
+    % ./packer -t 4889d8c3 examples/opti
 
 Results
 
-    Found equivalent! 3
        [X] add byte ptr [rax], al ; add byte ptr [rdi], cl ; add eax, 0xc3d88948 ; xchg rbx, rax ; ret  ;
-       [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
        [X] add byte ptr [rdi], cl ; add eax, 0xc3d88948 ; xchg rbx, rax ; ret  ;
-       [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
        [X] add eax, 0xc3d88948 ; xchg rbx, rax ; ret  ;
-       [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
        [X] fadd st0, st3 ; xchg rbx, rax ; ret  ;
-       [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
        [X] fadd st0, st3 ; xchg rcx, rbx ; xchg rcx, rax ; ret  ;
-       [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
        [X] fadd st0, st3 ; xor rax, rax ; not rax ; and rax, rbx ; ret  ;
-       [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
        [X] imul rax, rbx, 0x1 ; ret  ;
        [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
-       [X] mov rax, rbx ; ret  ;
-       [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
        [X] push rbx ; xor rax, rax ; pop rax ; ret  ;
-       [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
        [X] rcr byte ptr [rsi+0x48], 0x1 ; fadd st0, st3 ; xor rax, rax ; not rax ; and rax, rbx ; ret  ;
-       [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
        [X] ror byte ptr [rax+0x21], 0x1 ; fadd st0, st3 ; xchg rcx, rbx ; xchg rcx, rax ; ret  ;
-       [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
        [X] xchg rbx, rax ; ret  ;
-       [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
        [X] xchg rcx, rbx ; lea rax, ptr [rcx] ; ret  ;
-       [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
        [X] xchg rcx, rbx ; xchg rcx, rax ; ret  ;
-       [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
        [X] xor eax, eax ; add rax, rbx ; ret  ;
-       [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
        [X] xor eax, eax ; not rax ; and rax, rbx ; ret  ;
-       [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
        [X] xor rax, rax ; add rax, rbx ; ret  ;
-       [X] mov rax, rbx ; ret  ;
-    --
-    Found equivalent! 3
        [X] xor rax, rax ; not rax ; and rax, rbx ; ret  ;
-       [X] mov rax, rbx ; ret  ;
 
 ### PN2
 
@@ -99,21 +46,13 @@ The second category of gadgets sets a register to an immediate constant.
 
 Command to launch:
 
-    % ./packer -t 48c7c034120000c3 examples/opti | grep "equivalent! 3" -A2
+    % ./packer -t 48c7c034120000c3 examples/opti
 
 Results
 
-    Found equivalent! 3
        [X] push 0x1234 ; pop rax ; inc rbx ; ret  ;
-       [X] mov rax, 0x1234 ; ret  ;
-    --
-    Found equivalent! 3
        [X] push 0x1234 ; pop rbp ; xchg rbp, rax ; ret  ;
-       [X] mov rax, 0x1234 ; ret  ;
-    --
-    Found equivalent! 3
        [X] push 0xffffffffffffedcc ; pop rdx ; xor rax, rax ; sub rax, rdx ; ret  ;
-       [X] mov rax, 0x1234 ; ret  ;
 
 ## Chained gadgets
 

@@ -3,8 +3,8 @@ title: nROP Documentation
 layout: base
 ---
 
-[1]: doc/faq.md
-[2]: doc/disassemblers.md
+[1]: doc/faq.html
+[2]: doc/disassemblers.html
 
 # Documentation
 

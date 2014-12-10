@@ -1,6 +1,6 @@
 # nrop
 #
-# VERSION               1.0
+# VERSION               1.1
 FROM      debian:testing
 MAINTAINER Anthony Verez <averez@google.com>
 
@@ -15,10 +15,12 @@ RUN cd /nrop/qemu && git apply ../qemu.noprologet.patch \
 RUN cd /nrop \
 	&& sed '12s/.*/INCLUDES\=\-Ixed2\-intel64\/include\ \-I\.\ \-Idisassemblers\ \-Iplugins\ \-Iparsers\ \-isystem\ qemu\/tcg\/i386\ \-isystem\ qemu\/x86\_64\-linux\-user\ \-isystem\ qemu\/target\-i386\ \-isystem\ qemu\ \-isystem\ qemu\/include\ \`pkg\-config\ \-\-cflags\ glib\-2\.0\`/' Makefile > Makefile2 \
 	&& sed 's/\/usr\/lib\/glib\-2\.0\/include\/glibconfig\.h/\/usr\/lib\/x86\_64\-linux\-gnu\/glib\-2\.0\/include\/glibconfig\.h/' Makefile2 > Makefile \
-	&& wget --output-document z3-4.3.3.005bb82a1751-x64-debian-7.7.zip "http://download-codeplex.sec.s-msft.com/Download/Release?ProjectName=z3&DownloadId=929550&FileTime=130599035112670000&Build=20941" \
-	&& unzip z3-4.3.3.005bb82a1751-x64-debian-7.7.zip \
-	&& cp -rf z3-4.3.3.005bb82a1751-x64-debian-7.7/include/* /usr/include/ \
-	&& cp -rf z3-4.3.3.005bb82a1751-x64-debian-7.7/bin/*.so /usr/lib \
+	&& cd z3/ \
+	&& python2 scripts/mk_make.py \
+	&& cd build \
+	&& make -j32 \
+	&& make install \
+	&& cd ../.. \
 	&& bash -c "( make -j32 ); if [ $? > 0 ]; then echo $?; fi"
 RUN cd /nrop/qemu && git apply ../qemu.patch \
 	&& cd .. \

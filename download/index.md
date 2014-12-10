@@ -24,7 +24,7 @@ You can grab the pre-compiled binary here.
 
 ## Get latest submodules
 
-    git submodule update --init
+    git submodule update --init --recursive
 
 ## With all submodules
 

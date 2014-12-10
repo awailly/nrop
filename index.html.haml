@@ -4,15 +4,129 @@ layout: base
 .row
   .col-md-12
     .page-header
-      %h1 Be ready for nROP
+      %h1 Find ROP gadgets the semantic way
+
+.row
+  .col-md-3
+    .pre
+      :markdown
+            mov rax, rbx
+            ret
+  .col-md-1
+    %span{:class => "glyphicon glyphicon-arrow-right"}
+    Qemu
+
+  .col-md-3
+    .pre
+      :markdown
+            nopn $0x2,$0x2
+            mov_i64 rax,rbx
+            qemu_ld_i64 tmp0,rsp,leq,$0x0
+            movi_i64 tmp11,$0x8
+            add_i64 tmp3,rsp,tmp11
+            mov_i64 rsp,tmp3
+            st_i64 tmp0,env,$0x80
+            exit_tb $0x0
+            end
+
+  .col-md-1
+    %span{:class => "glyphicon glyphicon-arrow-right"}
+    LLVM
+
+  .col-md-3
+    .pre
+      :markdown
+            %Lgv = load i64* @rbx
+            store i64 %Lgv, i64* @rax
+            %Lgv1 = load i64* @rsp
+            %Ildq = inttoptr i64 %Lgv1 to i64*
+            %Ldq = load i64* %Ildq
+            %Oarith = add i64 %Lgv1, 8
+            store i64 %Oarith, i64* @rsp
+            store i64 %Ldq, i64* @rip
+            ret i64 0
+
+.row
+  .col-md-1.col-md-offset-9
+    %span{:class => "glyphicon glyphicon-arrow-down"}
+    Z3
+
+.row
+  .col-md-6.col-md-offset-6
+    .pre
+      :markdown
+            (solver
+              (and true
+                 (= Lgv rbx) (= rax Lgv) (= Lgv1 rsp) (= Ildq Lgv1)
+                 (= Ldq (select ram Ildq)) (= Oarith (bvadd #x8 Lgv1))
+                 (= rsp1 Oarith) (= rip Ldq))
+              (and true
+                 (= t_Lgv t_rbx) (= t_rax t_Lgv) (= t_Lgv1 t_rsp) (= t_Ildq t_Lgv1)
+                 (= t_Ldq (select t_ram t_Ildq)) (= t_Oarith (bvadd #x8 t_Lgv1))
+                 (= t_rsp1 t_Oarith) (= t_rip t_Ldq))
+              (= rbx t_rbx) (not (= rax t_rax))
+              (= rsp t_rsp) (= rsp1 t_rsp1) (not (= rip t_rip)))
+
+.row
+  .col-md-1.col-md-offset-9
+    %span{:class => "glyphicon glyphicon-arrow-up"}
+
+.row
+  .col-md-3
+    .pre
+      :markdown
+            xor rax, rax
+            not rax
+            and rax, rbx
+            ret
+
+  .col-md-1
+    %span{:class => "glyphicon glyphicon-arrow-right"}
+
+  .col-md-3
+    .pre
+      :markdown
+            nopn $0x2,$0x2
+            mov_i64 rax,rbx
+            mov_i64 cc_dst,rbx
+            qemu_ld_i64 tmp0,rsp,leq,$0x0
+            movi_i64 tmp11,$0x8
+            add_i64 tmp3,rsp,tmp11
+            mov_i64 rsp,tmp3
+            st_i64 tmp0,env,$0x80
+            movi_i32 cc_op,$0x19
+            exit_tb $0x0
+            end
+
+  .col-md-1
+    %span{:class => "glyphicon glyphicon-arrow-right"}
+
+  .col-md-3
+    .pre
+      :markdown
+            %Lgv = load i64* @rbx
+            store i64 %Lgv, i64* @rax
+            %Lgv1 = load i64* @rsp
+            %Ildq = inttoptr i64 %Lgv1 to i64*
+            %Ldq = load i64* %Ildq
+            %Oarith = add i64 %Lgv1, 8
+            store i64 %Oarith, i64* @rsp
+            store i64 %Ldq, i64* @rip
+            ret i64 0
 
 .row
   .col-md-12
-    .panel-heading
-      %h3 Get started
-      %p Discover how to use nROP and discover tricky gadgets
-      %a.btn.btn-primary.btn-lg{:href=>"#{site.base_url}/download"} Download/Build
-      %a.btn.btn-primary.btn-lg{:href=>"#{site.base_url}/getstarted"} Get started
+    .panel.panel-primary
+      .panel-heading
+        %h3 Get started
+      .panel-body
+        %p Use nROP and discover tricky gadgets using the docker image :
+        :markdown
+              $ sudo docker pull awailly/nrop
+              $ sudo docker run -h nrop -t -i awailly/nrop:latest /bin/bash
+        %a.btn.btn-primary.btn-lg{:href=>"#{site.base_url}/getstarted"} Usage
+        %a.btn.btn-primary.btn-lg{:href=>"#{site.base_url}/download"} Manual Download and build
+        %a.btn.btn-primary.btn-lg{:href=>"#{site.base_url}/demos"} Advanced examples
 
 .row
   .col-md-4
@@ -29,6 +143,6 @@ layout: base
 
   .col-md-4
     %h3 Concept
-    %p Mix Qemu, LLVM and z3 (tobedone) for ultimate instruction semantic.
+    %p Mix Qemu, LLVM and z3 for ultimate instruction semantic.
     %p
       %a.btn.btn-default{:href=>"#{site.base_url}/doc"} View details &raquo; 

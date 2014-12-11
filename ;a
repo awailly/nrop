@@ -1,0 +1,98 @@
+---
+layout: base
+---
+.row
+  .col-md-12
+    .page-header
+      %h1 Be ready for nROP
+
+.row
+  .col-md-3
+    .well.well-sm
+      mov rax, rbx
+  .col-md-3
+    .well.well-sm
+      nopn $0x2,$0x2
+      mov_i64 rax,rbx
+      qemu_ld_i64 tmp0,rsp,leq,$0x0
+      movi_i64 tmp11,$0x8
+      add_i64 tmp3,rsp,tmp11
+      mov_i64 rsp,tmp3
+      st_i64 tmp0,env,$0x80
+      exit_tb $0x0
+      end
+  .col-md-3
+    .well.well-sm
+      \%Lgv = load i64* @rbx
+      store i64 %Lgv, i64* @rax
+      \%Lgv1 = load i64* @rsp
+      \%Ildq = inttoptr i64 %Lgv1 to i64*
+      \%Ldq = load i64* %Ildq
+      \%Oarith = add i64 %Lgv1, 8
+      store i64 %Oarith, i64* @rsp
+      store i64 %Ldq, i64* @rip
+      ret i64 0
+  .col-md-3
+    .well.well-sm
+      kikoo ueaonthunoehanuhasoeuhtnoehuntoahunthaontuhoehutoeahunetohutoauhnoehunsaohnushoaeunhseaonuhstnaoehunhaoenuhnsaoethunsahoeuhaoeuh
+
+.row
+  .col-md-3
+    .well.well-sm
+      xor eax, eax
+      not rax
+      and rax, rbx
+      ret
+  .col-md-3
+    .well.well-sm
+      nopn $0x2,$0x2
+      mov_i64 rax,rbx
+      mov_i64 cc_dst,rbx
+      qemu_ld_i64 tmp0,rsp,leq,$0x0
+      movi_i64 tmp11,$0x8
+      add_i64 tmp3,rsp,tmp11
+      mov_i64 rsp,tmp3
+      st_i64 tmp0,env,$0x80
+      movi_i32 cc_op,$0x19
+      exit_tb $0x0
+      end
+  .col-md-3
+    .well.well-sm
+      \%Lgv = load i64* @rbx
+      store i64 %Lgv, i64* @rax
+      \%Lgv1 = load i64* @rsp
+      \%Ildq = inttoptr i64 %Lgv1 to i64*
+      \%Ldq = load i64* %Ildq
+      \%Oarith = add i64 %Lgv1, 8
+      store i64 %Oarith, i64* @rsp
+      store i64 %Ldq, i64* @rip
+      ret i64 0
+
+.row
+  .col-md-12
+    .panel.panel-primary
+      .panel-heading
+        %h3 Get started
+      .panel-body
+        %p Discover how to use nROP and discover tricky gadgets
+        %a.btn.btn-primary.btn-lg{:href=>"#{site.base_url}/download"} Download/Build
+        %a.btn.btn-primary.btn-lg{:href=>"#{site.base_url}/getstarted"} Get started
+
+.row
+  .col-md-4
+    %h3 About
+    %p Current ROP tools suffer from static gadget search and does not extract the underlying semantic. Combining the intermediate language of Qemu with the LLVM optimization, nROP is able to seek exotic combination to achieve your exploit.
+    %p
+      %a.btn.btn-default{:href=>"#{site.base_url}/demos"} View examples &raquo; 
+
+  .col-md-4
+    %h3 Goal
+    %p Exploiting softwares require subtle gadget chaining to bypass state-of-the-art memory protection. nROP helps exploit writers to achieve non-trivial gadget chaining on various architecture.
+    %p
+      %a.btn.btn-default{:href=>"#{site.base_url}/demos"} View demos &raquo; 
+
+  .col-md-4
+    %h3 Concept
+    %p Mix Qemu, LLVM and z3 for ultimate instruction semantic.
+    %p
+      %a.btn.btn-default{:href=>"#{site.base_url}/doc"} View details &raquo; 

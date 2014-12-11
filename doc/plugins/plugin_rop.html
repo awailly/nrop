@@ -45,32 +45,19 @@
     </div>
     <div class="container">
       
-      <h1 id="documentation">Documentation</h1>
+      <h1 id="multithreading">Multithreading</h1>
       
-      <p>The nrop components and tricks are detailed in the following sections. If you feel that something is poorly explained feel free to contact me :)</p>
+      <p>The current multithreading is not optimal as the way qemu and LLVM are used is not thread-safe. Numerous mutex tries to minimize the impact but some cases will leave the tool running on one thread (for example with a lot of bad instructions).</p>
       
-      <h1 id="disassemblers">Disassemblers</h1>
+      <p>It is also ugly to print in the same terminal with multiple threads, and one can forget to enable the multithread when pushing on the git. This is how you can control the threading:</p>
       
-      <p>nrop relied for a long time on the XED disassemblers, but now a new tiny interface is available to use your custom state-of-art disassembler. You can see the in-depth details in the <a href="disassemblers.html">dedicated documentation page</a>.</p>
+      <pre><code>% grep MULTITHREAD plugins/plugin_rop.h&#x000A;#define MULTITHREAD&#x000A;</code></pre>
       
-      <h1 id="loggingdebug">Logging/Debug</h1>
+      <h1 id="instruction-categories">Instruction categories</h1>
       
-      <p>Several levels of logs and debug are available in the nrop source code. However they are disabled by default for performances and have to be enabled before compilation. The <a href="logging.html">logging documentation page</a> details how it is implemented and how to enable them.</p>
+      <p>By default nrop gives a positive match on gadgets with a ending basic block behavior. It may thus return gadgets that are not fitting your constraints, i.e. only RET ending instructions. You can tune the behavior by filtering in the <code>is_last_inst()</code> function of the plugin, or directly in the disassembler <code>get_category()</code> function.</p>
       
-      <h1 id="plugins">Plugins</h1>
-      
-      <p>The nrop architecture allows more than just Return-Oriented Programming. You can play with the ELF file format and create new plugins by registering your new code in the main file <code>packer.c</code>.</p>
-      
-      <p>The following pages are explaining specific plugins.</p>
-      
-      <ul>
-        <li><a href="plugins/plugin_rop.html">plugin_rop documentation</a></li>
-        <li><a href="plugins/plugin_rop.html">plugin_junk documentation</a></li>
-      </ul>
-      
-      <h1 id="faq">FAQ</h1>
-      
-      <p>The compilation can be complicated, and the <a href="faq.html">faq dedicated page</a> is a convenient start to progress.</p>
+      <p>A quick fix is to <code>| grep ret</code> on the output.</p>
       <hr>
       <footer>
         <p>&copy; NoName 2014</p>

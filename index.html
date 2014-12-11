@@ -9,7 +9,7 @@
         padding-top: 60px;
       }
     </style>
-    <link href="http://aurelien.wail.ly/nrop/stylesheets/styles.css" rel="stylesheet" type="text/css">
+    <link href="http://localhost:4242/stylesheets/styles.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
     <!--[if lt IE 9]>
       <script src="//html5shim.googlecode.com/svn/trunk/html5.js" type="text/javascript"></script>
@@ -19,24 +19,24 @@
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
-          <a class="navbar-brand" href="http://aurelien.wail.ly/nrop">nROP</a>
+          <a class="navbar-brand" href="http://localhost:4242">nROP</a>
           <ul class="nav navbar-nav">
             <li>
-              <a href="http://aurelien.wail.ly/nrop">Home</a>
+              <a href="http://localhost:4242">Home</a>
             </li>
             <li>
               <li>
-                <a href="http://aurelien.wail.ly/nrop/getstarted">Get Started</a>
+                <a href="http://localhost:4242/getstarted">Get Started</a>
               </li>
             </li>
             <li>
               <li>
-                <a href="http://aurelien.wail.ly/nrop/download">Download</a>
+                <a href="http://localhost:4242/download">Download</a>
               </li>
             </li>
             <li>
               <li>
-                <a href="http://aurelien.wail.ly/nrop/doc">Documentation</a>
+                <a href="http://localhost:4242/doc">Documentation</a>
               </li>
             </li>
           </ul>
@@ -57,7 +57,7 @@
             <pre><code>mov rax, rbx&#x000A;ret&#x000A;</code></pre>
           </div>
         </div>
-        <div class="col-md-1">
+        <div class="col-md-1 vertical-center">
           <span class="glyphicon glyphicon-arrow-right"></span>
           Qemu
         </div>
@@ -83,7 +83,14 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-md-6 col-md-offset-6">
+        <div class="col-md-3">
+          Are these gadgets equivalent ?
+        </div>
+        <div class="col-md-1 col-md-offset-2">
+          Yes!
+          <span class="glyphicon glyphicon-arrow-left"></span>
+        </div>
+        <div class="col-md-6">
           <div class="pre">
             <pre><code>(solver&#x000A;  (and true&#x000A;     (= Lgv rbx) (= rax Lgv) (= Lgv1 rsp) (= Ildq Lgv1)&#x000A;     (= Ldq (select ram Ildq)) (= Oarith (bvadd #x8 Lgv1))&#x000A;     (= rsp1 Oarith) (= rip Ldq))&#x000A;  (and true&#x000A;     (= t_Lgv t_rbx) (= t_rax t_Lgv) (= t_Lgv1 t_rsp) (= t_Ildq t_Lgv1)&#x000A;     (= t_Ldq (select t_ram t_Ildq)) (= t_Oarith (bvadd #x8 t_Lgv1))&#x000A;     (= t_rsp1 t_Oarith) (= t_rip t_Ldq))&#x000A;  (= rbx t_rbx) (not (= rax t_rax))&#x000A;  (= rsp t_rsp) (= rsp1 t_rsp1) (not (= rip t_rip)))&#x000A;</code></pre>
           </div>
@@ -126,9 +133,9 @@
             <div class="panel-body">
               <p>Use nROP and discover tricky gadgets using the docker image :</p>
               <pre><code>$ sudo docker pull awailly/nrop&#x000A;$ sudo docker run -h nrop -t -i awailly/nrop:latest /bin/bash&#x000A;</code></pre>
-              <a class="btn btn-primary btn-lg" href="http://aurelien.wail.ly/nrop/getstarted">Usage</a>
-              <a class="btn btn-primary btn-lg" href="http://aurelien.wail.ly/nrop/download">Manual Download and build</a>
-              <a class="btn btn-primary btn-lg" href="http://aurelien.wail.ly/nrop/demos">Advanced examples</a>
+              <a class="btn btn-primary btn-lg" href="http://localhost:4242/getstarted">Usage</a>
+              <a class="btn btn-primary btn-lg" href="http://localhost:4242/download">Manual Download and build</a>
+              <a class="btn btn-primary btn-lg" href="http://localhost:4242/demos">Advanced examples</a>
             </div>
           </div>
         </div>
@@ -138,21 +145,21 @@
           <h3>About</h3>
           <p>Current ROP tools suffer from static gadget search and does not extract the underlying semantic. Combining the intermediate language of Qemu with the LLVM optimization, nROP is able to seek exotic combination to achieve your exploit.</p>
           <p>
-            <a class="btn btn-default" href="http://aurelien.wail.ly/nrop/demos">View examples &raquo;</a>
+            <a class="btn btn-default" href="http://localhost:4242/demos">View examples &raquo;</a>
           </p>
         </div>
         <div class="col-md-4">
           <h3>Goal</h3>
           <p>Exploiting softwares require subtle gadget chaining to bypass state-of-the-art memory protection. nROP helps exploit writers to achieve non-trivial gadget chaining on various architecture.</p>
           <p>
-            <a class="btn btn-default" href="http://aurelien.wail.ly/nrop/demos">View demos &raquo;</a>
+            <a class="btn btn-default" href="http://localhost:4242/demos">View demos &raquo;</a>
           </p>
         </div>
         <div class="col-md-4">
           <h3>Concept</h3>
           <p>Mix Qemu, LLVM and z3 for ultimate instruction semantic.</p>
           <p>
-            <a class="btn btn-default" href="http://aurelien.wail.ly/nrop/doc">View details &raquo;</a>
+            <a class="btn btn-default" href="http://localhost:4242/doc">View details &raquo;</a>
           </p>
         </div>
       </div>

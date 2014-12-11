@@ -8,7 +8,7 @@
 
 #define BUFLEN  1000
 
-#define DEBUG_META
+//#define DEBUG_META
 #ifdef DEBUG_META
 #  define LOG_META(...) logging(__VA_ARGS__)
 #else

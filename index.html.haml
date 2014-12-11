@@ -12,7 +12,7 @@ layout: base
       :markdown
             mov rax, rbx
             ret
-  .col-md-1
+  .col-md-1.vertical-center
     %span{:class => "glyphicon glyphicon-arrow-right"}
     Qemu
 
@@ -52,7 +52,14 @@ layout: base
     Z3
 
 .row
-  .col-md-6.col-md-offset-6
+  .col-md-3
+    Are these gadgets equivalent ?
+
+  .col-md-1.col-md-offset-2
+    Yes! 
+    %span{:class => "glyphicon glyphicon-arrow-left"}
+
+  .col-md-6
     .pre
       :markdown
             (solver

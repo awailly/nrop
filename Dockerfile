@@ -34,6 +34,7 @@ RUN cd /nrop/qemu && git apply ../qemu.patch \
     && cd .. \
 	&& sed -i 's/main/ma1n/g' qemu/x86_64-linux-user/linux-user/main.o \
 	&& sed -i 's/use_icount/use_1count/g' qemu/stubs/cpu-get-icount.o \
+	&& make clean \
 	&& make -j32
 
 WORKDIR /nrop

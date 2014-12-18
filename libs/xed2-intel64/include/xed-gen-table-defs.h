@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -35,18 +35,17 @@ END_LEGAL */
 
 #if !defined(_XED_GEN_TABLE_DEFS_H_)
 # define _XED_GEN_TABLE_DEFS_H_
-#define XED_MAX_ATTRIBUTE_COUNT 39
-#define XED_MAX_GRAPH_NODES 8040
-#define XED_MAX_GRAPH_NEXT_NODES 12750
-#define XED_MAX_INST_TABLE_NODES 2472
-#define XED_MAX_OPERAND_TABLE_NODES 722
-#define XED_MAX_OPERAND_SEQUENCES 2868
-#define XED_MAX_REQUIRED_SIMPLE_FLAGS_ENTRIES 870
+#define XED_ICLASS_NAME_STR_MAX 22
+#define XED_MAX_ATTRIBUTE_COUNT 55
+#define XED_MAX_INST_TABLE_NODES 3417
+#define XED_MAX_OPERAND_TABLE_NODES 920
+#define XED_MAX_OPERAND_SEQUENCES 3955
+#define XED_MAX_REQUIRED_SIMPLE_FLAGS_ENTRIES 943
 #define XED_MAX_REQUIRED_COMPLEX_FLAGS_ENTRIES 53
-#define XED_MAX_IFORMS_PER_ICLASS 27
-#define XED_MAX_REQUIRED_ATTRIBUTES 76
+#define XED_MAX_IFORMS_PER_ICLASS 28
+#define XED_MAX_REQUIRED_ATTRIBUTES 112
 #define XED_MAX_ACTIONS_PER_SIMPLE_FLAG 20
-#define XED_MAX_GLOBAL_FLAG_ACTIONS 3795
+#define XED_MAX_GLOBAL_FLAG_ACTIONS 4181
 #define XED_MAX_CONVERT_PATTERNS 1
 #define XED_MAX_DECORATIONS_PER_OPERAND 3
 #endif

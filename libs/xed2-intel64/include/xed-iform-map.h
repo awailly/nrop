@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -29,7 +29,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 END_LEGAL */
 /// @file xed-iform-map.h
-/// @author Mark Charney <mark.charney@intel.com>
+/// 
 
 #if !defined(_XED_IFORM_MAP_H_)
 # define _XED_IFORM_MAP_H_
@@ -45,37 +45,46 @@ END_LEGAL */
 /// @ingroup IFORM
 /// Statically available information about iforms.
 /// Values are returned by #xed_iform_map().
-typedef struct XED_DLL_EXPORT  xed_iform_info_s {
+typedef struct xed_iform_info_s {
     xed_iclass_enum_t iclass;
     xed_category_enum_t category;
     xed_extension_enum_t extension;
     xed_isa_set_enum_t isa_set;
+  
+    /* if nonzero, index in to the disassembly string table */
+    xed_uint32_t  string_table_idx;
 } xed_iform_info_t;
 
 
 /// @ingroup IFORM
-/// Map the #xed_iform_enum_t to a pointer to a #xed_iform_info_t which indicates the 
-/// #xed_iclass_enum_t, the #xed_category_enum_t and the #xed_extension_enum_t for the
-/// iform. Returns 0 if the iform is not a valid iform.
-XED_DLL_EXPORT const xed_iform_info_t* xed_iform_map(xed_iform_enum_t iform);
+/// Map the #xed_iform_enum_t to a pointer to a #xed_iform_info_t which
+/// indicates the #xed_iclass_enum_t, the #xed_category_enum_t and the
+/// #xed_extension_enum_t for the iform. Returns 0 if the iform is not a
+/// valid iform.
+XED_DLL_EXPORT
+const xed_iform_info_t* xed_iform_map(xed_iform_enum_t iform);
 
 /// @ingroup IFORM
 /// Return the maximum number of iforms for a particular iclass.  This
-/// function returns valid data as soon as global data is initialized. (This
-/// function does not require a decoded instruction as input).
-XED_DLL_EXPORT xed_uint32_t xed_iform_max_per_iclass(xed_iclass_enum_t iclass);
+/// function returns valid data as soon as global data is
+/// initialized. (This function does not require a decoded instruction as
+/// input).
+XED_DLL_EXPORT
+xed_uint32_t xed_iform_max_per_iclass(xed_iclass_enum_t iclass);
 
 /// @ingroup IFORM
-/// Return the first of the iforms for a particular iclass.  This
-/// function returns valid data as soon as global data is initialized. (This
+/// Return the first of the iforms for a particular iclass.  This function
+/// returns valid data as soon as global data is initialized. (This
 /// function does not require a decoded instruction as input).
-XED_DLL_EXPORT xed_uint32_t xed_iform_first_per_iclass(xed_iclass_enum_t iclass);
+XED_DLL_EXPORT
+xed_uint32_t xed_iform_first_per_iclass(xed_iclass_enum_t iclass);
 
 /// @ingroup IFORM
 /// Return the iclass for a given iform. This 
 /// function returns valid data as soon as global data is initialized. (This
 /// function does not require a decoded instruction as input).
-static XED_INLINE xed_iclass_enum_t xed_iform_to_iclass(xed_iform_enum_t iform) {
+static
+xed_iclass_enum_t XED_INLINE xed_iform_to_iclass(xed_iform_enum_t iform) {
     const xed_iform_info_t* ii = xed_iform_map(iform);
     if (ii)
         return ii->iclass;
@@ -86,20 +95,36 @@ static XED_INLINE xed_iclass_enum_t xed_iform_to_iclass(xed_iform_enum_t iform) 
 /// Return the category for a given iform. This 
 /// function returns valid data as soon as global data is initialized. (This
 /// function does not require a decoded instruction as input).
-XED_DLL_EXPORT xed_category_enum_t xed_iform_to_category(xed_iform_enum_t iform);
+XED_DLL_EXPORT
+xed_category_enum_t xed_iform_to_category(xed_iform_enum_t iform);
 
 /// @ingroup IFORM
-/// Return the extension for a given iform. This 
-/// function returns valid data as soon as global data is initialized. (This
-/// function does not require a decoded instruction as input).
-XED_DLL_EXPORT xed_extension_enum_t xed_iform_to_extension(xed_iform_enum_t iform);
+/// Return the extension for a given iform. This function returns valid
+/// data as soon as global data is initialized. (This function does not
+/// require a decoded instruction as input).
+XED_DLL_EXPORT
+xed_extension_enum_t xed_iform_to_extension(xed_iform_enum_t iform);
 
 /// @ingroup IFORM
-/// Return the isa_set for a given iform. This 
-/// function returns valid data as soon as global data is initialized. (This
-/// function does not require a decoded instruction as input).
-XED_DLL_EXPORT xed_isa_set_enum_t xed_iform_to_isa_set(xed_iform_enum_t iform);
+/// Return the isa_set for a given iform. This function returns valid data
+/// as soon as global data is initialized. (This function does not require
+/// a decoded instruction as input).
+XED_DLL_EXPORT
+xed_isa_set_enum_t xed_iform_to_isa_set(xed_iform_enum_t iform);
+
+/// @ingroup IFORM
+/// Return a pointer to a character string of the iclass. This
+/// translates the internal disambiguated names to the more ambiguous
+/// names that people like to see. This returns the ATT SYSV-syntax name.
+XED_DLL_EXPORT
+char const* xed_iform_to_iclass_string_att(xed_iform_enum_t iform);
 
 
+/// @ingroup IFORM
+/// Return a pointer to a character string of the iclass. This
+/// translates the internal disambiguated names to the more ambiguous
+/// names that people like to see. This returns the Intel-syntax name.
+XED_DLL_EXPORT
+char const* xed_iform_to_iclass_string_intel(xed_iform_enum_t iform);
 
 #endif

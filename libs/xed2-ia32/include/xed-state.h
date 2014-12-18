@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -29,7 +29,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 END_LEGAL */
 /// @file xed-state.h
-/// @author  Mark Charney   <mark.charney@intel.com> 
+/// 
 
 
 
@@ -49,7 +49,7 @@ END_LEGAL */
 /// mode (XED_MACHINE_MODE_LONG_64), a default addressing width, and a
 /// stack addressing width must be supplied of type
 /// #xed_address_width_enum_t .  @ingroup INIT
-typedef struct XED_DLL_EXPORT xed_state_s {
+typedef struct xed_state_s {
   /// real architected machine modes
   xed_machine_mode_enum_t mmode; 
   /// for 16b/32b modes
@@ -204,7 +204,3 @@ XED_DLL_EXPORT int xed_state_print(const xed_state_t* p, char* buf, int buflen);
 
 #endif
 
-////////////////////////////////////////////////////////////////////////////
-//Local Variables:
-//pref: "../../xed-state.c"
-//End:

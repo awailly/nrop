@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -48,12 +48,24 @@ typedef enum {
   XED_ERROR_NO_AGEN_CALL_BACK_REGISTERED, ///< One or both of the callbacks for
   XED_ERROR_BAD_MEMOP_INDEX, ///< Memop indices must be 0 or 1.
   XED_ERROR_CALLBACK_PROBLEM, ///< The register or segment callback for
+  XED_ERROR_GATHER_REGS, ///< The index, dest and mask regs for AVX2 gathers must be different.
+  XED_ERROR_INSTR_TOO_LONG, ///< Full decode of instruction would exeed 15B.
   XED_ERROR_LAST
 } xed_error_enum_t;
 
+/// This converts strings to #xed_error_enum_t types.
+/// @param s A C-string.
+/// @return #xed_error_enum_t
+/// @ingroup ENUM
 XED_DLL_EXPORT xed_error_enum_t str2xed_error_enum_t(const char* s);
+/// This converts strings to #xed_error_enum_t types.
+/// @param p An enumeration element of type xed_error_enum_t.
+/// @return string
+/// @ingroup ENUM
 XED_DLL_EXPORT const char* xed_error_enum_t2str(const xed_error_enum_t p);
 
+/// Returns the last element of the enumeration
+/// @return xed_error_enum_t The last element of the enumeration.
+/// @ingroup ENUM
 XED_DLL_EXPORT xed_error_enum_t xed_error_enum_t_last(void);
-       
 #endif

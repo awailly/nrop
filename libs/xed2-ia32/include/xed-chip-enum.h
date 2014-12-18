@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -52,6 +52,7 @@ typedef enum {
   XED_CHIP_I486,
   XED_CHIP_PENTIUMREAL,
   XED_CHIP_PENTIUM,
+  XED_CHIP_QUARK,
   XED_CHIP_PENTIUMMMXREAL,
   XED_CHIP_PENTIUMMMX,
   XED_CHIP_ALLREAL,
@@ -60,24 +61,40 @@ typedef enum {
   XED_CHIP_PENTIUM3,
   XED_CHIP_PENTIUM4,
   XED_CHIP_P4PRESCOTT,
-  XED_CHIP_P4PRESCOTT642,
-  XED_CHIP_P4PRESCOTT2M,
+  XED_CHIP_P4PRESCOTT_NOLAHF,
+  XED_CHIP_P4PRESCOTT_VTX,
   XED_CHIP_CORE2,
-  XED_CHIP_ATOM,
   XED_CHIP_PENRYN,
   XED_CHIP_PENRYN_E,
   XED_CHIP_NEHALEM,
   XED_CHIP_WESTMERE,
+  XED_CHIP_BONNELL,
+  XED_CHIP_SALTWELL,
+  XED_CHIP_SILVERMONT,
   XED_CHIP_AMD,
+  XED_CHIP_BROADWELL,
+  XED_CHIP_GOLDMONT,
+  XED_CHIP_SKYLAKE,
   XED_CHIP_SANDYBRIDGE,
-  XED_CHIP_FUTURE,
+  XED_CHIP_IVYBRIDGE,
+  XED_CHIP_HASWELL,
   XED_CHIP_ALL,
   XED_CHIP_LAST
 } xed_chip_enum_t;
 
+/// This converts strings to #xed_chip_enum_t types.
+/// @param s A C-string.
+/// @return #xed_chip_enum_t
+/// @ingroup ENUM
 XED_DLL_EXPORT xed_chip_enum_t str2xed_chip_enum_t(const char* s);
+/// This converts strings to #xed_chip_enum_t types.
+/// @param p An enumeration element of type xed_chip_enum_t.
+/// @return string
+/// @ingroup ENUM
 XED_DLL_EXPORT const char* xed_chip_enum_t2str(const xed_chip_enum_t p);
 
+/// Returns the last element of the enumeration
+/// @return xed_chip_enum_t The last element of the enumeration.
+/// @ingroup ENUM
 XED_DLL_EXPORT xed_chip_enum_t xed_chip_enum_t_last(void);
-       
 #endif

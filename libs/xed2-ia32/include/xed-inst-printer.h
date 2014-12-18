@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -29,7 +29,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 END_LEGAL */
 /// @file xed-inst-printer.h 
-/// @author Mark Charney   <mark.charney@intel.com> 
+/// 
 
 
 #ifndef _XED_INST_PRINTER_H_
@@ -166,7 +166,3 @@ xed_format_context(xed_syntax_enum_t syntax,
                    void* context);
 //@}
 #endif
-////////////////////////////////////////////////////////////////////////////
-//Local Variables:
-//pref: "../../xed-inst-printer.c"
-//End:

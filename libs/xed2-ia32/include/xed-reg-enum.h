@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -38,6 +38,12 @@ END_LEGAL */
 #include "xed-common-hdrs.h"
 typedef enum {
   XED_REG_INVALID,
+  XED_REG_BNDCFGU,
+  XED_REG_BNDSTATUS,
+  XED_REG_BND0,
+  XED_REG_BND1,
+  XED_REG_BND2,
+  XED_REG_BND3,
   XED_REG_CR0,
   XED_REG_CR1,
   XED_REG_CR2,
@@ -145,6 +151,14 @@ typedef enum {
   XED_REG_RIP,
   XED_REG_EIP,
   XED_REG_IP,
+  XED_REG_K0,
+  XED_REG_K1,
+  XED_REG_K2,
+  XED_REG_K3,
+  XED_REG_K4,
+  XED_REG_K5,
+  XED_REG_K6,
+  XED_REG_K7,
   XED_REG_MMX0,
   XED_REG_MMX1,
   XED_REG_MMX2,
@@ -163,13 +177,19 @@ typedef enum {
   XED_REG_TSC,
   XED_REG_TSCAUX,
   XED_REG_MSRS,
+  XED_REG_FSBASE,
+  XED_REG_GSBASE,
   XED_REG_X87CONTROL,
   XED_REG_X87STATUS,
-  XED_REG_X87TOP,
   XED_REG_X87TAG,
   XED_REG_X87PUSH,
   XED_REG_X87POP,
   XED_REG_X87POP2,
+  XED_REG_X87OPCODE,
+  XED_REG_X87LASTCS,
+  XED_REG_X87LASTIP,
+  XED_REG_X87LASTDS,
+  XED_REG_X87LASTDP,
   XED_REG_CS,
   XED_REG_DS,
   XED_REG_ES,
@@ -200,6 +220,7 @@ typedef enum {
   XED_REG_ST5,
   XED_REG_ST6,
   XED_REG_ST7,
+  XED_REG_XCR0,
   XED_REG_XMM0,
   XED_REG_XMM1,
   XED_REG_XMM2,
@@ -233,6 +254,12 @@ typedef enum {
   XED_REG_YMM14,
   XED_REG_YMM15,
   XED_REG_LAST,
+  XED_REG_BNDCFG_FIRST=XED_REG_BNDCFGU, //< PSEUDO
+  XED_REG_BNDCFG_LAST=XED_REG_BNDCFGU, //<PSEUDO
+  XED_REG_BNDSTAT_FIRST=XED_REG_BNDSTATUS, //< PSEUDO
+  XED_REG_BNDSTAT_LAST=XED_REG_BNDSTATUS, //<PSEUDO
+  XED_REG_BOUND_FIRST=XED_REG_BND0, //< PSEUDO
+  XED_REG_BOUND_LAST=XED_REG_BND3, //<PSEUDO
   XED_REG_CR_FIRST=XED_REG_CR0, //< PSEUDO
   XED_REG_CR_LAST=XED_REG_CR15, //<PSEUDO
   XED_REG_DR_FIRST=XED_REG_DR0, //< PSEUDO
@@ -253,27 +280,43 @@ typedef enum {
   XED_REG_INVALID_LAST=XED_REG_ERROR, //<PSEUDO
   XED_REG_IP_FIRST=XED_REG_RIP, //< PSEUDO
   XED_REG_IP_LAST=XED_REG_IP, //<PSEUDO
+  XED_REG_MASK_FIRST=XED_REG_K0, //< PSEUDO
+  XED_REG_MASK_LAST=XED_REG_K7, //<PSEUDO
   XED_REG_MMX_FIRST=XED_REG_MMX0, //< PSEUDO
   XED_REG_MMX_LAST=XED_REG_MMX7, //<PSEUDO
   XED_REG_MXCSR_FIRST=XED_REG_MXCSR, //< PSEUDO
   XED_REG_MXCSR_LAST=XED_REG_MXCSR, //<PSEUDO
   XED_REG_PSEUDO_FIRST=XED_REG_STACKPUSH, //< PSEUDO
-  XED_REG_PSEUDO_LAST=XED_REG_X87POP2, //<PSEUDO
+  XED_REG_PSEUDO_LAST=XED_REG_GSBASE, //<PSEUDO
+  XED_REG_PSEUDOX87_FIRST=XED_REG_X87CONTROL, //< PSEUDO
+  XED_REG_PSEUDOX87_LAST=XED_REG_X87LASTDP, //<PSEUDO
   XED_REG_SR_FIRST=XED_REG_CS, //< PSEUDO
   XED_REG_SR_LAST=XED_REG_GS, //<PSEUDO
   XED_REG_TMP_FIRST=XED_REG_TMP0, //< PSEUDO
   XED_REG_TMP_LAST=XED_REG_TMP15, //<PSEUDO
   XED_REG_X87_FIRST=XED_REG_ST0, //< PSEUDO
   XED_REG_X87_LAST=XED_REG_ST7, //<PSEUDO
+  XED_REG_XCR_FIRST=XED_REG_XCR0, //< PSEUDO
+  XED_REG_XCR_LAST=XED_REG_XCR0, //<PSEUDO
   XED_REG_XMM_FIRST=XED_REG_XMM0, //< PSEUDO
   XED_REG_XMM_LAST=XED_REG_XMM15, //<PSEUDO
   XED_REG_YMM_FIRST=XED_REG_YMM0, //< PSEUDO
   XED_REG_YMM_LAST=XED_REG_YMM15 //<PSEUDO
 } xed_reg_enum_t;
 
+/// This converts strings to #xed_reg_enum_t types.
+/// @param s A C-string.
+/// @return #xed_reg_enum_t
+/// @ingroup ENUM
 XED_DLL_EXPORT xed_reg_enum_t str2xed_reg_enum_t(const char* s);
+/// This converts strings to #xed_reg_enum_t types.
+/// @param p An enumeration element of type xed_reg_enum_t.
+/// @return string
+/// @ingroup ENUM
 XED_DLL_EXPORT const char* xed_reg_enum_t2str(const xed_reg_enum_t p);
 
+/// Returns the last element of the enumeration
+/// @return xed_reg_enum_t The last element of the enumeration.
+/// @ingroup ENUM
 XED_DLL_EXPORT xed_reg_enum_t xed_reg_enum_t_last(void);
-       
 #endif

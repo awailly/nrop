@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -29,7 +29,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 END_LEGAL */
 /// @file xed-util.h 
-/// @author Mark Charney   <mark.charney@intel.com> 
+/// 
 
 
 
@@ -124,6 +124,11 @@ extern  FILE* xed_log_file;
 #endif
 XED_NORETURN XED_NOINLINE XED_DLL_EXPORT void xed_internal_assert(const char* s, const char* file, int line);
 
+typedef void (*xed_user_abort_function_t)(const char* msg,
+                                          const char* file,
+                                          int line,
+                                          void* other);
+
 /// @ingroup INIT
 /// This is for registering a function to be called during XED's assert
 /// processing. If you do not register an abort function, then the system's
@@ -143,8 +148,7 @@ XED_NORETURN XED_NOINLINE XED_DLL_EXPORT void xed_internal_assert(const char* s,
 ///        feature. You can used this to convey whatever additional context
 ///        to your assertion handler (like FILE* pointers etc.).
 ///
-XED_DLL_EXPORT void xed_register_abort_function(void (*fn)(const char* msg,
-                                                           const char* file, int line, void* other),
+XED_DLL_EXPORT void xed_register_abort_function(xed_user_abort_function_t fn,
                                                 void* other);
 
 
@@ -153,12 +157,25 @@ XED_DLL_EXPORT void xed_register_abort_function(void (*fn)(const char* msg,
 ////////////////////////////////////////////////////////////////////////////
 char* xed_downcase_buf(char* s);
 
-/* copy from src to dst, downcasing bytes as the copy proceeds. len is the available space in the buffer*/
+/* copy from src to dst, downcasing bytes as the copy proceeds. len is the
+ * available space in the buffer*/
 int xed_strncat_lower(char* dst, const char* src, int len);
 
-int xed_itoa(char* buf, xed_uint64_t f, int buflen);
-int xed_itoa_hex_zeros(char* buf, xed_uint64_t f, xed_uint_t xed_bits_to_print, xed_bool_t leading_zeros, int buflen);
-int xed_itoa_hex(char* buf, xed_uint64_t f, xed_uint_t xed_bits_to_print, int buflen);
+XED_DLL_EXPORT int xed_itoa(char* buf,
+                            xed_uint64_t f,
+                            int buflen);
+
+int xed_itoa_hex_zeros(char* buf,
+                       xed_uint64_t f,
+                       xed_uint_t xed_bits_to_print,
+                       xed_bool_t leading_zeros,
+                       int buflen);
+
+XED_DLL_EXPORT int xed_itoa_hex(char* buf,
+                                xed_uint64_t f,
+                                xed_uint_t xed_bits_to_print,
+                                int buflen);
+
 int xed_itoa_signed(char* buf, xed_int64_t f, int buflen);
 
 char xed_to_ascii_hex_nibble(xed_uint_t x);
@@ -264,6 +281,3 @@ XED_DLL_EXPORT xed_uint_t xed_shortest_width_signed(xed_int64_t x, xed_uint8_t l
 
 ////////////////////////////////////////////////////////////////////////////
 #endif
-//Local Variables:
-//pref: "../../xed-util.c"
-//End:

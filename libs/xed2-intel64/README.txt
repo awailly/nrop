@@ -1,16 +1,9 @@
 Documentation:
 
-Internal Intel: http://goto.intel.com/xed
-External World: http://www.pintool.org/downloads.html    (click on Xed)
+Internal Intel: http://sde.intel.com/xed
+External World: http://software.intel.com/en-us/articles/pintool-downloads
 
-Send bugs to mark.charney@intel.com
-
-Internal to Intel:
-  Information about XED:     http://goto.intel.com/xed
-  Misc build information: 
-     http://spi-st.intel.com/mediawiki/index.php/User:MarkCharney
-     (Account required, ask mark.charney@intel.com for a wiki account)
-
+Send bugs to sde-dev@intel.com
 
 
 ===========================================================================

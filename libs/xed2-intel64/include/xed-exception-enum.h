@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -61,9 +61,19 @@ typedef enum {
   XED_EXCEPTION_LAST
 } xed_exception_enum_t;
 
+/// This converts strings to #xed_exception_enum_t types.
+/// @param s A C-string.
+/// @return #xed_exception_enum_t
+/// @ingroup ENUM
 XED_DLL_EXPORT xed_exception_enum_t str2xed_exception_enum_t(const char* s);
+/// This converts strings to #xed_exception_enum_t types.
+/// @param p An enumeration element of type xed_exception_enum_t.
+/// @return string
+/// @ingroup ENUM
 XED_DLL_EXPORT const char* xed_exception_enum_t2str(const xed_exception_enum_t p);
 
+/// Returns the last element of the enumeration
+/// @return xed_exception_enum_t The last element of the enumeration.
+/// @ingroup ENUM
 XED_DLL_EXPORT xed_exception_enum_t xed_exception_enum_t_last(void);
-       
 #endif

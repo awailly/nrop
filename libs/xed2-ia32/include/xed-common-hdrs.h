@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -29,26 +29,49 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 END_LEGAL */
 /// @file xed-common-hdrs.h
-/// @author  Mark Charney   <mark.charney@intel.com>
+/// 
 
 
 
 #ifndef _XED_COMMON_HDRS_H_
 # define _XED_COMMON_HDRS_H_
 
-////////////////////////////////////////////////////////////////////////////
-#if !defined(XED_MESSAGES)
-# define XED_MESSAGES 0
+
+
+#if defined(__FreeBSD__)
+# define XED_BSD
 #endif
+#if defined(__linux__)
+# define XED_LINUX
+#endif
+#if defined(_MSC_VER)
+# define XED_WINDOWS
+#endif
+#if defined(__APPLE__)
+# define XED_MAC
+#endif
+
 
 #if defined(XED_DLL)
 //  __declspec(dllexport) works with GNU GCC or MS compilers, but not ICC
 //  on linux
-# define XED_DLL_EXPORT __declspec(dllexport)
-# define XED_DLL_IMPORT __declspec(dllimport)
+
+#  if defined(XED_WINDOWS)
+#     define XED_DLL_EXPORT __declspec(dllexport)
+#     define XED_DLL_IMPORT __declspec(dllimport)
+#  elif defined(XED_LINUX)  || defined(XED_BSD) || defined(XED_MAC)
+#     define XED_DLL_EXPORT __attribute__((visibility("default")))
+#     define XED_DLL_IMPORT
+#  else
+#     define XED_DLL_EXPORT
+#     define XED_DLL_IMPORT
+#  endif
+    
 #  if defined(XED_BUILD)
+    /* when building XED, we export symbols */
 #    define XED_DLL_GLOBAL XED_DLL_EXPORT
 #  else
+    /* when building XED clients, we import symbols */
 #    define XED_DLL_GLOBAL XED_DLL_IMPORT
 #  endif
 #else
@@ -56,7 +79,11 @@ END_LEGAL */
 # define XED_DLL_IMPORT
 # define XED_DLL_GLOBAL
 #endif
-////////////////////////////////////////////////////////////////////////////
+
+    
+#if !defined(XED_MESSAGES)
+# define XED_MESSAGES 0
+#endif
 
 #if defined(XED_OMIT_ENCODER)
      /* do not emit an encoder */

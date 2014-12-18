@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -29,7 +29,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 END_LEGAL */
 /// @file xed-inst.h
-/// @author Mark Charney <mark.charney@intel.com>
+
 
 #if !defined(_XED_INST_H_)
 # define _XED_INST_H_
@@ -64,7 +64,7 @@ typedef void (*xed_operand_extractor_fn_t)(struct xed_decoded_inst_s* xds);
 /// Constant information about an individual generic operand, like an
 ///operand template, describing the operand properties. See @ref DEC for
 ///API information.
-typedef struct XED_DLL_EXPORT xed_operand_s
+typedef struct xed_operand_s
 {
     xed_operand_enum_t               _name;
     xed_operand_visibility_enum_t    _operand_visibility;  // implicit, explicit, suppressed
@@ -114,6 +114,14 @@ static XED_INLINE xed_operand_element_xtype_enum_t xed_operand_xtype(const xed_o
 static XED_INLINE xed_operand_width_enum_t xed_operand_width(const xed_operand_t* p)  { 
     return p->_oc2; 
 }
+
+/// @ingroup DEC
+/// @param p  an operand template,  #xed_operand_t.
+/// @param eosz  effective operand size of the instruction, 0 | 1 | 2 | 3 for 
+/// 8 | 16 | 32 | 64 bits respectively.
+/// @return  the actual width of operand in bits.
+XED_DLL_EXPORT xed_uint32_t xed_operand_width_bits(const xed_operand_t* p,
+                                                   const xed_uint32_t eosz);
 
 /// @ingroup DEC
 static XED_INLINE 
@@ -174,7 +182,7 @@ XED_DLL_EXPORT void    xed_operand_print(const xed_operand_t* p, char* buf, int 
 ///Note there are other registers for memory addressing; See
 /// #xed_operand_is_memory_addressing_register .
 static XED_INLINE xed_uint_t xed_operand_is_register(xed_operand_enum_t name) {
-    return name >= XED_OPERAND_REG0 && name <= XED_OPERAND_REG15;
+    return name >= XED_OPERAND_REG0 && name <= XED_OPERAND_REG8;
 }
 /// @ingroup DEC
 /// Tests the enum for inclusion in XED_OPERAND_{BASE0,BASE1,INDEX,SEG0,SEG1}
@@ -224,18 +232,11 @@ XED_DLL_EXPORT xed_uint_t xed_operand_conditional_write(const xed_operand_t* p);
 //@}
 
 
-#include "xed-gen-table-defs.h"
-XED_DLL_GLOBAL extern const  xed_operand_t
-xed_operand[XED_MAX_OPERAND_TABLE_NODES];
-
-XED_DLL_GLOBAL extern const  xed_uint16_t
-xed_operand_sequences[XED_MAX_OPERAND_SEQUENCES];
-
 /// @ingroup DEC
 /// constant information about a decoded instruction form, including
 /// the pointer to the constant operand properties #xed_operand_t for this
 /// instruction form.
-typedef struct XED_DLL_EXPORT xed_inst_s {
+typedef struct xed_inst_s {
 
 
     // rflags info -- index in to the 2 tables of flags information. 
@@ -301,11 +302,8 @@ static XED_INLINE unsigned int xed_inst_noperands(const xed_inst_t* p) {
 
 ///@ingroup DEC
 /// Obtain a pointer to an individual operand
-static XED_INLINE const xed_operand_t*
-xed_inst_operand(const xed_inst_t* p, unsigned int i)    {
-    xed_assert(i <  p->_noperands);
-    return &(xed_operand[xed_operand_sequences[p->_operand_base + i]]);
-}
+XED_DLL_EXPORT const xed_operand_t*
+xed_inst_operand(const xed_inst_t* p, unsigned int i);
 
 
 

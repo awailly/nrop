@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -29,7 +29,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 END_LEGAL */
 /// @file xed-operand-action.h
-/// @author Mark Charney <mark.charney@intel.com>
+/// 
 
 #if !defined(_XED_OPERAND_ACTION_H_)
 # define _XED_OPERAND_ACTION_H_
@@ -47,6 +47,3 @@ XED_DLL_EXPORT xed_uint_t xed_operand_action_conditional_write(const xed_operand
 
 #endif
 
-//Local Variables:
-//pref: "../../xed-operand-action.c"
-//End:

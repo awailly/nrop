@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -29,7 +29,6 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 END_LEGAL */
 /// @file xed-encode.h
-/// @author Mark Charney   <mark.charney@intel.com> 
 
 
 #ifndef _XED_ENCODE_H_
@@ -52,6 +51,7 @@ END_LEGAL */
 typedef struct  xed_decoded_inst_s xed_encoder_request_s; 
 /// @ingroup ENC
 typedef xed_decoded_inst_t xed_encoder_request_t; 
+
 
 
 /// @ingroup ENC
@@ -176,13 +176,6 @@ XED_DLL_EXPORT void xed_encoder_request_set_uimm1(xed_encoder_request_t* p,
 XED_DLL_EXPORT void xed_encoder_request_set_simm(xed_encoder_request_t* p,
                                                  xed_int32_t simm,
                                                  xed_uint_t nbytes);
-/// @ingroup ENC
-/// Set an arbitrary operand storage field
-XED_DLL_EXPORT void xed_encoder_request_set_operand_storage_field(xed_encoder_request_t* p, 
-                                                                  xed_operand_enum_t operand_name,  
-                                                                  xed_uint32_t value);
-
-//@}
 
 /// @name Memory
 //@{
@@ -246,15 +239,6 @@ struct xed_decoded_inst_s; //fwd decl
 /// Converts an decoder request to a valid encoder request.
 XED_DLL_EXPORT void  xed_encoder_request_init_from_decode(struct xed_decoded_inst_s* d);
 
-void
-xed_encoder_request_encode_emit(xed_encoder_request_t* q,
-                                const unsigned int bits,
-                                const xed_uint64_t value);
-    
-xed_bool_t
-xed_encoder_request__memop_compatible(const xed_encoder_request_t* p,
-                                      xed_operand_width_enum_t operand_width);
-
 /// @name String Printing
 //@{
 /// @ingroup ENC        
@@ -262,8 +246,7 @@ XED_DLL_EXPORT void xed_encode_request_print(const xed_encoder_request_t* p,
                                              char* buf, xed_uint_t buflen);
 //@}
 
-// Type signature for an encode function
-typedef xed_uint_t (*xed_encode_function_pointer_t)(xed_encoder_request_t* enc_req);
+
 
 
 /// @name Encoding
@@ -301,7 +284,3 @@ xed_encode_nop(xed_uint8_t* array,
 //@}
 
 #endif
-////////////////////////////////////////////////////////////////////////////
-//Local Variables:
-//pref: "../../xed-encode.c"
-//End:

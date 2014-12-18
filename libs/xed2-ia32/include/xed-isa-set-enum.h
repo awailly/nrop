@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -42,8 +42,18 @@ typedef enum {
   XED_ISA_SET_AES,
   XED_ISA_SET_AMD,
   XED_ISA_SET_AVX,
+  XED_ISA_SET_AVX2,
+  XED_ISA_SET_AVX2GATHER,
+  XED_ISA_SET_BDW,
+  XED_ISA_SET_BMI1,
+  XED_ISA_SET_BMI2,
+  XED_ISA_SET_CLFLUSHOPT,
   XED_ISA_SET_CMPXCHG16B,
+  XED_ISA_SET_F16C,
   XED_ISA_SET_FMA,
+  XED_ISA_SET_FMA4,
+  XED_ISA_SET_FXSAVE,
+  XED_ISA_SET_FXSAVE64,
   XED_ISA_SET_I186,
   XED_ISA_SET_I286PROTECTED,
   XED_ISA_SET_I286REAL,
@@ -52,10 +62,13 @@ typedef enum {
   XED_ISA_SET_I486,
   XED_ISA_SET_I486REAL,
   XED_ISA_SET_I86,
+  XED_ISA_SET_INVPCID,
   XED_ISA_SET_LAHF,
   XED_ISA_SET_LONGMODE,
+  XED_ISA_SET_LZCNT,
   XED_ISA_SET_MMX,
   XED_ISA_SET_MOVBE,
+  XED_ISA_SET_MPX,
   XED_ISA_SET_MXCSR,
   XED_ISA_SET_PCLMULQDQ,
   XED_ISA_SET_PENTIUM,
@@ -65,9 +78,17 @@ typedef enum {
   XED_ISA_SET_PENTIUMREAL,
   XED_ISA_SET_POPCNT,
   XED_ISA_SET_PPRO,
+  XED_ISA_SET_PREFETCHW,
   XED_ISA_SET_PREFETCH_NOP,
   XED_ISA_SET_RDPMC,
+  XED_ISA_SET_RDRAND,
+  XED_ISA_SET_RDSEED,
   XED_ISA_SET_RDTSCP,
+  XED_ISA_SET_RDWRFSGS,
+  XED_ISA_SET_RTM,
+  XED_ISA_SET_SGX,
+  XED_ISA_SET_SHA,
+  XED_ISA_SET_SMAP,
   XED_ISA_SET_SMX,
   XED_ISA_SET_SSE,
   XED_ISA_SET_SSE2,
@@ -78,16 +99,31 @@ typedef enum {
   XED_ISA_SET_SSE5,
   XED_ISA_SET_SSSE3,
   XED_ISA_SET_SVM,
+  XED_ISA_SET_TBM,
+  XED_ISA_SET_VMFUNC,
   XED_ISA_SET_VTX,
   XED_ISA_SET_X87,
+  XED_ISA_SET_XOP,
   XED_ISA_SET_XSAVE,
+  XED_ISA_SET_XSAVEC,
   XED_ISA_SET_XSAVEOPT,
+  XED_ISA_SET_XSAVES,
   XED_ISA_SET_LAST
 } xed_isa_set_enum_t;
 
+/// This converts strings to #xed_isa_set_enum_t types.
+/// @param s A C-string.
+/// @return #xed_isa_set_enum_t
+/// @ingroup ENUM
 XED_DLL_EXPORT xed_isa_set_enum_t str2xed_isa_set_enum_t(const char* s);
+/// This converts strings to #xed_isa_set_enum_t types.
+/// @param p An enumeration element of type xed_isa_set_enum_t.
+/// @return string
+/// @ingroup ENUM
 XED_DLL_EXPORT const char* xed_isa_set_enum_t2str(const xed_isa_set_enum_t p);
 
+/// Returns the last element of the enumeration
+/// @return xed_isa_set_enum_t The last element of the enumeration.
+/// @ingroup ENUM
 XED_DLL_EXPORT xed_isa_set_enum_t xed_isa_set_enum_t_last(void);
-       
 #endif

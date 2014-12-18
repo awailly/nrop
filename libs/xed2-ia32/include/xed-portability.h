@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -29,28 +29,20 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 END_LEGAL */
 /// @file xed-portability.h
-/// @author Mark Charney   <mark.charney@intel.com>
+/// 
 
 #ifndef _XED_PORTABILITY_H_
 # define _XED_PORTABILITY_H_
+# include "xed-common-hdrs.h"
 # include "xed-types.h"
 
-#if defined(__FreeBSD__)
-# define XED_BSD
-#endif
-#if defined(__linux__)
-# define XED_LINUX
-#endif
-#if defined(_MSC_VER)
-# define XED_WINDOWS
-#endif
-#if defined(__APPLE__)
-# define XED_MAC
-#endif
 
 #define XED_STATIC_CAST(x,y) ((x) (y))
 #define XED_REINTERPRET_CAST(x,y) ((x) (y))
+#define XED_CAST(x,y) ((x) (y))
 
+
+    
 XED_DLL_EXPORT xed_uint_t xed_strlen(const char* s);
 XED_DLL_EXPORT void xed_strcat(char* dst, const char* src);
 XED_DLL_EXPORT void xed_strcpy(char* dst, const char* src);
@@ -129,20 +121,30 @@ XED_DLL_EXPORT int xed_strncat(char* dst, const char* src,  int len);
 #  define XED_FMT_9U "%9u"
 #endif
 
+// Go write portable code... Sigh
+#if defined(__APPLE__)  // clang *32b* and 64b
+# define XED_FMT_SIZET "%lu"
+#elif defined(__LP64__)  // 64b gcc, icc
+# define XED_FMT_SIZET "%lu"
+#elif defined (_M_X64)   // 64b msvs, ICL
+  // MSVS/x64 accepts %llu or %lu, icl/x64 does not)
+# define XED_FMT_SIZET "%llu"
+#else  // 32b everything else
+# define XED_FMT_SIZET "%u"
+#endif
+
 #if defined(__GNUC__) && defined(__LP64__) && !defined(__APPLE__)
 # define XED_FMT_LX "%lx"
 # define XED_FMT_LU "%lu"
 # define XED_FMT_LU12 "%12lu"
 # define XED_FMT_LD "%ld"
 # define XED_FMT_LX16 "%016lx"
-# define XED_FMT_SIZET "%lu"
 #else
 # define XED_FMT_LX "%llx"
 # define XED_FMT_LU "%llu"
 # define XED_FMT_LU12 "%12llu"
 # define XED_FMT_LD "%lld"
 # define XED_FMT_LX16 "%016llx"
-# define XED_FMT_SIZET "%llu"
 #endif
 
 #if defined(__LP64__) || defined (_M_X64) 
@@ -187,9 +189,7 @@ XED_DLL_EXPORT int xed_strncat(char* dst, const char* src,  int len);
 #define XED_MIN(a, b) (((a) < (b)) ? (a):(b))
 
 
+
+
 #endif  // _XED_PORTABILITY_H_
 
-////////////////////////////////////////////////////////////////////////////
-//Local Variables:
-//pref: "../../xed-portability.c"
-//End:

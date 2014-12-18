@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -43,20 +43,35 @@ typedef enum {
   XED_ATTRIBUTE_AVX_REQUIRES_ALIGNMENT,
   XED_ATTRIBUTE_BYTEOP,
   XED_ATTRIBUTE_DOUBLE_WIDE_OUTPUT,
+  XED_ATTRIBUTE_DWORD_INDICES,
+  XED_ATTRIBUTE_ELEMENT_SIZE_D,
+  XED_ATTRIBUTE_ELEMENT_SIZE_Q,
+  XED_ATTRIBUTE_EXCEPTION_BR,
   XED_ATTRIBUTE_FAR_XFER,
   XED_ATTRIBUTE_FIXED_BASE0,
   XED_ATTRIBUTE_FIXED_BASE1,
+  XED_ATTRIBUTE_GATHER,
   XED_ATTRIBUTE_HALF_WIDE_OUTPUT,
+  XED_ATTRIBUTE_HLE_ACQ_ABLE,
+  XED_ATTRIBUTE_HLE_REL_ABLE,
   XED_ATTRIBUTE_IGNORES_OSFXSR,
   XED_ATTRIBUTE_IMPLICIT_ONE,
+  XED_ATTRIBUTE_INDEX_REG_IS_POINTER,
   XED_ATTRIBUTE_LOCKABLE,
   XED_ATTRIBUTE_MASKOP,
+  XED_ATTRIBUTE_MASKOP_EVEX,
+  XED_ATTRIBUTE_MASK_AS_CONTROL,
   XED_ATTRIBUTE_MMX_EXCEPT,
+  XED_ATTRIBUTE_MPX_PREFIX_ABLE,
   XED_ATTRIBUTE_MXCSR,
   XED_ATTRIBUTE_MXCSR_RD,
   XED_ATTRIBUTE_NOP,
+  XED_ATTRIBUTE_NOTSX,
+  XED_ATTRIBUTE_NOTSX_COND,
+  XED_ATTRIBUTE_NO_RIP_REL,
   XED_ATTRIBUTE_PREFETCH,
   XED_ATTRIBUTE_PROTECTED_MODE,
+  XED_ATTRIBUTE_QWORD_INDICES,
   XED_ATTRIBUTE_REQUIRES_ALIGNMENT,
   XED_ATTRIBUTE_RING0,
   XED_ATTRIBUTE_SCALABLE,
@@ -64,6 +79,7 @@ typedef enum {
   XED_ATTRIBUTE_SIMD_SCALAR,
   XED_ATTRIBUTE_SKIPLOW32,
   XED_ATTRIBUTE_SKIPLOW64,
+  XED_ATTRIBUTE_SPECIAL_AGEN_REQUIRED,
   XED_ATTRIBUTE_STACKPOP0,
   XED_ATTRIBUTE_STACKPOP1,
   XED_ATTRIBUTE_STACKPUSH0,
@@ -80,9 +96,19 @@ typedef enum {
   XED_ATTRIBUTE_LAST
 } xed_attribute_enum_t;
 
+/// This converts strings to #xed_attribute_enum_t types.
+/// @param s A C-string.
+/// @return #xed_attribute_enum_t
+/// @ingroup ENUM
 XED_DLL_EXPORT xed_attribute_enum_t str2xed_attribute_enum_t(const char* s);
+/// This converts strings to #xed_attribute_enum_t types.
+/// @param p An enumeration element of type xed_attribute_enum_t.
+/// @return string
+/// @ingroup ENUM
 XED_DLL_EXPORT const char* xed_attribute_enum_t2str(const xed_attribute_enum_t p);
 
+/// Returns the last element of the enumeration
+/// @return xed_attribute_enum_t The last element of the enumeration.
+/// @ingroup ENUM
 XED_DLL_EXPORT xed_attribute_enum_t xed_attribute_enum_t_last(void);
-       
 #endif

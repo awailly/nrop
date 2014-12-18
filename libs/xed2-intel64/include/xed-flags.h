@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -29,7 +29,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 END_LEGAL */
 /// @file xed-flags.h
-/// @author Mark Charney <mark.charney@intel.com>
+/// 
 
 #ifndef _XED_FLAGS_H_
 # define  _XED_FLAGS_H_
@@ -44,34 +44,45 @@ END_LEGAL */
 ////////////////////////////////////////////////////////////////////////////
 /// @ingroup FLAGS
 /// a union of flags bits
-union  XED_DLL_EXPORT xed_flag_set_s {
+union  xed_flag_set_s {
     struct {
-        xed_uint32_t cf:1;
+        xed_uint32_t cf:1; ///< bit 0
         xed_uint32_t must_be_1:1;
         xed_uint32_t pf:1;
         xed_uint32_t must_be_0a:1;
-        xed_uint32_t af:1;
+        
+        xed_uint32_t af:1; ///< bit 4
         xed_uint32_t must_be_0b:1;
         xed_uint32_t zf:1;
         xed_uint32_t sf:1;
-        xed_uint32_t tf:1;
+        
+        xed_uint32_t tf:1;  ///< bit 8
         xed_uint32_t _if:1;  ///< underscore to avoid token clash
         xed_uint32_t df:1;
         xed_uint32_t of:1;
-        xed_uint32_t iopl:1;
+        
+        xed_uint32_t iopl:2; ///< A 2-bit field, bits 12-13
         xed_uint32_t nt:1;
         xed_uint32_t must_be_0c:1;
-        xed_uint32_t rf:1;
+        
+        xed_uint32_t rf:1; ///< bit 16
         xed_uint32_t vm:1;
         xed_uint32_t ac:1;
         xed_uint32_t vif:1;
-        xed_uint32_t vip:1; 
-        xed_uint32_t id:1;
-        xed_uint32_t mbz:6;  ///< Really should be 10, but I steal 4b for the x87 flags
-        xed_uint32_t fc0:1;  ///< x87 flag FC0
-        xed_uint32_t fc1:1;  ///< x87 flag FC1
-        xed_uint32_t fc2:1;  ///< x87 flag FC2
-        xed_uint32_t fc3:1;  ///< x87 flag FC3
+        
+        xed_uint32_t vip:1; ///< bit 20
+        xed_uint32_t id:1;   ///< bit 21
+        xed_uint32_t must_be_0d:2;  ///< bits 22-23
+        
+        xed_uint32_t must_be_0e:4;  ///< bits 24-27
+
+        // fc0,fc1,fc2,fc3 are not really part of rflags but I put them
+        // here to save space. These bits are only used for x87
+        // instructions.
+        xed_uint32_t fc0:1;  ///< x87 flag FC0 (not really part of rflags)
+        xed_uint32_t fc1:1;  ///< x87 flag FC1 (not really part of rflags)
+        xed_uint32_t fc2:1;  ///< x87 flag FC2 (not really part of rflags)
+        xed_uint32_t fc3:1;  ///< x87 flag FC3 (not really part of rflags)
     } s;
     xed_uint32_t flat;
 };
@@ -95,7 +106,7 @@ XED_DLL_EXPORT xed_bool_t xed_flag_set_is_subset_of(const xed_flag_set_t* p,
 
 /// @ingroup FLAGS
 /// Associated with each flag field there can be one action.
-typedef struct XED_DLL_EXPORT xed_flag_enum_s {
+typedef struct xed_flag_enum_s {
     xed_flag_enum_t flag;
     // there are at most two actions per flag. The 2nd may be invalid.
     xed_flag_action_enum_t action;
@@ -146,7 +157,7 @@ xed_flag_action_write_action( xed_flag_action_enum_t a);
 #define XED_MAX_FLAG_ACTIONS (XED_MAX_ACTIONS_PER_SIMPLE_FLAG)
 /// @ingroup FLAGS
 /// A collection of #xed_flag_action_t's and unions of read and written flags
-typedef struct  XED_DLL_EXPORT xed_simple_flag_s 
+typedef struct  xed_simple_flag_s 
 {
     xed_uint8_t nflags;
 

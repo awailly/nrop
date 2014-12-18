@@ -1,2 +1,2 @@
-Send bugs to mark.charney@intel.com
+Send bugs to sde-dev@intel.com
 

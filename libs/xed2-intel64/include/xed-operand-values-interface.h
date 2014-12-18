@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -29,7 +29,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 END_LEGAL */
 /// @file xed-operand-values-interface.h
-/// @author Mark Charney <mark.charney@intel.com>
+/// 
 
 #if !defined(_XED_OPERAND_VALUES_INTERFACE_H_)
 # define _XED_OPERAND_VALUES_INTERFACE_H_
@@ -41,7 +41,7 @@ END_LEGAL */
 #include "xed-types.h"
 #include "xed-state.h" // a generated file
 #include "xed-operand-enum.h" // a generated file
-#include "xed-operand-storage.h" 
+#include "xed-decoded-inst.h" 
 #include "xed-reg-enum.h"  // generated
 #include "xed-iclass-enum.h"  // generated
 /// @name Initialization
@@ -68,12 +68,6 @@ XED_DLL_EXPORT void
 xed_operand_values_init_keep_mode( xed_operand_values_t* dst,
                                    const xed_operand_values_t* src );
 //@}
-
-// Returns the raw operand fields. Do not use this. 
-XED_DLL_EXPORT xed_uint32_t 
-xed_operand_values_get_operand_decider(const xed_operand_values_t* p,
-                                       xed_operand_enum_t operand_decider_index) ;
-
     
 ///////////////////////////////////////////////////////////
 /// @name String output
@@ -215,17 +209,8 @@ xed_operand_values_has_66_prefix(const xed_operand_values_t* p);
 
 /// @ingroup OPERANDS    
 /// This instruction has a REX prefix with the W bit set.
-xed_bool_t 
+XED_DLL_EXPORT xed_bool_t 
 xed_operand_values_has_rexw_prefix(const xed_operand_values_t* p);
-
-#if 0
-XED_DLL_EXPORT xed_bool_t 
-xed_operand_values_has_refining_66_prefix(const xed_operand_values_t* p);
-XED_DLL_EXPORT xed_bool_t 
-xed_operand_values_has_refining_f2_prefix(const xed_operand_values_t* p);
-XED_DLL_EXPORT xed_bool_t 
-xed_operand_values_has_refining_f3_prefix(const xed_operand_values_t* p);
-#endif
 
 /// @ingroup OPERANDS    
 XED_DLL_EXPORT xed_bool_t 
@@ -315,6 +300,7 @@ xed_operand_values_is_nop(const xed_operand_values_t* p);
 XED_DLL_EXPORT xed_int64_t
 xed_operand_values_get_immediate_int64(const xed_operand_values_t* p);
 
+
 /// @ingroup OPERANDS    
 XED_DLL_EXPORT xed_uint64_t
 xed_operand_values_get_immediate_uint64(const xed_operand_values_t* p);
@@ -347,9 +333,27 @@ xed_operand_values_get_memory_displacement_length(const xed_operand_values_t* p)
 XED_DLL_EXPORT xed_uint32_t
 xed_operand_values_get_memory_displacement_length_bits(const xed_operand_values_t* p);
 
+/// @ingroup OPERANDS
+/// Return the raw memory displacement width in BITS(ignores scaling)
+XED_DLL_EXPORT xed_uint32_t
+xed_operand_values_get_memory_displacement_length_bits_raw(const xed_operand_values_t* p);
+
 /// @ingroup OPERANDS    
 XED_DLL_EXPORT xed_int64_t
 xed_operand_values_get_memory_displacement_int64(const xed_operand_values_t* p);
+
+/// @ingroup OPERANDS    
+XED_DLL_EXPORT xed_int64_t
+xed3_operand_get_memory_displacement_int64(const xed_operand_values_t* p);
+
+/// @ingroup OPERANDS
+XED_DLL_EXPORT xed_int64_t
+xed3_operand_get_memory_displacement_int64_raw(const xed_operand_values_t* p);
+
+/// @ingroup OPERANDS    
+XED_DLL_EXPORT xed_int32_t
+xed3_operand_get_branch_displacement_int32(const xed_operand_values_t* p);
+
 
 /// @ingroup OPERANDS    
 XED_DLL_EXPORT xed_uint8_t 
@@ -518,6 +522,3 @@ xed_operand_values_set_operand_reg(xed_operand_values_t* p,
 //@}
 #endif
 
-//Local Variables:
-//pref: "../../xed-operand-values-interface.c"
-//End:

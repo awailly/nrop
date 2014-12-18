@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -29,7 +29,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 END_LEGAL */
 /// @file xed-init.h 
-/// @author  Mark Charney   <mark.charney@intel.com> 
+/// 
 
 
 
@@ -42,15 +42,6 @@ END_LEGAL */
 ///   This is the call to initialize the XED encode and decode tables. It
 ///   must be called once before using XED.
 void XED_DLL_EXPORT  xed_tables_init(void);
-/// @ingroup INIT
-///   This is the call to initialize the XED decode tables. It must be called
-///   once before using XED.
-void XED_DLL_EXPORT  xed_decode_init(void);
-/// @ingroup INIT
-///   This is the call to initialize the XED encode tables. It must be called
-///   once before using XED's encoder.
-void XED_DLL_EXPORT  xed_encode_init(void);
-
 
 ////////////////////////////////////////////////////////////////////////////
 

@@ -1,7 +1,7 @@
 /*BEGIN_LEGAL 
 Intel Open Source License 
 
-Copyright (c) 2002-2011 Intel Corporation. All rights reserved.
+Copyright (c) 2002-2014 Intel Corporation. All rights reserved.
  
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -29,7 +29,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 END_LEGAL */
 /// @file xed-immdis.h
-/// @author  Mark Charney   <mark.charney@intel.com> 
+/// 
 
 
 
@@ -66,7 +66,7 @@ union xed_immdis_values_t
 };
 
 /// Stores immediates and displacements for the encoder & decoder.
-typedef struct XED_DLL_EXPORT xed_immdis_s {
+typedef struct xed_immdis_s {
     union xed_immdis_values_t value;
     unsigned int currently_used_space :4; // current number of assigned bytes
     unsigned int max_allocated_space :4; // max allocation, 4 or 8
@@ -211,7 +211,3 @@ int xed_immdis__print_ptr(const xed_immdis_t* p, char* buf, int buflen);
 //@}
 
 
-////////////////////////////////////////////////////////////////////////////
-//Local Variables:
-//pref: "../../xed-immdis.c"
-//End:

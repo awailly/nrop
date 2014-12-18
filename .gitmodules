@@ -1,9 +1,9 @@
 [submodule "qemu"]
-	path = qemu
+	path = libs/qemu
 	url = git://git.qemu-project.org/qemu.git
 [submodule "z3"]
-	path = z3
+	path = libs/z3
 	url = https://git.codeplex.com/z3
 [submodule "capstone"]
-	path = capstone
+	path = libs/capstone
 	url = https://github.com/aquynh/capstone.git

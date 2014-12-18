@@ -25,9 +25,7 @@
 *~
 *.swp
 
-capstone/*
-qemu/*
-z3/*
+libs/*
 
 peda-session-packer.txt
 .gdb_history

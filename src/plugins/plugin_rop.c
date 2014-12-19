@@ -470,7 +470,7 @@ static void job_chain(th_arg *t)
     target_map->destroy(target_map);
     map->destroy(map);
 
-    //c->destroy(c);
+    c->destroy(c);
 
     Z3_del_context(ctx);
     ctx = NULL;
@@ -563,7 +563,11 @@ status_t pack(private_plugin_rop_t *this, Elf64_Addr addr, chunk_t chunk)
 
     e->destroy(e);
 
-    inst_list->destroy_function(inst_list, destroy_inst_list);
+    /*
+     * Destroy inst_list allocated values during job.
+     */
+    //inst_list->destroy_function(inst_list, destroy_inst_list);
+    inst_list->destroy(inst_list);
 
     return SUCCESS;
 }

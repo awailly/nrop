@@ -134,11 +134,11 @@ static gadget_type compare(private_map_t *this, map_t *other)
         if ((c->name.ptr) && ((strcmp((char*)c->name.ptr, "rip") == 0) ||
             (strcmp((char*)c->name.ptr, "eip") == 0)))
             continue;
+            */
 
         if ((c->name.ptr) && ((strcmp((char*)c->name.ptr, "rsp") == 0) ||
             (strcmp((char*)c->name.ptr, "esp") == 0)))
             continue;
-            */
 
         if (!c->is_global)
             continue;

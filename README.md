@@ -18,6 +18,11 @@ To work with submodules (init && update):
     git clone http://github.com/awailly/nrop
     git submodule update --init --recursive
 
+Then try to compile with:
+
+    make prepare
+    make -j32
+
 Dockerfile
 ----------
 

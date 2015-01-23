@@ -7,6 +7,7 @@ layout: base
 [2]: disassemblers.html
 [3]: logging.html
 [4]: plugins/plugin_rop.html
+[5]: converter.html
 
 # Documentation
 
@@ -28,6 +29,10 @@ The following pages are explaining specific plugins.
 
 - [plugin_rop documentation][4]
 - [plugin_junk documentation][4]
+
+# Using the engine as a library
+
+If you only need the assembly converter to LLVM, [read the dedicated page][5]
 
 # FAQ
 

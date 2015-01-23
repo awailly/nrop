@@ -259,13 +259,13 @@ chain_t *chain_create_from_string_disass(disassembler_t *d, uint64_t addr, chunk
         count+= d->get_length(d, instruction);
 
         /*
-        char buf[4096];
-        unsigned int buflen = 4096;
+        char buf[65535];
+        unsigned int buflen = 65535;
 
         xed_decoded_inst_dump_intel_format(xedd, buf, buflen, 0);
         LOG_CHAIN("%s\n", buf);
         */
-        format_chunk = chunk_calloc(4096);
+        format_chunk = chunk_calloc(65535);
         if (d->dump_intel(d, instruction, &format_chunk, addr) == FAILED)
             LOG_CHAIN("[x] Error while dump_intel in chain.c\n");
 
@@ -306,7 +306,7 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
 
     instruction_t *instruction;
 
-    if ((insns_str = calloc(4096, 1)) == NULL)
+    if ((insns_str = calloc(65535, 1)) == NULL)
     {
         LOG_CHAIN("Error while allocating insns_chunk in chain_create_from_insn\n");
         return NULL;
@@ -334,7 +334,7 @@ chain_t *chain_create_from_insn_disass(disassembler_t *d, uint64_t addr, linked_
 
         if (new_str.ptr == chunk_empty.ptr)
         {
-            new_str = chunk_calloc(4096);
+            new_str = chunk_calloc(65535);
 
             LOG_CHAIN("dumping @instruction %x:%x\n", instruction, offset_addr);
             d->dump_intel(d, instruction, &new_str, offset_addr);

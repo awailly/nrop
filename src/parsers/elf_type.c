@@ -709,6 +709,12 @@ static chunk_t create_alignment_chunk(section_t *s, uint64_t offset)
 /*
  * Public functions
  */
+
+static Elf64_Ehdr *get_header(private_elf_t *this)
+{
+    return this->elf64_ehdr;
+}
+
 static status_t add_section(private_elf_t *this, section_t *section)
 {
     this->section_list->insert_last(this->section_list, section);
@@ -1593,6 +1599,7 @@ elf_t *create_elf(chunk_t type, region_t *region)
     this->create_alignment_chunk = (chunk_t (*)(section_t*,uint64_t)) create_alignment_chunk;
 
     /* Public functions */
+    this->public.get_header = (Elf64_Ehdr *(*)(elf_t*)) get_header;
     this->public.add_section = (status_t (*)(elf_t*, section_t*)) add_section;
     this->public.remove_section = (status_t (*)(elf_t*, section_t*)) remove_section;
     this->public.get_section_list = (linked_list_t *(*)(elf_t*)) get_section_list;

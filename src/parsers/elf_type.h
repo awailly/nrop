@@ -34,6 +34,13 @@ struct elf_t
     code_t interface;
 
     /**
+     * Get the direct raw Elf header (ehdr). Currently only 64b.
+     *
+     * @return          ehdr pointer for 64b.
+     */
+    Elf64_Ehdr *(*get_header)(elf_t*);
+
+    /**
      * Add a section header to the code_t object.
      *
      * @param section   the section_t to add

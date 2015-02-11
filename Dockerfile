@@ -12,6 +12,12 @@ ADD . /nrop
 RUN cd /nrop \
 	&& make clean \
 	&& make prepare \
+	&& cd libs/z3/build \
+	&& make install \
+	&& cd ../../capstone \
+	&& ./make.sh \
+	&& ./make.sh install \
+	&& cd ../.. \
 	&& make -j32
 
 WORKDIR /nrop

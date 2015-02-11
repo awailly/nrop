@@ -14,11 +14,11 @@ QEMU_ALL=qemu/qobject/qfloat.o qemu/qobject/json-streamer.o qemu/qobject/qdict.o
 QEMU_OBJECTS=$(addprefix $(LIBS_PATH)/,$(QEMU_ALL))
 #qemu/util/qemu-openpty.o qemu/stubs/set-fd-handler.o qemu/util/fifo8.o qemu/libqemuutil.a 
 QEMU_SPE=
-LIBS=$(LIBS_PATH)/xed2-intel64/lib/libxed.a -lcapstone -Lz3/build -L/usr/lib -lz -lm -lrt -lglib-2.0 $(QEMU_OBJECTS) `llvm-config --libs --cflags --ldflags` -lz3 -ldl -lncurses # -lpthread
+LIBS=$(LIBS_PATH)/xed2-intel64/lib/libxed.a -lcapstone -Lz3/build -L/usr/lib -lz -lm -lrt `pkg-config --libs glib-2.0` $(QEMU_OBJECTS) `llvm-config --libs --cflags --ldflags` -lz3 -ldl -lncurses # -lpthread
 #`llvm-config --libs --cflags --ldflags core analysis executionengine jit interpreter native`
 # pkg-config --cflags --libs glib-2.0
 #INCLUDES=-Ixed2-intel64/include -I. -Iplugins -Iparsers -Iqemu/tcg/i386 -Iqemu/x86_64-linux-user -Iqemu/target-i386 -Iqemu -Iqemu/include -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include 
-INCLUDES=-isystem $(LIBS_PATH)/xed2-intel64/include -I. -I$(LIBS_PATH)/ -Idisassemblers -Iplugins -Iparsers -isystem $(LIBS_PATH)/qemu/tcg/i386 -isystem $(LIBS_PATH)/qemu/x86_64-linux-user -isystem $(LIBS_PATH)/qemu/target-i386 -isystem $(LIBS_PATH)/qemu -isystem $(LIBS_PATH)/qemu/include -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I$(LIBS_PATH)/z3/build -I$(LIBS_PATH)/z3/src/api
+INCLUDES=-isystem $(LIBS_PATH)/xed2-intel64/include -I. -I$(LIBS_PATH)/ -Idisassemblers -Iplugins -Iparsers -isystem $(LIBS_PATH)/qemu/tcg/i386 -isystem $(LIBS_PATH)/qemu/x86_64-linux-user -isystem $(LIBS_PATH)/qemu/target-i386 -isystem $(LIBS_PATH)/qemu -isystem $(LIBS_PATH)/qemu/include `pkg-config --cflags glib-2.0` -I$(LIBS_PATH)/z3/build -I$(LIBS_PATH)/z3/src/api
 
 .SUFFIXES:
 .SUFFIXES: .c .o

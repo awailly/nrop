@@ -237,6 +237,7 @@ chain_t *chain_create_from_string_disass(disassembler_t *d, uint64_t addr, chunk
     instructions = linked_list_create();
     chunk_hex = chunk_from_hex(chunk_str, NULL);
     count = 0;
+    instruction = NULL;
 
     while (count < chunk_hex.len)
     {
@@ -280,7 +281,10 @@ chain_t *chain_create_from_string_disass(disassembler_t *d, uint64_t addr, chunk
 
     res = chain_create_from_insn_disass(d, addr, instructions);
 
-    instructions->destroy_function(instructions, (void (*)(void *)) instruction->destroy);
+    if (instruction == NULL)
+        instructions->destroy(instructions);
+    else
+        instructions->destroy_function(instructions, (void (*)(void *)) instruction->destroy);
 
     return res;
 }

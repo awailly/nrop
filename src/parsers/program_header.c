@@ -36,12 +36,21 @@ static void *get_formatted_header(private_program_header_t *this)
 
 static uint64_t get_p_filesz(private_program_header_t *this)
 {
+    void *formatted_header;
+    uint64_t p_filesz;
+
+    formatted_header = this->get_formatted_header(this);
+    p_filesz = 0;
+
     if (this->arch == 32)
-        return ((Elf32_Phdr*) this->get_formatted_header(this))->p_filesz;
+        p_filesz = ((Elf32_Phdr*) formatted_header)->p_filesz;
     else if (this->arch == 64)
-        return ((Elf64_Phdr*) this->get_formatted_header(this))->p_filesz;
+        p_filesz = ((Elf64_Phdr*) formatted_header)->p_filesz;
+
+    free(formatted_header);
+    formatted_header = NULL;
     
-    return 0;
+    return p_filesz;
 }
 
 static void set_p_filesz(private_program_header_t *this, uint64_t filesz)
@@ -72,22 +81,40 @@ static void set_p_memsz(private_program_header_t *this, uint64_t memsz)
 
 static uint64_t get_p_align(private_program_header_t *this)
 {
+    void *formatted_header;
+    uint64_t p_align;
+
+    formatted_header = this->get_formatted_header(this);
+    p_align = 0;
+
     if (this->arch == 32)
-        return ((Elf32_Phdr*) this->get_formatted_header(this))->p_align;
+        p_align= ((Elf32_Phdr*) formatted_header)->p_align;
     else if (this->arch == 64)
-        return ((Elf64_Phdr*) this->get_formatted_header(this))->p_align;
+        p_align = ((Elf64_Phdr*) formatted_header)->p_align;
+
+    free(formatted_header);
+    formatted_header = NULL;
     
-    return 0;
+    return p_align;
 }
 
 static Elf64_Off get_p_offset(private_program_header_t *this)
 {
-    if (this->arch == 32)
-        return ((Elf32_Phdr*) this->get_formatted_header(this))->p_offset;
-    else if (this->arch == 64)
-        return ((Elf64_Phdr*) this->get_formatted_header(this))->p_offset;
+    void *formatted_header;
+    Elf64_Off p_offset;
 
-    return 0;
+    formatted_header = this->get_formatted_header(this);
+    p_offset = 0;
+
+    if (this->arch == 32)
+        p_offset = ((Elf32_Phdr*) formatted_header)->p_offset;
+    else if (this->arch == 64)
+        p_offset = ((Elf64_Phdr*) formatted_header)->p_offset;
+
+    free(formatted_header);
+    formatted_header = NULL;
+
+    return p_offset;
 }
 
 static void set_p_offset(private_program_header_t *this, Elf64_Off offset)
@@ -105,22 +132,40 @@ static void set_p_offset(private_program_header_t *this, Elf64_Off offset)
 
 static uint32_t get_p_type(private_program_header_t *this)
 {
-    if (this->arch == 32)
-        return ((Elf32_Phdr*) this->get_formatted_header(this))->p_type;
-    else if (this->arch == 64)
-        return ((Elf64_Phdr*) this->get_formatted_header(this))->p_type;
+    void *formatted_header;
+    uint32_t p_type;
 
-    return 0;
+    formatted_header = this->get_formatted_header(this);
+    p_type = 0;
+
+    if (this->arch == 32)
+        p_type = ((Elf32_Phdr*) formatted_header)->p_type;
+    else if (this->arch == 64)
+        p_type = ((Elf64_Phdr*) formatted_header)->p_type;
+
+    free(formatted_header);
+    formatted_header = NULL;
+
+    return p_type;
 }
 
 static uint64_t get_p_vaddr(private_program_header_t *this)
 {
-    if (this->arch == 32)
-        return ((Elf32_Phdr*)this->get_formatted_header(this))->p_vaddr;
-    else if (this->arch == 64)
-        return ((Elf64_Phdr*)this->get_formatted_header(this))->p_vaddr;
+    void *formatted_header;
+    uint64_t p_vaddr;
 
-    return 0;
+    formatted_header = this->get_formatted_header(this);
+    p_vaddr = 0;
+
+    if (this->arch == 32)
+        p_vaddr= ((Elf32_Phdr*)formatted_header)->p_vaddr;
+    else if (this->arch == 64)
+        p_vaddr= ((Elf64_Phdr*)formatted_header)->p_vaddr;
+
+    free(formatted_header);
+    formatted_header = NULL;
+
+    return p_vaddr;
 }
 
 static void set_p_vaddr(private_program_header_t *this, Elf64_Addr address)
@@ -161,12 +206,21 @@ static chunk_t get_chunk(private_program_header_t *this)
 
 static uint32_t get_p_flags(private_program_header_t *this)
 {
-    if (this->arch == 32)
-        return ((Elf32_Phdr*) this->get_formatted_header(this))->p_flags;
-    else if (this->arch == 64)
-        return ((Elf64_Phdr*) this->get_formatted_header(this))->p_flags;
+    void *formatted_header;
+    uint32_t p_flags;
 
-    return 0;
+    formatted_header = this->get_formatted_header(this);
+    p_flags = 0;
+
+    if (this->arch == 32)
+        p_flags = ((Elf32_Phdr*) formatted_header)->p_flags;
+    else if (this->arch == 64)
+        p_flags = ((Elf64_Phdr*) formatted_header)->p_flags;
+
+    free(formatted_header);
+    formatted_header = NULL;
+
+    return p_flags;
 }
 
 static void destroy(private_program_header_t *this)

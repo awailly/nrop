@@ -280,7 +280,7 @@ chain_t *chain_create_from_string_disass(disassembler_t *d, uint64_t addr, chunk
 
     res = chain_create_from_insn_disass(d, addr, instructions);
 
-    instructions->destroy_function(instructions, free);
+    instructions->destroy_function(instructions, (void (*)(void *)) instruction->destroy);
 
     return res;
 }

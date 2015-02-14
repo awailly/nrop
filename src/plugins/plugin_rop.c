@@ -535,6 +535,7 @@ status_t pack(private_plugin_rop_t *this, Elf64_Addr addr, chunk_t chunk)
         if (this->target->get_chunk(this->target).ptr == NULL)
         {
             printf("0x%016lx: %s\n", c->get_addr(c), c->get_str(c));
+            c->destroy(c);
             job_count++;
         }
         else

@@ -1,0 +1,13 @@
+language: c
+
+before_script:
+    - git submodule update --init --recursive
+    - make prepare
+    - make examples
+
+script:
+    - make all
+
+after_script:
+    - ./packer examples/opti
+    - ./packer -t 48c7c034120000c3 examples/opti

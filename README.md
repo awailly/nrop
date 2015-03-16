@@ -1,6 +1,8 @@
 nrop
 ====
 
+[![Build Status](https://travis-ci.org/awailly/nrop.svg)](https://travis-ci.org/awailly/nrop)
+
 Automated Return-Oriented Programming Chaining
 
 More informations

@@ -1,8 +1,8 @@
-CC=gcc
-CXX=g++
+#CC=gcc
+#CXX=g++
 #CC=clang --analyze -x c
-#CC=clang 
-#CXX=clang++
+CC=clang 
+CXX=clang++
 RM=rm -f
 ifeq ($(CC), gcc)
 	CFLAGS=-g -DNEED_CPU_H -DCONFIG_USER_ONLY -pthread -W -Wall -Wextra #-O2 -pedantic -Werror -D_FORTIFY_SOURCE=2 

@@ -18,8 +18,8 @@ before_script:
     - sudo apt-get install -y git make python gcc g++ pkg-config libz-dev libglib2.0-dev dh-autoreconf libc6-dev-i386 wget unzip llvm libncurses5-dev clang nasm
     - if [ "$CC" == "clang" ]; then export CXX="clang++"; fi
     - make prepare
-    - cd libs/z3/build && make install 
-    - cd ../../capstone && ./make.sh && ./make.sh install && cd ../.. && make -j32
+    - cd libs/z3/build && sudo make install 
+    - cd ../../capstone && ./make.sh && sudo ./make.sh install && cd ../..
     - make examples
 
 script:

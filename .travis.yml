@@ -10,6 +10,8 @@ branches:
     only:
         - master
         - commit
+
+compiler: clang
         
 before_script:
     - sudo apt-get update -qq

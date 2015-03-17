@@ -11,6 +11,9 @@ branches:
         - master
         - commit
 
+notifications:
+    irc: "chat.freenode.net#nrop"
+
 compiler: clang
         
 before_script:

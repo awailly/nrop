@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
     file = argv[argc - 1];
     region = region_create_file(file);
 
-    if (region == NULL)
+    if (region->get_chunk(region).ptr == NULL)
         goto error_region;
 
     /*
@@ -177,9 +177,9 @@ error_parser:
 
     e->destroy(e);
     parser_builder->destroy(parser_builder);
-    region->destroy(region);
 
 error_region:
+    region->destroy(region);
     /* Not needed as target just point to the stack, not malloc'd
     chunk_clear(&target);
     */

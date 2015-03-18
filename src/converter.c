@@ -1255,6 +1255,14 @@ void error_handler(Z3_context c, Z3_error_code e)
     exit(0);
 }
 
+/*
+ * Well, this function is not fully functional, but give good results for our
+ * purpose. Feel free to upgrade it and send me a PR!
+ *
+ * NOTES:
+ * If I remember correctly the env variable is a fix related to qemu variables
+ * handling. It uses a 32b array to store values.
+ */
 static map_t *llvm_to_z3(private_converter_t *this)
 {
     LLVMBasicBlockRef bb;
@@ -1305,6 +1313,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
         ram->symbol = mk_var(this->ctx, (char*)ram->name.ptr, array_sort);
 
     ram->is_global = 1;
+    this->Z3_symbol_list->insert_last(this->Z3_symbol_list, ram);
 
     if ((env = malloc(sizeof(*env))) == NULL)
         LOG_LLVM("Error while allocating env in llvm_to_z3\n");
@@ -1326,6 +1335,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
         env->symbol = mk_var(this->ctx, (char*)env->name.ptr, array_sort_32);
 
     env->is_global = 1;
+    this->Z3_symbol_list->insert_last(this->Z3_symbol_list, env);
 
     do
     {
@@ -1996,6 +2006,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
 
     LOG_LLVM("AST: %s\n", Z3_ast_to_string(this->ctx, this->formula));
 
+    /*
     chunk_free(&ram->name);
     chunk_free(&ram->prefix);
 
@@ -2005,6 +2016,7 @@ static map_t *llvm_to_z3(private_converter_t *this)
     chunk_free(&env->prefix);
 
     free(env);
+    */
 
     return map_create(this->ctx, this->formula, this->Z3_symbol_list);
 }

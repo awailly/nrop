@@ -57,7 +57,10 @@ static gadget_type compare(private_map_t *this, map_t *other)
     int solver_res, solver_resnot;
     gadget_type result;
     bool found_target_register;
-    Z3_sort bv_sort;
+    
+    Z3_sort bv_sort, array_sort;
+    Z3_sort bv_sort_32, array_sort_32;
+    Z3_sort type_sort;
 
     /*
     Z3_ast target, Z3_rdx, Z3_0;
@@ -126,6 +129,10 @@ static gadget_type compare(private_map_t *this, map_t *other)
     ll_other = other->get_symbols(other);
 
     bv_sort = Z3_mk_bv_sort(this->ctx, 64);
+    array_sort = Z3_mk_array_sort(this->ctx, bv_sort, bv_sort);
+
+    bv_sort_32 = Z3_mk_bv_sort(this->ctx, 32);
+    array_sort_32 = Z3_mk_array_sort(this->ctx, bv_sort_32, bv_sort_32);
 
     while(e->enumerate(e, &c))
     {
@@ -134,11 +141,11 @@ static gadget_type compare(private_map_t *this, map_t *other)
         if ((c->name.ptr) && ((strcmp((char*)c->name.ptr, "rip") == 0) ||
             (strcmp((char*)c->name.ptr, "eip") == 0)))
             continue;
-            */
 
         if ((c->name.ptr) && ((strcmp((char*)c->name.ptr, "rsp") == 0) ||
             (strcmp((char*)c->name.ptr, "esp") == 0)))
             continue;
+            */
 
         if (!c->is_global)
             continue;
@@ -194,8 +201,15 @@ static gadget_type compare(private_map_t *this, map_t *other)
 
                     snprintf((char*)new_b.ptr, new_b.len, "%s", name_b.ptr);
                     
-                    a = mk_var(this->ctx, (char*)new_a.ptr, bv_sort);
-                    b = mk_var(this->ctx, (char*)new_b.ptr, bv_sort);
+                    if ((strcmp((char*)c->name.ptr, "ram") == 0))
+                        type_sort = array_sort;
+                    else if ((strcmp((char*)c->name.ptr, "env") == 0))
+                        type_sort = array_sort_32;
+                    else
+                        type_sort = bv_sort;
+
+                    a = mk_var(this->ctx, (char*)new_a.ptr, type_sort);
+                    b = mk_var(this->ctx, (char*)new_b.ptr, type_sort);
                     eq = Z3_mk_eq(this->ctx, a, b);
 
                     Z3_solver_assert(this->ctx, solver, eq);
@@ -248,15 +262,26 @@ static gadget_type compare(private_map_t *this, map_t *other)
                     else
                         snprintf((char*)new_b.ptr, new_b.len, "%s", name_b.ptr);
                     
-                    a = mk_var(this->ctx, (char*)new_a.ptr, bv_sort);
-                    b = mk_var(this->ctx, (char*)new_b.ptr, bv_sort);
+                    if ((strcmp((char*)c->name.ptr, "ram") == 0))
+                        type_sort = array_sort;
+                    else if ((strcmp((char*)c->name.ptr, "env") == 0))
+                        type_sort = array_sort_32;
+                    else
+                        type_sort = bv_sort;
+
+                    a = mk_var(this->ctx, (char*)new_a.ptr, type_sort);
+                    b = mk_var(this->ctx, (char*)new_b.ptr, type_sort);
                     eq = Z3_mk_eq(this->ctx, a, b);
 
                     Z3_solver_assert(this->ctx, solver, eq);
                     LOG_Z3_SOLVE("Dumping TTO:%s\n", Z3_ast_to_string(this->ctx, eq));
 
                     if ((strcmp((char*)c->name.ptr, "rsp") == 0) || 
-                        (strcmp((char*)c->name.ptr, "esp") == 0))
+                        (strcmp((char*)c->name.ptr, "esp") == 0) ||
+                        (strcmp((char*)c->name.ptr, "rip") == 0) ||
+                        (strcmp((char*)c->name.ptr, "eip") == 0) ||
+                        (strcmp((char*)c->name.ptr, "ram") == 0) ||
+                        (strcmp((char*)c->name.ptr, "env") == 0))
                     {
                         Z3_solver_assert(this->ctx, solvernot, eq);
                     }
@@ -303,17 +328,17 @@ static gadget_type compare(private_map_t *this, map_t *other)
         if (solver_res == Z3_L_TRUE)
         {
             solver_resnot = Z3_solver_check(this->ctx, solvernot);
+            LOG_Z3_SOLVE("Solver: %s\n", Z3_solver_to_string(this->ctx, solvernot));
 
             if (solver_resnot == Z3_L_FALSE)
             {
                 LOG_Z3_SOLVE("Found PN2\n");
-                LOG_Z3_SOLVE("Solver: %s\n", Z3_solver_to_string(this->ctx, solvernot));
                 result = PN2;
             }
             else
             {
                 //Z3_model model;
-                //LOG_Z3_SOLVE("Found PN1\n");
+                LOG_Z3_SOLVE("Found PN1\n");
                 result = PN1;
                 //model = Z3_solver_get_model(this->ctx, solvernot);
                 //LOG_Z3_SOLVE("Model: %s\n", Z3_model_to_string(this->ctx, model));

@@ -8,6 +8,7 @@ layout: base
 [3]: logging.html
 [4]: plugins/plugin_rop.html
 [5]: converter.html
+[6]: analysis.html
 
 # Documentation
 
@@ -29,6 +30,10 @@ The following pages are explaining specific plugins.
 
 - [plugin_rop documentation][4]
 - [plugin_junk documentation][4]
+
+# Analysis and instrumentation
+
+The project can be compiled with `clang` and various dynamic analysis such as `ASAN`. See the [analysis documentation][6] for more information.
 
 # Using the engine as a library
 

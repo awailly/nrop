@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>nROP Homepage</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <style>
+      body {
+        padding-top: 60px;
+      }
+    </style>
+    <link href="http://aurelien.wail.ly/nrop/stylesheets/styles.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js" type="text/javascript"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="http://aurelien.wail.ly/nrop">nROP</a>
+          <ul class="nav navbar-nav">
+            <li>
+              <a href="http://aurelien.wail.ly/nrop">Home</a>
+            </li>
+            <li>
+              <li>
+                <a href="http://aurelien.wail.ly/nrop/getstarted">Get Started</a>
+              </li>
+            </li>
+            <li>
+              <li>
+                <a href="http://aurelien.wail.ly/nrop/download">Download</a>
+              </li>
+            </li>
+            <li>
+              <li>
+                <a href="http://aurelien.wail.ly/nrop/doc">Documentation</a>
+              </li>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      
+      <h1 id="static-analysis">Static analysis</h1>
+      
+      <p>The <code>src/Makefile</code> handles <code>gcc</code> and <code>clang</code> as compilers. You can switch from one to another by commenting out <code>C</code> and <code>CXX</code> variables:</p>
+      
+      <pre><code>CC=gcc&#x000A;CXX=g++&#x000A;#CC=clang --analyze -x c&#x000A;#CC=clang &#x000A;#CXX=clang++&#x000A;</code></pre>
+      
+      <p>to</p>
+      
+      <pre><code>#CC=gcc&#x000A;#CXX=g++&#x000A;#CC=clang --analyze -x c&#x000A;CC=clang &#x000A;CXX=clang++&#x000A;</code></pre>
+      
+      <h1 id="dynamic-analysis">Dynamic analysis</h1>
+      
+      <h2 id="asan">ASAN</h2>
+      
+      <p>A fuzzing session with <a href="http://lcamtuf.coredump.cx/afl/">afl</a> and <a href="https://github.com/0vercl0k/rp">rp</a> showed a nice crash, in <code>examples/execve-badstrtabsize</code>, with a valid ELF and a huge strtab size. While our project handles this case (and not rp++ v1 :), ASAN will stop the process with :</p>
+      
+      <pre><code>==10359==WARNING: AddressSanitizer failed to allocate 0x800000000108 bytes&#x000A;==10359==AddressSanitizer's allocator is terminating the process instead of returning 0&#x000A;==10359==If you don't like this behavior set allocator_may_return_null=1&#x000A;==10359==AddressSanitizer CHECK failed: /build/llvm/src/llvm-3.6.0.src/projects/compiler-rt/lib/sanitizer_common/sanitizer_allocator.cc:146 "((0)) != (0)" (0x0, 0x0)&#x000A;#0 0x64c834 in __asan::AsanCheckFailed(char const*, int, char const*, unsigned long long, unsigned long long) (/home/dad/Outils/nrop/nrop/packer+0x64c834)&#x000A;#1 0x6531b1 in __sanitizer::CheckFailed(char const*, int, char const*, unsigned long long, unsigned long long) (/home/dad/Outils/nrop/nrop/packer+0x6531b1)&#x000A;#2 0x651ca3 in __sanitizer::ReportAllocatorCannotReturnNull() (/home/dad/Outils/nrop/nrop/packer+0x651ca3)&#x000A;#3 0x5bf706 in __asan::Allocator::Allocate(unsigned long, unsigned long, __sanitizer::BufferedStackTrace*, __asan::AllocType, bool) (/home/dad/Outils/nrop/nrop/packer+0x5bf706)&#x000A;#4 0x644d6c in __interceptor_malloc (/home/dad/Outils/nrop/nrop/packer+0x644d6c)&#x000A;#5 0x6735eb in create_section (/home/dad/Outils/nrop/nrop/packer+0x6735eb)&#x000A;#6 0x674a32 in symbols_elf64 (/home/dad/Outils/nrop/nrop/packer+0x674a32)&#x000A;#7 0x674581 in create_elf (/home/dad/Outils/nrop/nrop/packer+0x674581)&#x000A;#8 0x676e4e in parse (/home/dad/Outils/nrop/nrop/packer+0x676e4e)&#x000A;#9 0x6650b0 in main (/home/dad/Outils/nrop/nrop/packer+0x6650b0)&#x000A;#10 0x7f53237567ff in __libc_start_main (/usr/lib/libc.so.6+0x207ff)&#x000A;#11 0x5bdce8 in _start (/home/dad/Outils/nrop/nrop/packer+0x5bdce8)&#x000A;</code></pre>
+      
+      <p>You can allow this behavior with</p>
+      
+      <pre><code>export ASAN_OPTIONS="allocator_may_return_null=1"&#x000A;</code></pre>
+      
+      <p>And run the program again.</p>
+      <hr>
+      <footer>
+        <p>&copy; NoName 2015</p>
+      </footer>
+    </div>
+  </body>
+</html>

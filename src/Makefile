@@ -9,7 +9,7 @@ ifeq ($(CC), gcc)
 	LDFLAGS=
 else
 	CFLAGS=-DNEED_CPU_H -DCONFIG_USER_ONLY -pthread -W -Wall -Wextra 
-	#CFLAGS+=-g -fsanitize=address,leak 
+	CFLAGS+=-g -fsanitize=address,leak 
 	CFLACS+=-fno-omit-frame-pointer -fno-common
 	#CFLAGS+=-O2 -pedantic -Werror -D_FORTIFY_SOURCE=2 
 	#CFLAGS+=-DDEBUG_ROP -DDEBUG_ROP_DEBUG -DDEBUG_Z3_SOLVE -DDEBUG_LLVM -DDEBUG_OPS

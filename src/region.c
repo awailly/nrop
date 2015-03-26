@@ -127,7 +127,6 @@ region_t *region_create_file(char *filename)
         if (this->map(this, this->filename))
         {
             logging("Error while mapping filename into region_create_file\n");
-            return NULL;
         }
     }
 

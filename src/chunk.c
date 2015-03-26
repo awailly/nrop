@@ -46,7 +46,7 @@ chunk_t chunk_create_clone(u_char *ptr, chunk_t chunk)
 {
 	chunk_t clone = chunk_empty;
 	
-	if (chunk.ptr && chunk.len > 0)
+	if (ptr && chunk.ptr && chunk.len > 0)
 	{
 		clone.ptr = ptr;
 		clone.len = chunk.len;

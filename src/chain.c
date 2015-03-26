@@ -15,6 +15,13 @@
 #  define LOG_CHAIN(...) do { } while (0)
 #endif
 
+//#define DEBUG_OPS
+#ifdef DEBUG_OPS
+#  define LOG_OPS(...) logging(__VA_ARGS__)
+#else
+#  define LOG_OPS(...) do { } while (0)
+#endif
+
 typedef struct private_chain_t private_chain_t;
 
 struct private_chain_t
@@ -141,10 +148,14 @@ static map_t *get_map_prefix(private_chain_t *this, chunk_t prefix)
     env = cpu_init("qemu64");
     cpu = ENV_GET_CPU(env); 
     tb = tb_gen_code(cpu, (uint64_t) this->chunk.ptr, 0, 0x40c0b3, 0);
-    //tb_gen_code(cpu, (uint64_t) this->chunk.ptr, 0, 0x40c0b3, 0);
+#ifdef DEBUG_OPS
+    tb_gen_code(cpu, (uint64_t) this->chunk.ptr, 0, 0x40c0b3, 0);
+#endif
 
     s = get_tcg_ctx();
-    //tcg_dump_ops(s);
+#ifdef DEBUG_OPS
+    tcg_dump_ops(s);
+#endif
 
     if (this->ctx == NULL)
         LOG_CHAIN("The Z3 context is NULL, will segfault\n");

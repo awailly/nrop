@@ -31,3 +31,4 @@ script:
 after_script:
     - ./packer examples/opti
     - ./packer -t 48c7c034120000c3 examples/opti
+    - ./packer -t 4889d8c3 examples/opti

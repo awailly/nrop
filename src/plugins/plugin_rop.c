@@ -464,7 +464,7 @@ static void job_chain(th_arg *t)
         LOG_ROP("   [X] %s\n", c->get_str(c));
         LOG_ROP("   [X] %s\n", t->target->get_str(t->target));
         if (g == PN2)
-            printf("   [X] %s\n", c->get_str(c));
+            printf("   [%08lx] %s\n", c->get_addr(c), c->get_str(c));
     }
 
     target_map->destroy(target_map);

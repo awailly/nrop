@@ -319,16 +319,16 @@ static gadget_type compare(private_map_t *this, map_t *other)
 
     e->destroy(e);
 
-
     if (result != BAD)
     {
         LOG_Z3_SOLVE("Checking\n");
         solver_res = Z3_solver_check(this->ctx, solver);
+        LOG_Z3_SOLVE("Solver: %s\n", Z3_solver_to_string(this->ctx, solver));
 
         if (solver_res == Z3_L_TRUE)
         {
             solver_resnot = Z3_solver_check(this->ctx, solvernot);
-            LOG_Z3_SOLVE("Solver: %s\n", Z3_solver_to_string(this->ctx, solvernot));
+            LOG_Z3_SOLVE("SolverNot: %s\n", Z3_solver_to_string(this->ctx, solvernot));
 
             if (solver_resnot == Z3_L_FALSE)
             {
@@ -337,16 +337,20 @@ static gadget_type compare(private_map_t *this, map_t *other)
             }
             else
             {
-                //Z3_model model;
+                Z3_model model;
                 LOG_Z3_SOLVE("Found PN1\n");
                 result = PN1;
-                //model = Z3_solver_get_model(this->ctx, solvernot);
-                //LOG_Z3_SOLVE("Model: %s\n", Z3_model_to_string(this->ctx, model));
-                //Z3_model_dec_ref(this->ctx, model);
+                model = Z3_solver_get_model(this->ctx, solvernot);
+                LOG_Z3_SOLVE("Model: %s\n", Z3_model_to_string(this->ctx, model));
+                Z3_model_dec_ref(this->ctx, model);
             }
 
 
             LOG_Z3_SOLVE("Sat result: %x|%x\n", solver_res, solver_resnot);
+        }
+        else
+        {
+            LOG_Z3_SOLVE("Unsat");
         }
 
         LOG_Z3_SOLVE("%x:True %x:False %x:Undef\n", Z3_L_TRUE, Z3_L_FALSE, Z3_L_UNDEF);

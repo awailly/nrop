@@ -8,7 +8,11 @@ ifeq ($(CC), gcc)
 	CFLAGS=-g -DNEED_CPU_H -DCONFIG_USER_ONLY -pthread -W -Wall -Wextra #-O2 -pedantic -Werror -D_FORTIFY_SOURCE=2 
 	LDFLAGS=
 else
-	CFLAGS=-g -fsanitize=address,leak -fno-omit-frame-pointer -fno-common -DNEED_CPU_H -DCONFIG_USER_ONLY -pthread -W -Wall -Wextra #-O2 -pedantic -Werror -D_FORTIFY_SOURCE=2 
+	CFLAGS=-DNEED_CPU_H -DCONFIG_USER_ONLY -pthread -W -Wall -Wextra 
+	#CFLAGS+=-g -fsanitize=address,leak 
+	CFLACS+=-fno-omit-frame-pointer -fno-common
+	#CFLAGS+=-O2 -pedantic -Werror -D_FORTIFY_SOURCE=2 
+	#CFLAGS+=-DDEBUG_ROP -DDEBUG_ROP_DEBUG -DDEBUG_Z3_SOLVE -DDEBUG_LLVM -DDEBUG_OPS
 	LDFLAGS=-fsanitize=address,leak
 endif
 LIBS_PATH=../libs

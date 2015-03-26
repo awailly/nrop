@@ -3,6 +3,9 @@ title: nROP converters
 layout: base
 ---
 
+[1]: http://lcamtuf.coredump.cx/afl/
+[2]: https://github.com/0vercl0k/rp
+
 # Static analysis
 
 The `src/Makefile` handles `gcc` and `clang` as compilers. You can switch from one to another by commenting out `C` and `CXX` variables:
@@ -25,7 +28,7 @@ to
 
 ## ASAN
 
-A fuzzing session with afl and rp showed a nice crash, in `examples/execve-badstrtabsize`, with a valid ELF and a huge strtab size. While our project handles this case (and not rp++ v1 :), ASAN will stop the process with :
+A fuzzing session with [afl][1] and [rp][2] showed a nice crash, in `examples/execve-badstrtabsize`, with a valid ELF and a huge strtab size. While our project handles this case (and not rp++ v1 :), ASAN will stop the process with :
 
     ==10359==WARNING: AddressSanitizer failed to allocate 0x800000000108 bytes
     ==10359==AddressSanitizer's allocator is terminating the process instead of returning 0

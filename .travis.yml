@@ -23,8 +23,8 @@ addons:
       name: "awailly/nrop"
       description: "Build submitted via Travis CI"
     notification_email: aurelien.wailly+coverity@gmail.com
-    build_command_prepend: "make prepare"
-    build_command:   "make_all"
+#    build_command_prepend: "make prepare"
+    build_command:   "make all"
     branch_pattern: commit
 
 notifications:

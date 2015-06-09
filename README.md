@@ -2,6 +2,7 @@ nrop
 ====
 
 [![Build Status](https://travis-ci.org/awailly/nrop.svg)](https://travis-ci.org/awailly/nrop)
+[![Coverity](https://scan.coverity.com/projects/4550/badge.svg)](https://scan.coverity.com/projects/4550)
 
 Automated Return-Oriented Programming Chaining
 

@@ -80,14 +80,12 @@ static category_t get_category(private_disass_capstone_t *this, instruction_t *i
     insn = ((capstone_instruction_t*) i)->insn;
 
     if ((insn->id == X86_INS_JE) ||
-        (insn->id == X86_INS_JE) ||
         (insn->id == X86_INS_JAE) ||
         (insn->id == X86_INS_JA) ||
         (insn->id == X86_INS_JBE) ||
         (insn->id == X86_INS_JB) ||
         (insn->id == X86_INS_JCXZ) ||
         (insn->id == X86_INS_JECXZ) ||
-        (insn->id == X86_INS_JE) ||
         (insn->id == X86_INS_JGE) ||
         (insn->id == X86_INS_JG) ||
         (insn->id == X86_INS_JLE) ||

@@ -95,6 +95,8 @@ static int map(private_region_t *this, char *filename)
                   0);
     if (this->start == (void*) -1)
         logging("could not map region");
+    if (close(fd) != 0)
+        logging("error closing fd for region mapping");
 #endif
     return 0;
 }

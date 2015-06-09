@@ -604,8 +604,6 @@ static void update_symbols_generic (private_elf_t *this, section_t *section, Elf
     while (e->enumerate(e, &c))
     {
         Elf64_Sym *sym;
-        sym=(void*)sym_len; /* fix compilo (del me)*/
-
         sym = (Elf64_Sym*) c->ptr;
 
         /**

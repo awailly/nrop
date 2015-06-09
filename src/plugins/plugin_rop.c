@@ -351,7 +351,9 @@ static linked_list_t* find_rop_chains(private_plugin_rop_t *this, chunk_t functi
 
     d = this->d;
     instruction = NULL;
+    pthread_mutex_lock(&job_reverse_disass_ret_count_mutex);
     job_reverse_disass_ret_count = 0;
+    pthread_mutex_unlock(&job_reverse_disass_ret_count_mutex);
     job_reverse_disass_ret_count_local = 0;
     job_reverse_disass_ret_total = 0;
 
@@ -536,7 +538,9 @@ status_t pack(private_plugin_rop_t *this, Elf64_Addr addr, chunk_t chunk)
         {
             printf("0x%016lx: %s\n", c->get_addr(c), c->get_str(c));
             c->destroy(c);
+            pthread_mutex_lock(&job_mutex);
             job_count++;
+            pthread_mutex_unlock(&job_mutex);
         }
         else
         {

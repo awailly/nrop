@@ -585,7 +585,7 @@ static status_t map_program_headers64(private_elf_t *this)
  * - Two flows into enumerate depending on section_name
  * - Casting parameter + value
  **/
-static void update_symbols_generic (private_elf_t *this, section_t *section, Elf64_Off offset, char *section_name, size_t sym_len)
+static void update_symbols_generic(private_elf_t *this, section_t *section, Elf64_Off offset, char *section_name, __attribute__((unused)) size_t sym_len)
 {
     uint32_t section_size;
     Elf64_Off section_start;

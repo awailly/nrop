@@ -1351,6 +1351,8 @@ static status_t write_to_file(private_elf_t *this, char *name)
             chunk_data = chunk_cat("mmm", chunk_data, chunk_align, chunk_to_add);
     }
 
+    new_dynamic_section->destroy(new_dynamic_section);
+
     e->destroy(e);
 
     /**

@@ -209,21 +209,24 @@ void chunk_split(chunk_t chunk, const char *mode, ...)
 bool chunk_write(chunk_t chunk, char *path, mode_t mask, bool force)
 {
     mode_t oldmask;
-    FILE *fd;
+    int fd;
+    int open_flags;
+    FILE *f;
     bool good = FALSE;
 
-    if (!force && access(path, F_OK) == 0)
-    {
-        logging("  file '%s' already exists", path);
-        return FALSE;
-    }
+    open_flags = O_CREAT | O_WRONLY;
+
+    if (!force)
+        open_flags|= O_EXCL;
+
+    fd = open(path, open_flags);
 
     oldmask = umask(mask);
-    fd = fopen(path, "w");
+    f = fdopen(fd, "w");
 
-    if (fd)
+    if (f)
     {
-        if (fwrite(chunk.ptr, sizeof(u_char), chunk.len, fd) == chunk.len)
+        if (fwrite(chunk.ptr, sizeof(u_char), chunk.len, f) == chunk.len)
         {
             good = TRUE;
         }
@@ -231,7 +234,7 @@ bool chunk_write(chunk_t chunk, char *path, mode_t mask, bool force)
         {
             logging("  writing to file '%s' failed: %s", path, strerror(errno));
         }
-        fclose(fd);
+        fclose(f);
         // return TRUE; Can't see why, good is returned just after
     }
     else
@@ -239,6 +242,7 @@ bool chunk_write(chunk_t chunk, char *path, mode_t mask, bool force)
         logging("  could not open file '%s': %s", path, strerror(errno));
     }
 
+    close(fd);
     umask(oldmask);
     return good;
 }

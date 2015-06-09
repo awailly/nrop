@@ -122,7 +122,14 @@ int main(int argc, char *argv[])
     hexdump(code->get_region(code)->get_chunk(code->get_region(code)).ptr, 32);
     */
 
-    if (code) logging("Found Entry @%"PRIx64"\n", code->entry);
+    if (code)
+    {
+        logging("Found Entry @%"PRIx64"\n", code->entry);
+    }
+    else
+    {
+        goto error_parser;
+    }
 
     /*
      * Loading plugins

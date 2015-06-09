@@ -246,9 +246,9 @@ static status_t get_first(private_linked_list_t *this, void **item)
 /**
  * Implementation of linked_list_t.remove_first.
  */
-static status_t remove_first(private_linked_list_t *this, void **item)
+static status_t remove_first(private_linked_list_t *this, __attribute__((unused)) void **item)
 {
-	if (get_first(this, item) == SUCCESS)
+	if (this->count)
 	{
 		remove_element(this, this->first);
 		return SUCCESS;

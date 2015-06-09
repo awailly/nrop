@@ -886,7 +886,7 @@ static void tcg_to_llvm(private_converter_t *this)
                 break;
             }
 
-            uint64_t mask = (1u << len) - 1;
+            uint64_t mask = (((uint64_t) 1u) << len) - 1;
             LLVMValueRef t1, ret;
             if (ofs + len < 64) {
                 t1 = LLVMBuildAnd(this->builder, arg2, LLVMConstInt(intType(64), mask, 0), "AddDepositCx");

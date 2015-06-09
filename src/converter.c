@@ -1294,7 +1294,10 @@ static map_t *llvm_to_z3(private_converter_t *this)
         ram = mk_var(this->ctx, "ram", array_sort);
      */
     if ((ram = malloc(sizeof(*ram))) == NULL)
+    {
         LOG_LLVM("Error while allocating ram in llvm_to_z3\n");
+        return NULL;
+    }
 
     ram->valueref = NULL;
     ram->index = 0;
@@ -1316,7 +1319,10 @@ static map_t *llvm_to_z3(private_converter_t *this)
     this->Z3_symbol_list->insert_last(this->Z3_symbol_list, ram);
 
     if ((env = malloc(sizeof(*env))) == NULL)
+    {
         LOG_LLVM("Error while allocating env in llvm_to_z3\n");
+        return NULL;
+    }
 
     env->valueref = NULL;
     env->index = 0;

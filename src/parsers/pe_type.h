@@ -188,7 +188,7 @@ struct pe_t
 };
 
 /**
- * Creates an pe file object based on a region.
+ * Creates a pe file object based on a region.
  *
  * @return          pe_t object
  */

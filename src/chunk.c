@@ -219,7 +219,11 @@ bool chunk_write(chunk_t chunk, char *path, mode_t mask, bool force)
     if (!force)
         open_flags|= O_EXCL;
 
-    fd = open(path, open_flags);
+    if ((fd = open(path, open_flags)) == -1)
+    {
+        logging("  error opening file descriptor for path %s: %s", path, strerror(errno));
+        return good;
+    }
 
     oldmask = umask(mask);
     f = fdopen(fd, "w");

@@ -8,7 +8,7 @@ More informations
 
 All informations to build, configure, solve errors, versions used etc etc:
 
-http://aurelien.wail.ly/nrop/
+http://aurelien.wail.ly/nrop/index.html
 
 You will need
 -------------
